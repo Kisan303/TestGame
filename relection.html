@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport"
       content="width=device-width,
                initial-scale=1,
@@ -10,3356 +9,2567 @@
                user-scalable=no,
                viewport-fit=cover">
 
-<meta name="theme-color" content="#05070c">
+<meta name="theme-color" content="#05050a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 
-<meta name="apple-mobile-web-app-capable"
-      content="yes">
-
-<meta name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent">
-
-<title>Mobile Lab</title>
+<title>LUMEN — Escape the Shadow Lab</title>
 
 <style>
-:root {
-    --bg:#05070c;
-    --panel:#0d121c;
-    --panel2:#131b28;
-    --border:#263348;
-    --text:#f5f7fb;
-    --muted:#8995a8;
-    --green:#43e58a;
-    --blue:#55a9ff;
-    --yellow:#ffd166;
-    --red:#ff5c72;
-    --purple:#ad7cff;
-    --cyan:#45e6ff;
-
-    --safe-top:env(safe-area-inset-top,0px);
-    --safe-bottom:env(safe-area-inset-bottom,0px);
-    --safe-left:env(safe-area-inset-left,0px);
-    --safe-right:env(safe-area-inset-right,0px);
+:root{
+    --bg:#05050a;
+    --panel:rgba(10,12,24,.86);
+    --line:rgba(120,150,255,.22);
+    --cyan:#63f7ff;
+    --blue:#4b7dff;
+    --purple:#a76cff;
+    --danger:#ff466e;
+    --gold:#ffe66d;
+    --text:#eef3ff;
 }
 
-* {
+*{
     box-sizing:border-box;
     -webkit-tap-highlight-color:transparent;
 }
 
-html,
-body {
+html,body{
     margin:0;
     width:100%;
     height:100%;
     overflow:hidden;
-
-    background:var(--bg);
+    background:#000;
     color:var(--text);
-
     font-family:
+        system-ui,
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+}
 
+body{
     touch-action:none;
+    overscroll-behavior:none;
 }
 
-button {
-    font:inherit;
+/* =========================================================
+   GAME ROOT
+========================================================= */
+
+#game{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100dvh;
+    overflow:hidden;
+    background:#020208;
 }
 
-#app {
+canvas{
+    position:absolute;
+    inset:0;
     width:100%;
     height:100%;
+    display:block;
+}
 
-    display:flex;
-    flex-direction:column;
+/* Camera sits behind the game */
+
+#camera{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    opacity:0;
+    display:none;
+    z-index:0;
+    filter:saturate(.65) brightness(.42) contrast(1.15);
+}
+
+#gameCanvas{
+    z-index:1;
+}
+
+#vignette{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 35%,
+            rgba(0,0,0,.25) 65%,
+            rgba(0,0,0,.82) 100%
+        );
+}
+
+/* =========================================================
+   TOP HUD
+========================================================= */
+
+#hud{
+    position:absolute;
+    z-index:10;
+    top:0;
+    left:0;
+    right:0;
 
     padding:
-        calc(8px + var(--safe-top))
-        calc(10px + var(--safe-right))
-        calc(8px + var(--safe-bottom))
-        calc(10px + var(--safe-left));
-}
-
-
-/* =========================================================
-   TOP BAR
-========================================================= */
-
-#topbar {
-    flex:0 0 auto;
-
-    min-height:50px;
+        max(12px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        8px
+        max(12px, env(safe-area-inset-left));
 
     display:flex;
-    align-items:center;
     justify-content:space-between;
+    align-items:flex-start;
 
-    gap:8px;
-}
-
-.logo {
-    display:flex;
-    align-items:center;
-    gap:8px;
-
-    font-weight:900;
-    font-size:18px;
-}
-
-.logoIcon {
-    width:34px;
-    height:34px;
-
-    display:grid;
-    place-items:center;
-
-    border-radius:10px;
-
-    background:var(--panel2);
-    border:1px solid var(--border);
-}
-
-.topActions {
-    display:flex;
-    gap:6px;
-}
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-.btn {
-    min-height:40px;
-
-    padding:8px 12px;
-
-    border-radius:10px;
-
-    border:1px solid var(--border);
-
-    background:var(--panel);
-    color:white;
-
-    font-weight:800;
-    font-size:12px;
-
-    cursor:pointer;
-
-    touch-action:manipulation;
-}
-
-.btn:active {
-    transform:scale(.95);
-}
-
-.btn.primary {
-    background:#12653f;
-    border-color:#21875a;
-}
-
-.btn.blue {
-    background:#123d6a;
-    border-color:#2768a7;
-}
-
-.btn.red {
-    background:#51202b;
-    border-color:#7a3040;
-}
-
-.btn.yellow {
-    background:#51421e;
-    border-color:#786328;
-}
-
-.btn:disabled {
-    opacity:.4;
     pointer-events:none;
 }
 
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-#main {
-    position:relative;
-
-    flex:1;
-
-    min-height:0;
-}
-
-
-/* =========================================================
-   HOME
-========================================================= */
-
-#home {
-    width:100%;
-    height:100%;
-
-    overflow-y:auto;
-    overflow-x:hidden;
-
-    padding:5px 2px 30px;
-
-    touch-action:pan-y;
-}
-
-.hero {
-    text-align:center;
-
-    padding:12px 8px 20px;
-}
-
-.hero h1 {
-    margin:0;
-
-    font-size:
-        clamp(34px,8vw,60px);
-
-    letter-spacing:-3px;
-}
-
-.hero p {
-    margin:8px auto 0;
-
-    max-width:680px;
-
-    color:var(--muted);
-
-    line-height:1.5;
-    font-size:13px;
-}
-
-
-/* =========================================================
-   DEVICE STATUS
-========================================================= */
-
-.devicePanel {
-    max-width:900px;
-
-    margin:0 auto 15px;
-
-    padding:12px;
-
-    background:var(--panel);
-
-    border:1px solid var(--border);
-
-    border-radius:15px;
-}
-
-.deviceTitle {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    margin-bottom:10px;
-
-    font-size:12px;
-    font-weight:900;
-}
-
-.deviceGrid {
-    display:grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(150px,1fr)
-        );
-
-    gap:7px;
-}
-
-.cap {
-    padding:9px;
-
-    border-radius:10px;
-
-    border:1px solid var(--border);
-
-    background:#0a0f17;
-}
-
-.capTop {
+.hudGroup{
     display:flex;
     gap:7px;
-    align-items:center;
+    flex-wrap:wrap;
 }
 
-.capIcon {
-    font-size:18px;
+.stat{
+    min-width:76px;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:rgba(4,6,15,.72);
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 20px rgba(60,90,255,.08);
 }
 
-.capName {
-    font-size:11px;
-    font-weight:900;
-}
-
-.capStatus {
-    margin-top:3px;
-
-    color:var(--muted);
-
+.stat small{
+    display:block;
+    color:#8993b8;
     font-size:9px;
-}
-
-.cap.ok {
-    border-color:#1d5139;
-}
-
-.cap.ok .capStatus {
-    color:var(--green);
-}
-
-.cap.warn {
-    border-color:#5b4c27;
-}
-
-.cap.warn .capStatus {
-    color:var(--yellow);
-}
-
-.cap.no {
-    border-color:#512b34;
-}
-
-.cap.no .capStatus {
-    color:var(--red);
-}
-
-
-/* =========================================================
-   EXPERIMENTS
-========================================================= */
-
-.sectionTitle {
-    max-width:900px;
-
-    margin:0 auto 8px;
-
-    font-size:12px;
-    font-weight:900;
-
-    color:var(--muted);
-
     text-transform:uppercase;
     letter-spacing:1px;
 }
 
-.experiments {
-    max-width:900px;
-
-    margin:auto;
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(210px,1fr)
-        );
-
-    gap:10px;
+.stat strong{
+    display:block;
+    margin-top:2px;
+    font-size:15px;
 }
 
-.card {
-    position:relative;
+/* =========================================================
+   SCREENS
+========================================================= */
 
-    min-height:160px;
+.screen{
+    position:absolute;
+    inset:0;
+    z-index:30;
 
-    padding:17px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 
-    border-radius:17px;
+    padding:
+        calc(25px + env(safe-area-inset-top))
+        20px
+        calc(25px + env(safe-area-inset-bottom));
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            rgba(66,92,255,.13),
+            transparent 45%
+        ),
+        rgba(1,2,8,.88);
+
+    backdrop-filter:blur(14px);
+}
+
+.panel{
+    width:min(620px, 94vw);
+    max-height:90dvh;
+    overflow:auto;
+
+    padding:28px;
+    border-radius:24px;
 
     background:
         linear-gradient(
             145deg,
-            #121a28,
-            #090d15
+            rgba(17,21,44,.95),
+            rgba(5,7,16,.96)
         );
 
-    border:1px solid var(--border);
-
-    cursor:pointer;
-
-    overflow:hidden;
-
-    transition:
-        transform .15s,
-        border-color .15s;
-}
-
-.card:hover {
-    transform:translateY(-2px);
-    border-color:#3a4b66;
-}
-
-.card:active {
-    transform:scale(.98);
-}
-
-.cardEmoji {
-    font-size:31px;
-}
-
-.card h2 {
-    margin:9px 0 5px;
-
-    font-size:18px;
-}
-
-.card p {
-    margin:0;
-
-    color:var(--muted);
-
-    line-height:1.45;
-
-    font-size:11px;
-}
-
-.tag {
-    position:absolute;
-
-    top:12px;
-    right:12px;
-
-    padding:4px 7px;
-
-    border-radius:7px;
-
-    background:#1a2434;
-
-    color:#9eb1ca;
-
-    font-size:8px;
-    font-weight:900;
-}
-
-
-/* =========================================================
-   EXPERIMENT SCREEN
-========================================================= */
-
-.screen {
-    position:absolute;
-
-    inset:0;
-
-    display:none;
-
-    flex-direction:column;
-
-    min-height:0;
-}
-
-.screen.active {
-    display:flex;
-}
-
-.screenHeader {
-    flex:0 0 auto;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    gap:8px;
-
-    padding:4px 0 8px;
-}
-
-.screenTitle {
-    font-size:15px;
-    font-weight:900;
-}
-
-.screenActions {
-    display:flex;
-    gap:5px;
-}
-
-
-/* =========================================================
-   LAB AREA
-========================================================= */
-
-.labArea {
-    position:relative;
-
-    flex:1;
-
-    min-height:0;
-
-    display:flex;
-
-    justify-content:center;
-    align-items:center;
-}
-
-.labCanvasWrap {
-    position:relative;
-
-    width:
-        min(
-            94vw,
-            82vh,
-            850px
-        );
-
-    aspect-ratio:1 / 1;
-}
-
-canvas {
-    display:block;
-
-    width:100%;
-    height:100%;
-
-    background:#05090f;
-
-    border:1px solid #28364b;
-
-    border-radius:18px;
+    border:1px solid rgba(115,150,255,.28);
 
     box-shadow:
-        0 25px 90px rgba(0,0,0,.55);
+        0 30px 100px rgba(0,0,0,.65),
+        inset 0 1px rgba(255,255,255,.06);
 }
 
+.logo{
+    text-align:center;
+    font-size:clamp(42px,11vw,82px);
+    font-weight:900;
+    letter-spacing:.16em;
+    margin-left:.16em;
+
+    color:#fff;
+
+    text-shadow:
+        0 0 15px var(--cyan),
+        0 0 50px rgba(90,150,255,.8);
+}
+
+.subtitle{
+    text-align:center;
+    color:#9ea8ca;
+    letter-spacing:.2em;
+    font-size:12px;
+    text-transform:uppercase;
+    margin-bottom:25px;
+}
+
+.story{
+    color:#cbd2ea;
+    line-height:1.65;
+    font-size:14px;
+    text-align:center;
+}
+
+button{
+    appearance:none;
+    border:0;
+    color:white;
+    font:inherit;
+    cursor:pointer;
+}
+
+.primary{
+    width:100%;
+    margin-top:22px;
+    padding:16px 20px;
+    border-radius:15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #436cff,
+            #8a55ff
+        );
+
+    box-shadow:
+        0 10px 35px rgba(79,91,255,.3);
+
+    font-weight:800;
+    letter-spacing:.08em;
+}
+
+.secondary{
+    padding:11px 15px;
+    border-radius:12px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.1);
+}
+
+.primary:active,
+.secondary:active{
+    transform:scale(.97);
+}
+
+/* =========================================================
+   SENSOR PANEL
+========================================================= */
+
+#sensorPanel{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+}
+
+.sensor{
+    padding:10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.sensorName{
+    font-size:10px;
+    color:#818bab;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.sensorValue{
+    margin-top:4px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.ok{
+    color:#65ffa6;
+}
+
+.no{
+    color:#ff647d;
+}
+
+.wait{
+    color:#ffe66d;
+}
 
 /* =========================================================
    CONTROLS
 ========================================================= */
 
-.bottomControls {
-    flex:0 0 auto;
+#controls{
+    position:absolute;
+    z-index:15;
+    left:0;
+    right:0;
+    bottom:0;
+
+    padding:
+        10px
+        max(14px, env(safe-area-inset-right))
+        max(14px, env(safe-area-inset-bottom))
+        max(14px, env(safe-area-inset-left));
 
     display:flex;
+    justify-content:space-between;
+    align-items:end;
 
-    justify-content:center;
-
-    flex-wrap:wrap;
-
-    gap:7px;
-
-    padding:8px 0 2px;
+    pointer-events:none;
 }
 
-
-/* =========================================================
-   OVERLAY
-========================================================= */
-
-.overlay {
-    position:absolute;
-
-    inset:0;
-
-    display:none;
-
-    align-items:center;
-    justify-content:center;
-
-    text-align:center;
-
-    border-radius:18px;
+#joystick{
+    width:140px;
+    height:140px;
+    border-radius:50%;
 
     background:
-        rgba(0,0,0,.72);
-
-    backdrop-filter:blur(5px);
-
-    z-index:10;
-}
-
-.overlay.show {
-    display:flex;
-}
-
-.overlayBox {
-    max-width:350px;
-
-    padding:20px;
-}
-
-.overlayBox h2 {
-    margin:0 0 7px;
-
-    font-size:28px;
-}
-
-.overlayBox p {
-    margin:0 0 15px;
-
-    color:var(--muted);
-
-    font-size:12px;
-
-    line-height:1.5;
-}
-
-
-/* =========================================================
-   SENSOR HUD
-========================================================= */
-
-.hud {
-    position:absolute;
-
-    top:12px;
-    left:12px;
-
-    padding:8px 10px;
-
-    border-radius:9px;
-
-    background:
-        rgba(5,8,14,.75);
-
-    border:1px solid rgba(255,255,255,.1);
-
-    backdrop-filter:blur(6px);
-
-    font-size:10px;
-
-    z-index:5;
-}
-
-.hud strong {
-    color:var(--green);
-}
-
-
-/* =========================================================
-   D-PAD
-========================================================= */
-
-.dpad {
-    display:none;
-
-    grid-template-columns:
-        repeat(3,50px);
-
-    grid-template-rows:
-        repeat(2,43px);
-
-    gap:5px;
-}
-
-.dpad button {
-    border:1px solid var(--border);
-
-    border-radius:10px;
-
-    background:var(--panel);
-
-    color:white;
-
-    font-size:18px;
-
-    font-weight:900;
-
-    touch-action:manipulation;
-}
-
-#dUp {
-    grid-column:2;
-}
-
-#dLeft {
-    grid-column:1;
-}
-
-#dDown {
-    grid-column:2;
-}
-
-#dRight {
-    grid-column:3;
-}
-
-
-/* =========================================================
-   SOUND MONSTER
-========================================================= */
-
-.soundMeter {
-    position:absolute;
-
-    left:50%;
-    transform:translateX(-50%);
-
-    bottom:22px;
-
-    width:70%;
-
-    height:16px;
-
-    border-radius:20px;
-
-    overflow:hidden;
-
-    background:#121925;
-
-    border:1px solid #2b394d;
-
-    z-index:5;
-}
-
-.soundFill {
-    width:0%;
-    height:100%;
-
-    background:
-        linear-gradient(
-            90deg,
-            #43e58a,
-            #ffd166,
-            #ff5c72
+        radial-gradient(
+            circle,
+            rgba(80,120,255,.13),
+            rgba(10,15,35,.5)
         );
 
-    transition:width .05s;
+    border:1px solid rgba(120,150,255,.22);
+
+    position:relative;
+    pointer-events:auto;
+
+    touch-action:none;
 }
 
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-#cameraVideo {
-    width:100%;
-    height:100%;
-
-    object-fit:cover;
-
-    border-radius:18px;
-
-    background:#05070c;
-}
-
-.cameraTarget {
+#stick{
     position:absolute;
-
-    width:54px;
-    height:54px;
+    width:58px;
+    height:58px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
 
     border-radius:50%;
 
-    border:3px solid var(--cyan);
-
-    box-shadow:
-        0 0 25px rgba(69,230,255,.65);
-
-    display:grid;
-
-    place-items:center;
-
-    font-size:24px;
-
-    z-index:5;
-}
-
-
-/* =========================================================
-   INSTALL CARD
-========================================================= */
-
-.install {
-    max-width:900px;
-
-    margin:15px auto 0;
-
-    padding:14px;
-
-    border-radius:14px;
-
-    background:#101825;
-
-    border:1px solid var(--border);
-
-    color:var(--muted);
-
-    font-size:11px;
-
-    line-height:1.5;
-}
-
-.install strong {
-    color:white;
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-#toast {
-    position:fixed;
-
-    left:50%;
-
-    bottom:
-        calc(
-            20px +
-            var(--safe-bottom)
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #c7ffff,
+            #4fceff 35%,
+            #5768ff 75%
         );
 
-    transform:
-        translate(-50%,20px);
-
-    opacity:0;
-
-    pointer-events:none;
-
-    z-index:1000;
-
-    max-width:90%;
-
-    padding:10px 14px;
-
-    border-radius:10px;
-
-    background:#141c2a;
-
-    border:1px solid #304059;
-
-    color:white;
-
-    font-size:11px;
-
-    font-weight:800;
-
-    transition:
-        opacity .2s,
-        transform .2s;
+    box-shadow:
+        0 0 25px rgba(80,200,255,.55);
 }
 
-#toast.show {
-    opacity:1;
-
-    transform:
-        translate(-50%,0);
+.actionButtons{
+    display:flex;
+    gap:10px;
+    pointer-events:auto;
 }
 
+.action{
+    width:68px;
+    height:68px;
 
-/* =========================================================
-   PERMISSION MODAL
-========================================================= */
-
-#permission {
-    position:fixed;
-
-    inset:0;
-
-    display:none;
-
-    align-items:center;
-    justify-content:center;
-
-    padding:20px;
-
-    z-index:2000;
+    border-radius:50%;
 
     background:
-        rgba(0,0,0,.82);
+        radial-gradient(
+            circle,
+            rgba(110,130,255,.24),
+            rgba(20,25,55,.9)
+        );
 
-    backdrop-filter:blur(10px);
-}
+    border:1px solid rgba(120,150,255,.28);
 
-#permission.show {
     display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:24px;
+    user-select:none;
 }
 
-.permissionCard {
-    width:min(440px,100%);
-
-    padding:22px;
-
-    border-radius:18px;
-
-    background:#0d131e;
-
-    border:1px solid var(--border);
-
-    box-shadow:
-        0 30px 100px rgba(0,0,0,.7);
+.action:active{
+    transform:scale(.9);
 }
 
-.permissionCard h2 {
-    margin:0 0 8px;
+#pulseButton{
+    border-color:rgba(99,247,255,.55);
+    box-shadow:0 0 25px rgba(99,247,255,.18);
 }
 
-.permissionCard p {
-    color:var(--muted);
+/* =========================================================
+   GAME INFO
+========================================================= */
 
-    font-size:12px;
+#message{
+    position:absolute;
+    z-index:20;
+    left:50%;
+    top:20%;
+    transform:translateX(-50%);
 
-    line-height:1.55;
+    padding:10px 18px;
+    border-radius:20px;
+
+    background:rgba(3,5,15,.75);
+    border:1px solid rgba(120,150,255,.2);
+
+    color:#dfe8ff;
+
+    font-size:13px;
+    text-align:center;
+
+    opacity:0;
+    pointer-events:none;
+
+    transition:opacity .25s;
 }
 
-.permissionActions {
-    display:flex;
+#message.show{
+    opacity:1;
+}
 
-    flex-wrap:wrap;
+/* =========================================================
+   PAUSE
+========================================================= */
 
-    gap:7px;
+#pauseScreen{
+    display:none;
+}
 
+.pauseTitle{
+    font-size:38px;
+    font-weight:900;
+    text-align:center;
+}
+
+/* =========================================================
+   SENSOR HINT
+========================================================= */
+
+#sensorHint{
     margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    background:rgba(255,230,100,.06);
+    border:1px solid rgba(255,230,100,.12);
+    color:#bfc5dc;
+    font-size:11px;
+    line-height:1.5;
 }
-
 
 /* =========================================================
    MOBILE
 ========================================================= */
 
-@media(max-width:700px) {
+@media(max-width:600px){
 
-    .experiments {
-        grid-template-columns:
-            1fr 1fr;
+    .panel{
+        padding:22px;
+        border-radius:20px;
     }
 
-    .card {
-        min-height:145px;
-        padding:13px;
+    #joystick{
+        width:125px;
+        height:125px;
     }
 
-    .card h2 {
-        font-size:15px;
+    .action{
+        width:62px;
+        height:62px;
     }
 
-    .card p {
-        font-size:10px;
+    .stat{
+        min-width:65px;
+        padding:6px 8px;
     }
 
-    .dpad {
-        display:grid;
+    .stat strong{
+        font-size:13px;
     }
-
 }
 
+/* Hide controls for mouse/keyboard desktop */
+
+@media(pointer:fine){
+    #joystick{
+        opacity:.45;
+    }
+}
 
 /* =========================================================
    LANDSCAPE
 ========================================================= */
 
-@media(orientation:landscape) {
+@media(max-height:500px){
 
-    #topbar {
-        min-height:42px;
+    #joystick{
+        width:100px;
+        height:100px;
     }
 
-    .labCanvasWrap {
-        width:
-            min(
-                70vh,
-                700px
-            );
+    #stick{
+        width:46px;
+        height:46px;
     }
 
-    .dpad {
-        position:fixed;
-
-        right:
-            calc(
-                10px +
-                var(--safe-right)
-            );
-
-        bottom:
-            calc(
-                10px +
-                var(--safe-bottom)
-            );
-
-        z-index:20;
+    .action{
+        width:52px;
+        height:52px;
+        font-size:20px;
     }
 
+    .panel{
+        padding:18px;
+    }
 }
 
-
-/* =========================================================
-   DESKTOP
-========================================================= */
-
-@media(min-width:900px) {
-
-    .dpad {
-        display:none;
-    }
-
+.hidden{
+    display:none !important;
 }
 </style>
 </head>
 
 <body>
 
-<div id="app">
+<div id="game">
 
-<header id="topbar">
+    <video id="camera"
+           autoplay
+           playsinline
+           muted></video>
 
-    <div class="logo">
-        <div class="logoIcon">🧪</div>
-        Mobile Lab
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <div class="topActions">
+    <div id="vignette"></div>
 
-        <button
-            class="btn"
-            id="fullscreenBtn">
-            ⛶ Fullscreen
-        </button>
+    <!-- HUD -->
 
-        <button
-            class="btn"
-            id="homeBtn"
-            style="display:none">
-            ⌂ Lab
-        </button>
+    <div id="hud">
 
-    </div>
+        <div class="hudGroup">
 
-</header>
+            <div class="stat">
+                <small>Level</small>
+                <strong id="levelText">1</strong>
+            </div>
 
+            <div class="stat">
+                <small>Light</small>
+                <strong id="lightText">100%</strong>
+            </div>
 
-<main id="main">
-
-<!-- =====================================================
-     HOME
-====================================================== -->
-
-<section id="home">
-
-    <div class="hero">
-
-        <h1>Mobile Lab</h1>
-
-        <p>
-            Experiments that use your phone's
-            motion, microphone, camera, touch,
-            sound and haptics.
-        </p>
-
-    </div>
-
-
-    <div class="devicePanel">
-
-        <div class="deviceTitle">
-
-            <span>
-                DEVICE CAPABILITIES
-            </span>
-
-            <span
-                id="deviceType">
-                Detecting...
-            </span>
+            <div class="stat">
+                <small>Health</small>
+                <strong id="healthText">100</strong>
+            </div>
 
         </div>
 
-        <div
-            class="deviceGrid"
-            id="deviceGrid">
+        <div class="hudGroup">
+
+            <div class="stat">
+                <small>Cores</small>
+                <strong id="coreText">0 / 8</strong>
+            </div>
+
+            <div class="stat">
+                <small>Score</small>
+                <strong id="scoreText">0</strong>
+            </div>
+
         </div>
 
     </div>
 
+    <div id="message"></div>
 
-    <div class="sectionTitle">
-        Experiments
-    </div>
+    <!-- GAME CONTROLS -->
 
+    <div id="controls">
 
-    <div class="experiments">
+        <div id="joystick">
+            <div id="stick"></div>
+        </div>
 
+        <div class="actionButtons">
 
-        <article
-            class="card"
-            id="snakeCard">
-
-            <span class="tag">
-                MOTION
-            </span>
-
-            <div class="cardEmoji">
-                🐍
-            </div>
-
-            <h2>
-                Sensor Snake
-            </h2>
-
-            <p>
-                Tilt your phone to control
-                the Snake. Touch and keyboard
-                are fallback controls.
-            </p>
-
-        </article>
-
-
-        <article
-            class="card"
-            id="soundCard">
-
-            <span class="tag">
-                MICROPHONE
-            </span>
-
-            <div class="cardEmoji">
-                👹
-            </div>
-
-            <h2>
-                Sound Monster
-            </h2>
-
-            <p>
-                Whisper to keep the monster
-                asleep. Make too much noise
-                and it wakes up.
-            </p>
-
-        </article>
-
-
-        <article
-            class="card"
-            id="freezeCard">
-
-            <span class="tag">
-                MOTION
-            </span>
-
-            <div class="cardEmoji">
-                🥷
-            </div>
-
-            <h2>
-                Don't Move
-            </h2>
-
-            <p>
-                Hold your phone perfectly
-                still. Movement wakes the
-                detector.
-            </p>
-
-        </article>
-
-
-        <article
-            class="card"
-            id="gravityCard">
-
-            <span class="tag">
-                PHYSICS
-            </span>
-
-            <div class="cardEmoji">
-                🌀
-            </div>
-
-            <h2>
-                Gravity Lab
-            </h2>
-
-            <p>
-                Tilt your phone and watch
-                particles fall under a
-                simulated gravity vector.
-            </p>
-
-        </article>
-
-
-        <article
-            class="card"
-            id="cameraCard">
-
-            <span class="tag">
-                CAMERA
-            </span>
-
-            <div class="cardEmoji">
+            <button
+                class="action"
+                id="cameraButton"
+                title="Camera">
                 📷
+            </button>
+
+            <button
+                class="action"
+                id="pulseButton"
+                title="Light pulse">
+                ✦
+            </button>
+
+            <button
+                class="action"
+                id="pauseButton"
+                title="Pause">
+                ⏸
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- START SCREEN -->
+
+    <section class="screen" id="startScreen">
+
+        <div class="panel">
+
+            <div class="logo">LUMEN</div>
+
+            <div class="subtitle">
+                Escape the Shadow Lab
             </div>
 
-            <h2>
-                Camera Lab
-            </h2>
-
-            <p>
-                Use the rear camera to find
-                virtual targets around you.
+            <p class="story">
+                The laboratory has lost its artificial sun.
+                <br><br>
+                Eight <b>Light Cores</b> are scattered through
+                the abandoned facility.
+                <br><br>
+                Unfortunately, the darkness is alive.
             </p>
 
-        </article>
+            <p class="story">
+                Move through the laboratory, collect the cores,
+                and use your light to destroy the creatures
+                hiding in the shadows.
+            </p>
 
-    </div>
+            <div id="sensorPanel">
 
+                <div class="sensor">
+                    <div class="sensorName">Motion</div>
+                    <div class="sensorValue wait"
+                         id="motionStatus">
+                        Checking...
+                    </div>
+                </div>
 
-    <div class="install">
+                <div class="sensor">
+                    <div class="sensorName">Microphone</div>
+                    <div class="sensorValue wait"
+                         id="micStatus">
+                        Checking...
+                    </div>
+                </div>
 
-        <strong>📱 iPhone tip:</strong>
+                <div class="sensor">
+                    <div class="sensorName">Camera</div>
+                    <div class="sensorValue wait"
+                         id="cameraStatus">
+                        Checking...
+                    </div>
+                </div>
 
-        Open this page in Safari →
-        Share → Add to Home Screen.
+                <div class="sensor">
+                    <div class="sensorName">Proximity</div>
+                    <div class="sensorValue wait"
+                         id="proximityStatus">
+                        Checking...
+                    </div>
+                </div>
 
-        The Home Screen version provides
-        the closest experience to a native
-        application.
+            </div>
 
-    </div>
+            <div id="sensorHint">
+                The game works without these sensors too.
+                On mobile, motion and microphone can provide
+                extra abilities. Camera mode creates an
+                augmented-reality style experience where supported.
+            </div>
 
-</section>
-
-
-<!-- =====================================================
-     SNAKE
-====================================================== -->
-
-<section
-    class="screen"
-    id="snakeScreen">
-
-    <div class="screenHeader">
-
-        <div class="screenTitle">
-            🐍 Sensor Snake
-        </div>
-
-        <div class="screenActions">
-
-            <button
-                class="btn"
-                id="snakeReset">
-                ↻ Reset
+            <button class="primary" id="startButton">
+                ENTER THE LAB
             </button>
 
-            <button
-                class="btn primary"
-                id="snakePlay">
-                ▶ Play
+        </div>
+
+    </section>
+
+    <!-- PAUSE -->
+
+    <section class="screen" id="pauseScreen">
+
+        <div class="panel">
+
+            <div class="pauseTitle">PAUSED</div>
+
+            <p class="story">
+                The laboratory is frozen.
+                The shadows cannot move while the simulation
+                is paused.
+            </p>
+
+            <button class="primary" id="resumeButton">
+                RESUME
+            </button>
+
+            <button class="secondary"
+                    id="restartButton"
+                    style="width:100%;margin-top:10px">
+                RESTART
+            </button>
+
+            <button class="secondary"
+                    id="fullscreenButton"
+                    style="width:100%;margin-top:10px">
+                IMMERSIVE MODE
             </button>
 
         </div>
 
-    </div>
+    </section>
 
+    <!-- GAME OVER -->
 
-    <div class="labArea">
+    <section class="screen hidden" id="gameOverScreen">
 
-        <div class="labCanvasWrap">
+        <div class="panel">
 
-            <canvas
-                id="snakeCanvas">
-            </canvas>
+            <div class="logo"
+                 style="font-size:44px">
+                SIGNAL LOST
+            </div>
 
-            <div
-                class="hud">
+            <p class="story">
+                The darkness consumed the laboratory.
+            </p>
 
+            <div class="story">
                 Score:
-                <strong id="snakeScore">
-                    0
-                </strong>
+                <b id="finalScore">0</b>
+            </div>
 
-                &nbsp; |
-
+            <div class="story">
                 Best:
-                <strong id="snakeBest">
-                    0
-                </strong>
-
-                <br>
-
-                Motion:
-                <strong id="snakeMotion">
-                    OFF
-                </strong>
-
+                <b id="bestScore">0</b>
             </div>
 
-
-            <div
-                class="overlay"
-                id="snakeOverlay">
-
-                <div class="overlayBox">
-
-                    <h2
-                        id="snakeOverlayTitle">
-                        Ready
-                    </h2>
-
-                    <p
-                        id="snakeOverlayText">
-                        Press Play to start.
-                    </p>
-
-                    <button
-                        class="btn primary"
-                        id="snakeOverlayBtn">
-                        ▶ Play
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bottomControls">
-
-        <button
-            class="btn"
-            id="snakeBack">
-            ← Lab
-        </button>
-
-        <button
-            class="btn blue"
-            id="snakeMotionBtn">
-            🌀 Enable Motion
-        </button>
-
-        <div class="dpad">
-
-            <button
-                id="dUp">
-                ▲
-            </button>
-
-            <button
-                id="dLeft">
-                ◀
-            </button>
-
-            <button
-                id="dDown">
-                ▼
-            </button>
-
-            <button
-                id="dRight">
-                ▶
+            <button class="primary" id="againButton">
+                TRY AGAIN
             </button>
 
         </div>
 
-    </div>
+    </section>
 
-</section>
+    <!-- WIN -->
 
+    <section class="screen hidden" id="winScreen">
 
-<!-- =====================================================
-     SOUND MONSTER
-====================================================== -->
+        <div class="panel">
 
-<section
-    class="screen"
-    id="soundScreen">
-
-    <div class="screenHeader">
-
-        <div class="screenTitle">
-            👹 Sound Monster
-        </div>
-
-        <button
-            class="btn"
-            id="soundBack">
-            ← Lab
-        </button>
-
-    </div>
-
-
-    <div class="labArea">
-
-        <div class="labCanvasWrap">
-
-            <canvas
-                id="soundCanvas">
-            </canvas>
-
-            <div
-                class="hud">
-
-                Noise:
-                <strong id="soundLevel">
-                    0%
-                </strong>
-
-                <br>
-
-                Monster:
-                <strong id="monsterState">
-                    Sleeping
-                </strong>
-
+            <div class="logo"
+                 style="font-size:44px">
+                LIGHT RESTORED
             </div>
 
+            <p class="story">
+                You recovered every Light Core.
+                <br><br>
+                The artificial sun is coming back online.
+            </p>
 
-            <div class="soundMeter">
-
-                <div
-                    class="soundFill"
-                    id="soundFill">
-                </div>
-
+            <div class="story">
+                Score:
+                <b id="winScore">0</b>
             </div>
 
-            <div
-                class="overlay"
-                id="soundOverlay">
-
-                <div class="overlayBox">
-
-                    <h2>
-                        😴 Sleeping
-                    </h2>
-
-                    <p>
-                        Press Play, then use
-                        your microphone.
-                    </p>
-
-                    <button
-                        class="btn primary"
-                        id="soundStart">
-                        🎤 Start
-                    </button>
-
-                </div>
-
-            </div>
+            <button class="primary" id="nextButton">
+                NEXT RUN
+            </button>
 
         </div>
 
-    </div>
-
-
-    <div class="bottomControls">
-
-        <button
-            class="btn primary"
-            id="soundPlay">
-            ▶ Play
-        </button>
-
-        <button
-            class="btn"
-            id="soundReset">
-            ↻ Reset
-        </button>
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     DON'T MOVE
-====================================================== -->
-
-<section
-    class="screen"
-    id="freezeScreen">
-
-    <div class="screenHeader">
-
-        <div class="screenTitle">
-            🥷 Don't Move
-        </div>
-
-        <button
-            class="btn"
-            id="freezeBack">
-            ← Lab
-        </button>
-
-    </div>
-
-
-    <div class="labArea">
-
-        <div class="labCanvasWrap">
-
-            <canvas
-                id="freezeCanvas">
-            </canvas>
-
-            <div
-                class="hud">
-
-                Movement:
-                <strong id="movementValue">
-                    0
-                </strong>
-
-                <br>
-
-                Status:
-                <strong id="freezeState">
-                    Ready
-                </strong>
-
-            </div>
-
-
-            <div
-                class="overlay show"
-                id="freezeOverlay">
-
-                <div class="overlayBox">
-
-                    <h2>
-                        🥷 Don't Move
-                    </h2>
-
-                    <p>
-                        The game will calibrate
-                        your phone, then you must
-                        stay still.
-                    </p>
-
-                    <button
-                        class="btn primary"
-                        id="freezeStart">
-                        ▶ Start
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     GRAVITY
-====================================================== -->
-
-<section
-    class="screen"
-    id="gravityScreen">
-
-    <div class="screenHeader">
-
-        <div class="screenTitle">
-            🌀 Gravity Lab
-        </div>
-
-        <button
-            class="btn"
-            id="gravityBack">
-            ← Lab
-        </button>
-
-    </div>
-
-
-    <div class="labArea">
-
-        <div class="labCanvasWrap">
-
-            <canvas
-                id="gravityCanvas">
-            </canvas>
-
-            <div class="hud">
-
-                Gravity X:
-                <strong id="gx">
-                    0
-                </strong>
-
-                <br>
-
-                Gravity Y:
-                <strong id="gy">
-                    1
-                </strong>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bottomControls">
-
-        <button
-            class="btn primary"
-            id="gravityPlay">
-            ▶ Play
-        </button>
-
-        <button
-            class="btn"
-            id="gravityReset">
-            ↻ Reset
-        </button>
-
-        <button
-            class="btn blue"
-            id="gravityMotion">
-            🌀 Enable Motion
-        </button>
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     CAMERA
-====================================================== -->
-
-<section
-    class="screen"
-    id="cameraScreen">
-
-    <div class="screenHeader">
-
-        <div class="screenTitle">
-            📷 Camera Lab
-        </div>
-
-        <button
-            class="btn"
-            id="cameraBack">
-            ← Lab
-        </button>
-
-    </div>
-
-
-    <div class="labArea">
-
-        <div class="labCanvasWrap">
-
-            <video
-                id="cameraVideo"
-                autoplay
-                muted
-                playsinline>
-            </video>
-
-
-            <div
-                class="cameraTarget"
-                id="cameraTarget">
-                👾
-            </div>
-
-
-            <div class="hud">
-
-                Targets:
-                <strong id="cameraScore">
-                    0
-                </strong>
-
-                <br>
-
-                Move the phone
-                to find them.
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bottomControls">
-
-        <button
-            class="btn primary"
-            id="cameraStart">
-            📷 Start Camera
-        </button>
-
-        <button
-            class="btn"
-            id="cameraStop">
-            ■ Stop
-        </button>
-
-    </div>
-
-</section>
-
-</main>
+    </section>
 
 </div>
-
-
-<!-- =========================================================
-     PERMISSION
-========================================================= -->
-
-<div id="permission">
-
-    <div class="permissionCard">
-
-        <h2 id="permissionTitle">
-            Permission Required
-        </h2>
-
-        <p id="permissionText">
-            This experiment needs access
-            to a device feature.
-        </p>
-
-        <div class="permissionActions">
-
-            <button
-                class="btn primary"
-                id="permissionAllow">
-                Allow
-            </button>
-
-            <button
-                class="btn"
-                id="permissionCancel">
-                Cancel
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<div id="toast"></div>
-
 
 <script>
+"use strict";
 
-/* =========================================================
-   MOBILE LAB ENGINE
-========================================================= */
+/*
+=========================================================
+ LUMEN — ESCAPE THE SHADOW LAB
+ Single-file HTML game
 
-
-/* =========================================================
-   DEVICE
-========================================================= */
-
-const Device = {
-
-    ua:navigator.userAgent,
-
-    isIOS:
-        /iPad|iPhone|iPod/.test(
-            navigator.userAgent
-        ) ||
-        (
-            navigator.platform === "MacIntel" &&
-            navigator.maxTouchPoints > 1
-        ),
-
-    isAndroid:
-        /Android/i.test(
-            navigator.userAgent
-        ),
-
-    isMobile:
-        /Android|iPhone|iPad|iPod/i.test(
-            navigator.userAgent
-        ) ||
-        navigator.maxTouchPoints > 1,
-
-    touch:
-        "ontouchstart" in window ||
-        navigator.maxTouchPoints > 0,
-
-    motion:
-        "DeviceMotionEvent" in window,
-
-    orientation:
-        "DeviceOrientationEvent" in window,
-
-    media:
-        !!(
-            navigator.mediaDevices &&
-            navigator.mediaDevices.getUserMedia
-        ),
-
-    vibration:
-        "vibrate" in navigator,
-
-    fullscreen:
-        !!(
-            document.documentElement
-                .requestFullscreen
-        ),
-
-    browser() {
-
-        const ua =
-            navigator.userAgent;
-
-        if (/CriOS/i.test(ua))
-            return "Chrome iOS";
-
-        if (/FxiOS/i.test(ua))
-            return "Firefox iOS";
-
-        if (/EdgiOS/i.test(ua))
-            return "Edge iOS";
-
-        if (
-            /Safari/i.test(ua) &&
-            !/Chrome/i.test(ua)
-        )
-            return "Safari";
-
-        if (/Chrome/i.test(ua))
-            return "Chrome";
-
-        return "Browser";
-    }
-};
-
+ Features:
+ - Canvas rendering
+ - Touch joystick
+ - Keyboard controls
+ - Device orientation
+ - Microphone amplitude
+ - Camera
+ - Proximity API detection
+ - Fullscreen where supported
+ - Local high score
+ - Mobile responsive UI
+=========================================================
+*/
 
 /* =========================================================
    DOM
 ========================================================= */
 
-const home =
-    document.getElementById("home");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-const homeBtn =
-    document.getElementById("homeBtn");
+const camera = document.getElementById("camera");
 
-const toast =
-    document.getElementById("toast");
+const startScreen = document.getElementById("startScreen");
+const pauseScreen = document.getElementById("pauseScreen");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const winScreen = document.getElementById("winScreen");
 
-const deviceGrid =
-    document.getElementById("deviceGrid");
+const startButton = document.getElementById("startButton");
+const pauseButton = document.getElementById("pauseButton");
+const resumeButton = document.getElementById("resumeButton");
+const restartButton = document.getElementById("restartButton");
+const againButton = document.getElementById("againButton");
+const nextButton = document.getElementById("nextButton");
+const fullscreenButton = document.getElementById("fullscreenButton");
+const cameraButton = document.getElementById("cameraButton");
+const pulseButton = document.getElementById("pulseButton");
 
-const deviceType =
-    document.getElementById("deviceType");
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
 
+const message = document.getElementById("message");
 
-/* =========================================================
-   TOAST
-========================================================= */
+const levelText = document.getElementById("levelText");
+const lightText = document.getElementById("lightText");
+const healthText = document.getElementById("healthText");
+const coreText = document.getElementById("coreText");
+const scoreText = document.getElementById("scoreText");
 
-let toastTimer;
+const motionStatus = document.getElementById("motionStatus");
+const micStatus = document.getElementById("micStatus");
+const cameraStatus = document.getElementById("cameraStatus");
+const proximityStatus = document.getElementById("proximityStatus");
 
-function showToast(message) {
-
-    toast.textContent =
-        message;
-
-    toast.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer =
-        setTimeout(
-            () =>
-                toast.classList.remove(
-                    "show"
-                ),
-            2400
-        );
-}
-
+const finalScore = document.getElementById("finalScore");
+const bestScore = document.getElementById("bestScore");
+const winScore = document.getElementById("winScore");
 
 /* =========================================================
-   CAPABILITIES
+   CANVAS
 ========================================================= */
 
-function capability(
-    icon,
-    name,
-    status,
-    type
-) {
+let W = 0;
+let H = 0;
+let DPR = 1;
 
-    const div =
-        document.createElement("div");
+function resize(){
 
-    div.className =
-        `cap ${type}`;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-    div.innerHTML = `
+    W = window.innerWidth;
+    H = window.innerHeight;
 
-        <div class="capTop">
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
 
-            <span class="capIcon">
-                ${icon}
-            </span>
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
 
-            <span class="capName">
-                ${name}
-            </span>
-
-        </div>
-
-        <div class="capStatus">
-            ${status}
-        </div>
-    `;
-
-    deviceGrid.appendChild(div);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
+window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", resize);
 
-function detectDevice() {
-
-    deviceGrid.innerHTML = "";
-
-    deviceType.textContent =
-        Device.isMobile
-        ? Device.isIOS
-            ? "iPhone / iPad"
-            : "Android"
-        : "Desktop";
-
-
-    capability(
-        "👆",
-        "Touch",
-        Device.touch
-        ? "Available"
-        : "Unavailable",
-        Device.touch
-        ? "ok"
-        : "no"
-    );
-
-
-    capability(
-        "🌀",
-        "Motion",
-        Device.motion
-        ? "Supported"
-        : "Unavailable",
-        Device.motion
-        ? "ok"
-        : "warn"
-    );
-
-
-    capability(
-        "🧭",
-        "Orientation",
-        Device.orientation
-        ? "Supported"
-        : "Unavailable",
-        Device.orientation
-        ? "ok"
-        : "warn"
-    );
-
-
-    capability(
-        "🎤",
-        "Microphone",
-        Device.media
-        ? "Available with permission"
-        : "Unavailable",
-        Device.media
-        ? "warn"
-        : "no"
-    );
-
-
-    capability(
-        "📷",
-        "Camera",
-        Device.media
-        ? "Available with permission"
-        : "Unavailable",
-        Device.media
-        ? "warn"
-        : "no"
-    );
-
-
-    capability(
-        "📳",
-        "Haptics",
-        Device.vibration
-        ? "Available"
-        : "Unavailable",
-        Device.vibration
-        ? "ok"
-        : "no"
-    );
-
-
-    capability(
-        "⛶",
-        "Fullscreen",
-        Device.fullscreen
-        ? "Supported"
-        : "Browser controlled",
-        Device.fullscreen
-        ? "ok"
-        : "warn"
-    );
-
-
-    capability(
-        "🌐",
-        "Browser",
-        Device.browser(),
-        "ok"
-    );
-}
-
-
-detectDevice();
-
+resize();
 
 /* =========================================================
-   FULLSCREEN
+   GAME STATE
 ========================================================= */
 
-document
-    .getElementById("fullscreenBtn")
-    .addEventListener(
-        "click",
-        async () => {
+const state = {
 
-            try {
+    running:false,
+    paused:false,
+    gameOver:false,
+    won:false,
 
-                if (
-                    document.fullscreenElement
-                ) {
+    level:1,
 
-                    await document
-                        .exitFullscreen();
+    score:0,
+    health:100,
+    light:100,
 
-                }
-                else if (
-                    document
-                        .documentElement
-                        .requestFullscreen
-                ) {
+    coresCollected:0,
+    coresNeeded:8,
 
-                    await document
-                        .documentElement
-                        .requestFullscreen();
+    elapsed:0,
 
-                }
-                else {
+    pulseCooldown:0,
 
-                    showToast(
-                        "Use Add to Home Screen on iPhone for app-like fullscreen."
-                    );
+    cameraMode:false,
 
-                }
+    proximityNear:false,
 
-            }
-            catch {
+    motionAvailable:false,
 
-                showToast(
-                    "Fullscreen is controlled by this browser."
-                );
+    micAvailable:false,
 
-            }
+    cameraAvailable:false,
 
-        }
-    );
+    proximityAvailable:false,
 
+    shake:0,
 
-/* =========================================================
-   SCREEN NAVIGATION
-========================================================= */
-
-const screens = [
-    "snakeScreen",
-    "soundScreen",
-    "freezeScreen",
-    "gravityScreen",
-    "cameraScreen"
-];
-
-
-function openScreen(id) {
-
-    home.style.display =
-        "none";
-
-    screens.forEach(
-        s => {
-
-            document
-                .getElementById(s)
-                .classList.remove(
-                    "active"
-                );
-
-        }
-    );
-
-    document
-        .getElementById(id)
-        .classList.add("active");
-
-    homeBtn.style.display =
-        "block";
-}
-
-
-function returnHome() {
-
-    stopCamera();
-
-    stopMicrophone();
-
-    stopGravity();
-
-    stopFreeze();
-
-    snakeRunning = false;
-
-    screens.forEach(
-        s =>
-            document
-                .getElementById(s)
-                .classList.remove(
-                    "active"
-                )
-    );
-
-    home.style.display =
-        "block";
-
-    homeBtn.style.display =
-        "none";
-}
-
-
-homeBtn.addEventListener(
-    "click",
-    returnHome
-);
-
-
-/* =========================================================
-   PERMISSION HELPER
-========================================================= */
-
-function permissionRequest(
-    title,
-    text,
-    callback
-) {
-
-    const modal =
-        document.getElementById(
-            "permission"
-        );
-
-    document.getElementById(
-        "permissionTitle"
-    ).textContent = title;
-
-    document.getElementById(
-        "permissionText"
-    ).textContent = text;
-
-    modal.classList.add("show");
-
-
-    document.getElementById(
-        "permissionAllow"
-    ).onclick = async () => {
-
-        modal.classList.remove(
-            "show"
-        );
-
-        await callback();
-
-    };
-
-
-    document.getElementById(
-        "permissionCancel"
-    ).onclick = () => {
-
-        modal.classList.remove(
-            "show"
-        );
-
-    };
-}
-
-
-/* =========================================================
-   MOTION ENGINE
-========================================================= */
-
-let motionEnabled = false;
-
-let latestOrientation = {
-    alpha:0,
-    beta:0,
-    gamma:0
+    highScore:Number(
+        localStorage.getItem("lumenHighScore") || 0
+    )
 };
 
-
-function orientationHandler(e) {
-
-    latestOrientation.alpha =
-        e.alpha || 0;
-
-    latestOrientation.beta =
-        e.beta || 0;
-
-    latestOrientation.gamma =
-        e.gamma || 0;
-
-    if (snakeRunning) {
-
-        updateSnakeGravity();
-
-    }
-
-    if (gravityRunning) {
-
-        updateGravityVector();
-
-    }
-
-    if (freezeRunning) {
-
-        updateFreezeMovement();
-
-    }
-}
-
-
-async function enableMotion() {
-
-    if (!Device.orientation) {
-
-        showToast(
-            "Orientation sensors are not available."
-        );
-
-        return false;
-    }
-
-
-    try {
-
-        if (
-            typeof DeviceOrientationEvent
-                .requestPermission ===
-            "function"
-        ) {
-
-            const result =
-                await DeviceOrientationEvent
-                    .requestPermission();
-
-            if (
-                result !== "granted"
-            ) {
-
-                showToast(
-                    "Motion permission was denied."
-                );
-
-                return false;
-            }
-        }
-
-
-        window.addEventListener(
-            "deviceorientation",
-            orientationHandler
-        );
-
-        motionEnabled = true;
-
-        showToast(
-            "Motion controls enabled."
-        );
-
-        return true;
-
-    }
-    catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Motion could not be enabled."
-        );
-
-        return false;
-    }
-}
-
-
 /* =========================================================
-   SNAKE
+   PLAYER
 ========================================================= */
 
-const snakeCanvas =
-    document.getElementById(
-        "snakeCanvas"
-    );
+const player = {
 
-const snakeCtx =
-    snakeCanvas.getContext("2d");
+    x:0,
+    y:0,
 
+    radius:14,
 
-let snake = [];
+    speed:250,
 
-let snakeFood;
+    vx:0,
+    vy:0,
 
-let snakeRunning = false;
+    angle:0,
 
-let snakeGameOver = false;
+    invulnerable:0
+};
 
-let snakeScore = 0;
+/* =========================================================
+   WORLD
+========================================================= */
 
-let snakeBest =
-    Number(
-        localStorage.getItem(
-            "mobileLabSnakeBest"
-        ) || 0
-    );
+let worldWidth = 2400;
+let worldHeight = 1500;
 
-let snakeDirection = {
-    x:1,
+let cameraX = 0;
+let cameraY = 0;
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+const keys = {};
+
+window.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    if(
+        e.key === " " ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+    ){
+        e.preventDefault();
+    }
+
+    if(e.key === "Escape"){
+        togglePause();
+    }
+
+    if(e.key === " "){
+        pulse();
+    }
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+let joystickPointer = null;
+
+const joystickInput = {
+    x:0,
     y:0
 };
 
-let snakeGravity = {
-    x:1,
-    y:0
-};
+function updateJoystick(clientX, clientY){
 
-let snakeAccumulator = 0;
+    const rect = joystick.getBoundingClientRect();
 
-let snakeLast = 0;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
-let snakeSpeed = 130;
+    let dx = clientX - cx;
+    let dy = clientY - cy;
 
+    const max = rect.width * .34;
 
-document.getElementById(
-    "snakeBest"
-).textContent =
-    snakeBest;
+    const distance = Math.hypot(dx,dy);
 
+    if(distance > max){
 
-function resizeCanvas(canvas) {
+        dx = dx / distance * max;
+        dy = dy / distance * max;
+    }
 
-    const rect =
-        canvas.getBoundingClientRect();
+    joystickInput.x = dx / max;
+    joystickInput.y = dy / max;
 
-    const dpr =
-        Math.min(
-            window.devicePixelRatio || 1,
-            2
+    stick.style.transform =
+        `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+}
+
+function resetJoystick(){
+
+    joystickInput.x = 0;
+    joystickInput.y = 0;
+
+    stick.style.transform =
+        "translate(-50%,-50%)";
+}
+
+joystick.addEventListener("pointerdown", e => {
+
+    joystickPointer = e.pointerId;
+
+    joystick.setPointerCapture(e.pointerId);
+
+    updateJoystick(e.clientX,e.clientY);
+});
+
+joystick.addEventListener("pointermove", e => {
+
+    if(e.pointerId !== joystickPointer) return;
+
+    updateJoystick(e.clientX,e.clientY);
+});
+
+joystick.addEventListener("pointerup", e => {
+
+    if(e.pointerId !== joystickPointer) return;
+
+    joystickPointer = null;
+
+    resetJoystick();
+});
+
+joystick.addEventListener("pointercancel", resetJoystick);
+
+/* =========================================================
+   WORLD OBJECTS
+========================================================= */
+
+let cores = [];
+let enemies = [];
+let walls = [];
+let particles = [];
+let stars = [];
+
+/* =========================================================
+   RANDOM
+========================================================= */
+
+function rand(min,max){
+    return Math.random() * (max-min) + min;
+}
+
+function dist(a,b){
+    return Math.hypot(a.x-b.x,a.y-b.y);
+}
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+let messageTimer = 0;
+
+function showMessage(text,duration=2000){
+
+    message.textContent = text;
+    message.classList.add("show");
+
+    messageTimer = duration;
+}
+
+/* =========================================================
+   WORLD CREATION
+========================================================= */
+
+function createWorld(){
+
+    cores = [];
+    enemies = [];
+    walls = [];
+    particles = [];
+    stars = [];
+
+    player.x = worldWidth/2;
+    player.y = worldHeight/2;
+
+    player.vx = 0;
+    player.vy = 0;
+
+    /* Walls */
+
+    for(let i=0;i<18;i++){
+
+        const horizontal = Math.random() > .5;
+
+        const w = horizontal
+            ? rand(180,420)
+            : rand(25,50);
+
+        const h = horizontal
+            ? rand(25,50)
+            : rand(180,360);
+
+        const x = rand(100,worldWidth-w-100);
+        const y = rand(100,worldHeight-h-100);
+
+        walls.push({
+            x,
+            y,
+            w,
+            h
+        });
+    }
+
+    /* Cores */
+
+    for(let i=0;i<state.coresNeeded;i++){
+
+        let p;
+
+        do{
+
+            p = {
+                x:rand(100,worldWidth-100),
+                y:rand(100,worldHeight-100)
+            };
+
+        }while(
+            Math.hypot(
+                p.x-player.x,
+                p.y-player.y
+            ) < 300
         );
 
-    canvas.width =
-        rect.width * dpr;
+        cores.push({
+            ...p,
+            radius:10,
+            phase:Math.random()*Math.PI*2,
+            collected:false
+        });
+    }
 
-    canvas.height =
-        rect.height * dpr;
+    /* Enemies */
 
-    const ctx =
-        canvas.getContext("2d");
+    const enemyCount = 4 + state.level * 2;
 
-    ctx.setTransform(
-        dpr,
-        0,
-        0,
-        dpr,
-        0,
-        0
-    );
+    for(let i=0;i<enemyCount;i++){
+
+        let p;
+
+        do{
+
+            p = {
+                x:rand(80,worldWidth-80),
+                y:rand(80,worldHeight-80)
+            };
+
+        }while(
+            Math.hypot(
+                p.x-player.x,
+                p.y-player.y
+            ) < 500
+        );
+
+        enemies.push({
+
+            x:p.x,
+            y:p.y,
+
+            radius:22,
+
+            speed:35 + state.level*8,
+
+            hp:100,
+
+            angle:0,
+
+            dead:false,
+
+            pulse:0
+        });
+    }
+
+    /* Background stars */
+
+    for(let i=0;i<250;i++){
+
+        stars.push({
+
+            x:Math.random()*worldWidth,
+            y:Math.random()*worldHeight,
+
+            size:Math.random()*2+.5,
+
+            alpha:Math.random()*.6+.2
+        });
+    }
 }
 
+/* =========================================================
+   COLLISION
+========================================================= */
 
-function initSnake() {
+function circleRectCollision(circle,rect){
 
-    snake = [
-        {x:12,y:12},
-        {x:11,y:12},
-        {x:10,y:12}
-    ];
+    const closestX =
+        Math.max(
+            rect.x,
+            Math.min(circle.x,rect.x+rect.w)
+        );
 
-    snakeDirection = {
-        x:1,
-        y:0
-    };
+    const closestY =
+        Math.max(
+            rect.y,
+            Math.min(circle.y,rect.y+rect.h)
+        );
 
-    snakeGravity = {
-        x:1,
-        y:0
-    };
+    const dx = circle.x-closestX;
+    const dy = circle.y-closestY;
 
-    snakeScore = 0;
-
-    snakeSpeed = 130;
-
-    snakeGameOver = false;
-
-    snakeAccumulator = 0;
-
-    document.getElementById(
-        "snakeScore"
-    ).textContent = "0";
-
-    spawnSnakeFood();
-
-    drawSnake();
-
-    showSnakeOverlay(
-        "Ready",
-        "Press Play to start."
-    );
+    return dx*dx + dy*dy <
+           circle.radius*circle.radius;
 }
 
+/* =========================================================
+   MOVE PLAYER
+========================================================= */
 
-function spawnSnakeFood() {
+function movePlayer(dt){
 
-    do {
+    let ix = joystickInput.x;
+    let iy = joystickInput.y;
 
-        snakeFood = {
-            x:
-                Math.floor(
-                    Math.random() * 24
-                ),
+    if(keys["w"] || keys["arrowup"]) iy -= 1;
+    if(keys["s"] || keys["arrowdown"]) iy += 1;
+    if(keys["a"] || keys["arrowleft"]) ix -= 1;
+    if(keys["d"] || keys["arrowright"]) ix += 1;
 
-            y:
-                Math.floor(
-                    Math.random() * 24
-                )
-        };
+    /* Device tilt */
 
-    }
-    while (
-        snake.some(
-            s =>
-                s.x === snakeFood.x &&
-                s.y === snakeFood.y
-        )
-    );
-}
+    if(orientationControl.enabled){
 
-
-function setSnakeDirection(
-    x,
-    y
-) {
-
-    if (
-        x === -snakeDirection.x &&
-        y === -snakeDirection.y
-    ) {
-        return;
+        ix += orientationControl.x;
+        iy += orientationControl.y;
     }
 
-    snakeDirection = {
-        x,
-        y
-    };
-}
+    const magnitude = Math.hypot(ix,iy);
 
+    if(magnitude > 1){
 
-function updateSnakeGravity() {
-
-    const gamma =
-        latestOrientation.gamma;
-
-    const beta =
-        latestOrientation.beta;
-
-
-    if (
-        Math.abs(gamma) >
-        Math.abs(beta)
-    ) {
-
-        snakeGravity = {
-            x:
-                Math.max(
-                    -1,
-                    Math.min(
-                        1,
-                        gamma / 35
-                    )
-                ),
-            y:0
-        };
-
-    }
-    else {
-
-        snakeGravity = {
-            x:0,
-            y:
-                Math.max(
-                    -1,
-                    Math.min(
-                        1,
-                        beta / 35
-                    )
-                )
-        };
-
+        ix /= magnitude;
+        iy /= magnitude;
     }
 
+    player.vx = ix * player.speed;
+    player.vy = iy * player.speed;
 
-    let x =
-        snakeGravity.x;
+    const oldX = player.x;
+    const oldY = player.y;
 
-    let y =
-        snakeGravity.y;
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
 
+    player.x =
+        Math.max(
+            player.radius,
+            Math.min(
+                worldWidth-player.radius,
+                player.x
+            )
+        );
 
-    if (
-        Math.abs(x) >
-        Math.abs(y)
-    ) {
+    player.y =
+        Math.max(
+            player.radius,
+            Math.min(
+                worldHeight-player.radius,
+                player.y
+            )
+        );
 
-        if (Math.abs(x) > .15) {
+    for(const wall of walls){
 
-            setSnakeDirection(
-                x > 0 ? 1 : -1,
-                0
-            );
+        if(circleRectCollision(player,wall)){
 
-        }
+            player.x = oldX;
+            player.y = oldY;
 
-    }
-    else {
-
-        if (Math.abs(y) > .15) {
-
-            setSnakeDirection(
-                0,
-                y > 0 ? 1 : -1
-            );
-
+            break;
         }
     }
 
+    if(magnitude>.1){
 
-    document.getElementById(
-        "snakeMotion"
-    ).textContent =
-        motionEnabled
-        ? "ON"
-        : "OFF";
+        player.angle =
+            Math.atan2(iy,ix);
+    }
 }
 
+/* =========================================================
+   CORES
+========================================================= */
 
-function snakeStep() {
+function updateCores(){
 
-    const head = {
-        x:
-            snake[0].x +
-            snakeDirection.x,
+    for(const core of cores){
 
-        y:
-            snake[0].y +
-            snakeDirection.y
-    };
+        if(core.collected) continue;
 
+        core.phase += .04;
 
-    if (head.x < 0)
-        head.x = 23;
+        if(
+            Math.hypot(
+                player.x-core.x,
+                player.y-core.y
+            ) <
+            player.radius+core.radius+10
+        ){
 
-    if (head.x >= 24)
-        head.x = 0;
+            core.collected = true;
 
-    if (head.y < 0)
-        head.y = 23;
+            state.coresCollected++;
 
-    if (head.y >= 24)
-        head.y = 0;
+            state.score += 250;
 
+            state.light =
+                Math.min(100,state.light+15);
 
-    if (
-        snake.some(
-            s =>
-                s.x === head.x &&
-                s.y === head.y
-        )
-    ) {
+            createExplosion(
+                core.x,
+                core.y,
+                25
+            );
 
-        snakeGameOver = true;
-        snakeRunning = false;
+            showMessage(
+                `LIGHT CORE ${state.coresCollected}/${state.coresNeeded}`,
+                1200
+            );
 
-        showSnakeOverlay(
-            "Game Over",
-            `Score: ${snakeScore}`
+            if(
+                state.coresCollected >=
+                state.coresNeeded
+            ){
+                winGame();
+            }
+        }
+    }
+}
+
+/* =========================================================
+   ENEMIES
+========================================================= */
+
+function updateEnemies(dt){
+
+    for(const enemy of enemies){
+
+        if(enemy.dead) continue;
+
+        enemy.pulse += dt;
+
+        const dx = player.x-enemy.x;
+        const dy = player.y-enemy.y;
+
+        const d = Math.hypot(dx,dy);
+
+        /*
+         * Shadow creatures become weaker when
+         * illuminated.
+         */
+
+        const lightDistance = 220;
+
+        if(d < lightDistance){
+
+            enemy.hp -=
+                dt *
+                (state.light > 50 ? 10 : 4);
+
+            enemy.speed =
+                Math.max(
+                    15,
+                    enemy.speed*.995
+                );
+
+            if(enemy.hp <= 0){
+
+                enemy.dead = true;
+
+                state.score += 500;
+
+                createExplosion(
+                    enemy.x,
+                    enemy.y,
+                    40
+                );
+
+                showMessage(
+                    "SHADOW DESTROYED +500",
+                    900
+                );
+
+                continue;
+            }
+        }
+
+        if(d > 1){
+
+            enemy.angle =
+                Math.atan2(dy,dx);
+
+            let speed = enemy.speed;
+
+            /*
+             * If player has low light,
+             * shadows become aggressive.
+             */
+
+            if(state.light < 25){
+                speed *= 1.5;
+            }
+
+            enemy.x +=
+                Math.cos(enemy.angle) *
+                speed *
+                dt;
+
+            enemy.y +=
+                Math.sin(enemy.angle) *
+                speed *
+                dt;
+        }
+
+        /* Player collision */
+
+        if(
+            d <
+            player.radius+enemy.radius
+        ){
+
+            if(player.invulnerable <= 0){
+
+                state.health -= 20;
+
+                player.invulnerable = 1.2;
+
+                state.shake = 12;
+
+                showMessage(
+                    "THE SHADOW TOUCHED YOU!",
+                    1000
+                );
+
+                if(state.health <= 0){
+
+                    gameOver();
+                }
+            }
+        }
+    }
+}
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+function updateLight(dt){
+
+    /*
+     * Light naturally drains.
+     */
+
+    state.light -= dt * .9;
+
+    if(state.light < 0){
+        state.light = 0;
+    }
+
+    /*
+     * Darkness increases enemy pressure.
+     */
+
+    if(state.light < 20){
+
+        state.health -= dt*1.3;
+
+        if(state.health <= 0){
+            gameOver();
+        }
+    }
+
+    if(player.invulnerable > 0){
+        player.invulnerable -= dt;
+    }
+
+    if(state.pulseCooldown > 0){
+        state.pulseCooldown -= dt;
+    }
+}
+
+/* =========================================================
+   LIGHT PULSE
+========================================================= */
+
+function pulse(){
+
+    if(!state.running || state.paused) return;
+
+    if(state.pulseCooldown > 0) return;
+
+    if(state.light < 12){
+
+        showMessage(
+            "NOT ENOUGH LIGHT",
+            800
         );
 
         return;
     }
 
+    state.light -= 12;
 
-    snake.unshift(head);
+    state.pulseCooldown = .7;
 
+    state.shake = 7;
 
-    if (
-        head.x === snakeFood.x &&
-        head.y === snakeFood.y
-    ) {
+    createExplosion(
+        player.x,
+        player.y,
+        90
+    );
 
-        snakeScore++;
+    for(const enemy of enemies){
 
-        document.getElementById(
-            "snakeScore"
-        ).textContent =
-            snakeScore;
+        if(enemy.dead) continue;
 
-
-        if (
-            snakeScore >
-            snakeBest
-        ) {
-
-            snakeBest =
-                snakeScore;
-
-            localStorage.setItem(
-                "mobileLabSnakeBest",
-                snakeBest
+        const d =
+            Math.hypot(
+                player.x-enemy.x,
+                player.y-enemy.y
             );
 
-            document.getElementById(
-                "snakeBest"
-            ).textContent =
-                snakeBest;
+        if(d < 300){
+
+            enemy.hp -=
+                Math.max(
+                    0,
+                    100 -
+                    d/3
+                );
+
+            enemy.x +=
+                Math.cos(
+                    Math.atan2(
+                        enemy.y-player.y,
+                        enemy.x-player.x
+                    )
+                ) * 40;
+
+            enemy.y +=
+                Math.sin(
+                    Math.atan2(
+                        enemy.y-player.y,
+                        enemy.x-player.x
+                    )
+                ) * 40;
         }
-
-
-        snakeSpeed =
-            Math.max(
-                55,
-                130 -
-                snakeScore * 3
-            );
-
-
-        if (
-            Device.vibration
-        ) {
-
-            navigator.vibrate?.(
-                35
-            );
-        }
-
-
-        spawnSnakeFood();
-
-    }
-    else {
-
-        snake.pop();
-
     }
 }
 
+/* =========================================================
+   PARTICLES
+========================================================= */
 
-function drawSnake() {
+function createExplosion(x,y,count){
 
-    const rect =
-        snakeCanvas.getBoundingClientRect();
+    for(let i=0;i<count;i++){
 
-    const width =
-        rect.width;
+        const angle =
+            Math.random()*Math.PI*2;
 
-    const height =
-        rect.height;
+        const speed =
+            rand(30,240);
 
-    const cell =
-        width / 24;
+        particles.push({
 
+            x,
+            y,
 
-    snakeCtx.clearRect(
-        0,
-        0,
-        width,
-        height
+            vx:Math.cos(angle)*speed,
+            vy:Math.sin(angle)*speed,
+
+            life:rand(.3,1),
+
+            maxLife:1,
+
+            size:rand(1,4)
+        });
+    }
+}
+
+function updateParticles(dt){
+
+    for(let i=particles.length-1;i>=0;i--){
+
+        const p = particles[i];
+
+        p.life -= dt;
+
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+
+        p.vx *= .96;
+        p.vy *= .96;
+
+        if(p.life <= 0){
+            particles.splice(i,1);
+        }
+    }
+}
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+function updateCamera(){
+
+    const targetX =
+        player.x - W/2;
+
+    const targetY =
+        player.y - H/2;
+
+    cameraX +=
+        (targetX-cameraX)*.08;
+
+    cameraY +=
+        (targetY-cameraY)*.08;
+
+    cameraX =
+        Math.max(
+            0,
+            Math.min(
+                worldWidth-W,
+                cameraX
+            )
+        );
+
+    cameraY =
+        Math.max(
+            0,
+            Math.min(
+                worldHeight-H,
+                cameraY
+            )
+        );
+}
+
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
+
+function drawBackground(){
+
+    ctx.fillStyle="#020208";
+
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+
+    ctx.translate(-cameraX,-cameraY);
+
+    /* Stars */
+
+    for(const s of stars){
+
+        ctx.globalAlpha=s.alpha;
+
+        ctx.fillStyle="#9db7ff";
+
+        ctx.fillRect(
+            s.x,
+            s.y,
+            s.size,
+            s.size
+        );
+    }
+
+    ctx.globalAlpha=1;
+
+    /* Grid */
+
+    ctx.strokeStyle=
+        "rgba(60,90,160,.08)";
+
+    ctx.lineWidth=1;
+
+    const grid=80;
+
+    const startX =
+        Math.floor(cameraX/grid)*grid;
+
+    const startY =
+        Math.floor(cameraY/grid)*grid;
+
+    for(
+        let x=startX;
+        x<cameraX+W+grid;
+        x+=grid
+    ){
+
+        ctx.beginPath();
+        ctx.moveTo(x,cameraY);
+        ctx.lineTo(x,cameraY+H);
+        ctx.stroke();
+    }
+
+    for(
+        let y=startY;
+        y<cameraY+H+grid;
+        y+=grid
+    ){
+
+        ctx.beginPath();
+        ctx.moveTo(cameraX,y);
+        ctx.lineTo(cameraX+W,y);
+        ctx.stroke();
+    }
+
+    /* Walls */
+
+    for(const wall of walls){
+
+        ctx.fillStyle=
+            "rgba(17,24,45,.9)";
+
+        ctx.fillRect(
+            wall.x,
+            wall.y,
+            wall.w,
+            wall.h
+        );
+
+        ctx.strokeStyle=
+            "rgba(75,115,220,.25)";
+
+        ctx.strokeRect(
+            wall.x,
+            wall.y,
+            wall.w,
+            wall.h
+        );
+    }
+
+    ctx.restore();
+}
+
+/* =========================================================
+   LIGHT RAYS
+========================================================= */
+
+function drawLight(){
+
+    ctx.save();
+
+    ctx.translate(
+        player.x-cameraX,
+        player.y-cameraY
     );
 
+    /*
+     * Main radial light.
+     */
+
+    const radius =
+        120 + state.light*2.2;
 
     const gradient =
-        snakeCtx.createRadialGradient(
-            width/2,
-            height/2,
-            0,
-            width/2,
-            height/2,
-            width
+        ctx.createRadialGradient(
+            0,0,
+            5,
+            0,0,
+            radius
         );
 
     gradient.addColorStop(
         0,
-        "#142338"
+        "rgba(150,255,255,.30)"
+    );
+
+    gradient.addColorStop(
+        .25,
+        "rgba(80,220,255,.15)"
+    );
+
+    gradient.addColorStop(
+        .7,
+        "rgba(60,100,255,.04)"
     );
 
     gradient.addColorStop(
         1,
-        "#05070c"
+        "rgba(0,0,0,0)"
     );
 
-    snakeCtx.fillStyle =
-        gradient;
+    ctx.fillStyle=gradient;
 
-    snakeCtx.fillRect(
+    ctx.beginPath();
+    ctx.arc(0,0,radius,0,Math.PI*2);
+    ctx.fill();
+
+    /*
+     * Directional cone.
+     */
+
+    const coneLength =
+        230 + state.light*2;
+
+    const coneWidth=.42;
+
+    const g =
+        ctx.createLinearGradient(
+            0,0,
+            Math.cos(player.angle)*coneLength,
+            Math.sin(player.angle)*coneLength
+        );
+
+    g.addColorStop(
         0,
-        0,
-        width,
-        height
+        "rgba(170,255,255,.20)"
     );
 
-
-    snakeCtx.strokeStyle =
-        "rgba(255,255,255,.035)";
-
-    for (
-        let i=0;
-        i<=24;
-        i++
-    ) {
-
-        const p =
-            i * cell;
-
-        snakeCtx.beginPath();
-
-        snakeCtx.moveTo(
-            p,
-            0
-        );
-
-        snakeCtx.lineTo(
-            p,
-            height
-        );
-
-        snakeCtx.stroke();
-
-        snakeCtx.beginPath();
-
-        snakeCtx.moveTo(
-            0,
-            p
-        );
-
-        snakeCtx.lineTo(
-            width,
-            p
-        );
-
-        snakeCtx.stroke();
-    }
-
-
-    snakeCtx.fillStyle =
-        "#ff526b";
-
-    roundedRect(
-        snakeCtx,
-        snakeFood.x * cell + 4,
-        snakeFood.y * cell + 4,
-        cell - 8,
-        cell - 8,
-        7
+    g.addColorStop(
+        1,
+        "rgba(80,120,255,0)"
     );
 
-    snakeCtx.fill();
-
-
-    snake.forEach(
-        (part,index) => {
-
-            snakeCtx.fillStyle =
-                index === 0
-                ? "#65ef9a"
-                : "#28ba6b";
-
-            roundedRect(
-                snakeCtx,
-                part.x * cell + 3,
-                part.y * cell + 3,
-                cell - 6,
-                cell - 6,
-                6
-            );
-
-            snakeCtx.fill();
-
-
-            if (index === 0) {
-
-                snakeCtx.fillStyle =
-                    "#06110a";
-
-                snakeCtx.beginPath();
-
-                snakeCtx.arc(
-                    part.x * cell +
-                        cell*.35,
-                    part.y * cell +
-                        cell*.38,
-                    2,
-                    0,
-                    Math.PI*2
-                );
-
-                snakeCtx.fill();
-
-
-                snakeCtx.beginPath();
-
-                snakeCtx.arc(
-                    part.x * cell +
-                        cell*.65,
-                    part.y * cell +
-                        cell*.38,
-                    2,
-                    0,
-                    Math.PI*2
-                );
-
-                snakeCtx.fill();
-            }
-        }
-    );
-}
-
-
-function roundedRect(
-    ctx,
-    x,
-    y,
-    w,
-    h,
-    r
-) {
+    ctx.fillStyle=g;
 
     ctx.beginPath();
 
-    ctx.roundRect(
-        x,
-        y,
-        w,
-        h,
-        r
+    ctx.moveTo(0,0);
+
+    ctx.lineTo(
+        Math.cos(player.angle-coneWidth)*
+        coneLength,
+        Math.sin(player.angle-coneWidth)*
+        coneLength
     );
-}
 
-
-function showSnakeOverlay(
-    title,
-    text
-) {
-
-    document.getElementById(
-        "snakeOverlayTitle"
-    ).textContent =
-        title;
-
-    document.getElementById(
-        "snakeOverlayText"
-    ).textContent =
-        text;
-
-    document.getElementById(
-        "snakeOverlay"
-    ).classList.add("show");
-
-    document.getElementById(
-        "snakeOverlayBtn"
-    ).textContent =
-        snakeGameOver
-        ? "↻ Play Again"
-        : "▶ Play";
-}
-
-
-function hideSnakeOverlay() {
-
-    document.getElementById(
-        "snakeOverlay"
-    ).classList.remove("show");
-}
-
-
-function toggleSnake() {
-
-    if (snakeGameOver) {
-
-        initSnake();
-
-        snakeGameOver = false;
-    }
-
-
-    snakeRunning =
-        !snakeRunning;
-
-
-    if (snakeRunning) {
-
-        hideSnakeOverlay();
-
-        document.getElementById(
-            "snakePlay"
-        ).textContent =
-            "❚❚ Pause";
-
-    }
-    else {
-
-        showSnakeOverlay(
-            "Paused",
-            "Press Play to continue."
-        );
-
-        document.getElementById(
-            "snakePlay"
-        ).textContent =
-            "▶ Play";
-    }
-}
-
-
-function snakeLoop(time) {
-
-    const delta =
-        time -
-        snakeLast;
-
-    snakeLast =
-        time;
-
-
-    if (snakeRunning) {
-
-        snakeAccumulator +=
-            delta;
-
-
-        while (
-            snakeAccumulator >=
-            snakeSpeed
-        ) {
-
-            snakeStep();
-
-            snakeAccumulator -=
-                snakeSpeed;
-
-        }
-    }
-
-
-    if (
-        document
-            .getElementById(
-                "snakeScreen"
-            )
-            .classList
-            .contains("active")
-    ) {
-
-        drawSnake();
-
-    }
-
-
-    requestAnimationFrame(
-        snakeLoop
+    ctx.lineTo(
+        Math.cos(player.angle+coneWidth)*
+        coneLength,
+        Math.sin(player.angle+coneWidth)*
+        coneLength
     );
-}
 
+    ctx.closePath();
+
+    ctx.fill();
+
+    ctx.restore();
+}
 
 /* =========================================================
-   SNAKE CONTROLS
+   DRAW CORES
 ========================================================= */
 
-document
-    .getElementById("snakePlay")
-    .onclick =
-    toggleSnake;
+function drawCores(){
 
-document
-    .getElementById("snakeOverlayBtn")
-    .onclick =
-    toggleSnake;
+    ctx.save();
 
+    ctx.translate(-cameraX,-cameraY);
 
-document
-    .getElementById("snakeReset")
-    .onclick =
-    () => {
+    for(const core of cores){
 
-        snakeRunning = false;
+        if(core.collected) continue;
 
-        initSnake();
+        const pulse =
+            1+
+            Math.sin(
+                core.phase
+            )*.25;
 
-        document.getElementById(
-            "snakePlay"
-        ).textContent =
-            "▶ Play";
-    };
+        ctx.shadowBlur=25;
 
+        ctx.shadowColor="#6effff";
 
-document
-    .getElementById("snakeMotionBtn")
-    .onclick =
-    () => {
+        ctx.fillStyle="#a9ffff";
 
-        permissionRequest(
-            "Motion Access",
-            "Allow motion/orientation access so the Snake can respond to the way you tilt your phone.",
-            enableMotion
-        );
+        ctx.beginPath();
 
-    };
-
-
-function bindDirection(
-    id,
-    x,
-    y
-) {
-
-    document
-        .getElementById(id)
-        ?.addEventListener(
-            "pointerdown",
-            e => {
-
-                e.preventDefault();
-
-                setSnakeDirection(
-                    x,
-                    y
-                );
-
-            }
-        );
-}
-
-
-bindDirection(
-    "dUp",
-    0,
-    -1
-);
-
-bindDirection(
-    "dDown",
-    0,
-    1
-);
-
-bindDirection(
-    "dLeft",
-    -1,
-    0
-);
-
-bindDirection(
-    "dRight",
-    1,
-    0
-);
-
-
-/* =========================================================
-   KEYBOARD
-========================================================= */
-
-window.addEventListener(
-    "keydown",
-    e => {
-
-        if (
-            !document
-                .getElementById(
-                    "snakeScreen"
-                )
-                .classList
-                .contains("active")
-        )
-            return;
-
-
-        switch(
-            e.key.toLowerCase()
-        ) {
-
-            case "arrowup":
-            case "w":
-                setSnakeDirection(
-                    0,-1
-                );
-                break;
-
-            case "arrowdown":
-            case "s":
-                setSnakeDirection(
-                    0,1
-                );
-                break;
-
-            case "arrowleft":
-            case "a":
-                setSnakeDirection(
-                    -1,0
-                );
-                break;
-
-            case "arrowright":
-            case "d":
-                setSnakeDirection(
-                    1,0
-                );
-                break;
-
-            case " ":
-                toggleSnake();
-                break;
-        }
-    }
-);
-
-
-/* =========================================================
-   SOUND MONSTER
-========================================================= */
-
-const soundCanvas =
-    document.getElementById(
-        "soundCanvas"
-    );
-
-const soundCtx =
-    soundCanvas.getContext("2d");
-
-
-let audioContext = null;
-let analyser = null;
-let microphone = null;
-let audioData = null;
-
-let microphoneRunning = false;
-let soundRunning = false;
-
-let monsterLevel = 0;
-
-
-function drawMonster(level) {
-
-    const rect =
-        soundCanvas.getBoundingClientRect();
-
-    const w =
-        rect.width;
-
-    const h =
-        rect.height;
-
-
-    soundCtx.clearRect(
-        0,
-        0,
-        w,
-        h
-    );
-
-
-    const g =
-        soundCtx.createRadialGradient(
-            w/2,
-            h/2,
-            20,
-            w/2,
-            h/2,
-            w
-        );
-
-    g.addColorStop(
-        0,
-        "#24192a"
-    );
-
-    g.addColorStop(
-        1,
-        "#05070c"
-    );
-
-    soundCtx.fillStyle =
-        g;
-
-    soundCtx.fillRect(
-        0,
-        0,
-        w,
-        h
-    );
-
-
-    const intensity =
-        Math.min(
-            1,
-            level
-        );
-
-
-    const size =
-        Math.min(w,h) *
-        (
-            .25 +
-            intensity*.15
-        );
-
-
-    const cx =
-        w/2;
-
-    const cy =
-        h/2;
-
-
-    let face;
-
-    if (level < .08)
-        face = "😴";
-    else if (level < .25)
-        face = "😐";
-    else if (level < .5)
-        face = "👀";
-    else if (level < .75)
-        face = "😡";
-    else
-        face = "👹";
-
-
-    soundCtx.font =
-        `${size}px serif`;
-
-    soundCtx.textAlign =
-        "center";
-
-    soundCtx.textBaseline =
-        "middle";
-
-    soundCtx.fillText(
-        face,
-        cx,
-        cy
-    );
-
-
-    for (
-        let i=0;
-        i<18;
-        i++
-    ) {
-
-        const angle =
-            i *
-            Math.PI*2/18;
-
-        const radius =
-            size*.8 +
-            level*size*.6;
-
-        const x =
-            cx +
-            Math.cos(angle) *
-            radius;
-
-        const y =
-            cy +
-            Math.sin(angle) *
-            radius;
-
-
-        soundCtx.fillStyle =
-            `rgba(
-                255,
-                100,
-                120,
-                ${.1+level*.5}
-            )`;
-
-        soundCtx.beginPath();
-
-        soundCtx.arc(
-            x,
-            y,
-            3+level*5,
+        ctx.arc(
+            core.x,
+            core.y,
+            core.radius*pulse,
             0,
             Math.PI*2
         );
 
-        soundCtx.fill();
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        ctx.strokeStyle=
+            "rgba(120,255,255,.4)";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            core.x,
+            core.y,
+            22,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+/* =========================================================
+   DRAW ENEMIES
+========================================================= */
+
+function drawEnemies(){
+
+    ctx.save();
+
+    ctx.translate(-cameraX,-cameraY);
+
+    for(const enemy of enemies){
+
+        if(enemy.dead) continue;
+
+        const alpha =
+            .45+
+            Math.sin(
+                enemy.pulse*4
+            )*.12;
+
+        ctx.shadowBlur=25;
+
+        ctx.shadowColor=
+            "rgba(130,60,255,.65)";
+
+        ctx.fillStyle=
+            `rgba(70,20,110,${alpha})`;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            enemy.x,
+            enemy.y,
+            enemy.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        /*
+         * Eyes
+         */
+
+        ctx.fillStyle="#ff527d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            enemy.x-7,
+            enemy.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.arc(
+            enemy.x+7,
+            enemy.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        /*
+         * Health
+         */
+
+        ctx.fillStyle=
+            "rgba(0,0,0,.6)";
+
+        ctx.fillRect(
+            enemy.x-20,
+            enemy.y-32,
+            40,
+            4
+        );
+
+        ctx.fillStyle="#b05cff";
+
+        ctx.fillRect(
+            enemy.x-20,
+            enemy.y-32,
+            40*Math.max(
+                0,
+                enemy.hp/100
+            ),
+            4
+        );
+    }
+
+    ctx.restore();
+}
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(){
+
+    ctx.save();
+
+    ctx.translate(
+        player.x-cameraX,
+        player.y-cameraY
+    );
+
+    ctx.rotate(player.angle);
+
+    /*
+     * Player light aura
+     */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#63f7ff";
+
+    ctx.fillStyle="#d8ffff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        player.radius,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    /*
+     * Direction indicator
+     */
+
+    ctx.fillStyle="#63f7ff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(25,0);
+    ctx.lineTo(8,-7);
+    ctx.lineTo(8,7);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+/* =========================================================
+   DRAW PARTICLES
+========================================================= */
+
+function drawParticles(){
+
+    ctx.save();
+
+    ctx.translate(-cameraX,-cameraY);
+
+    for(const p of particles){
+
+        ctx.globalAlpha =
+            Math.max(
+                0,
+                p.life/p.maxLife
+            );
+
+        ctx.fillStyle="#9fffff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.globalAlpha=1;
+
+    ctx.restore();
+}
+
+/* =========================================================
+   DARKNESS / VISION
+========================================================= */
+
+function drawDarkness(){
+
+    /*
+     * Everything outside the player's light
+     * becomes dark.
+     */
+
+    const px =
+        player.x-cameraX;
+
+    const py =
+        player.y-cameraY;
+
+    const radius =
+        150 + state.light*2.0;
+
+    const gradient =
+        ctx.createRadialGradient(
+            px,
+            py,
+            Math.max(30,radius*.35),
+            px,
+            py,
+            radius
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+    gradient.addColorStop(
+        .55,
+        "rgba(0,0,0,.25)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,.92)"
+    );
+
+    ctx.fillStyle=gradient;
+
+    ctx.fillRect(0,0,W,H);
+
+    /*
+     * Camera mode slightly changes the darkness.
+     */
+
+    if(state.cameraMode){
+
+        ctx.fillStyle=
+            "rgba(30,100,90,.08)";
+
+        ctx.fillRect(0,0,W,H);
     }
 }
 
+/* =========================================================
+   RENDER
+========================================================= */
 
-async function startMicrophone() {
+function render(){
 
-    if (!Device.media) {
+    ctx.clearRect(0,0,W,H);
 
-        showToast(
-            "Microphone is unavailable."
+    drawBackground();
+    drawCores();
+    drawEnemies();
+    drawLight();
+    drawPlayer();
+    drawParticles();
+    drawDarkness();
+
+    /*
+     * Camera scanning overlay
+     */
+
+    if(state.cameraMode){
+
+        ctx.strokeStyle=
+            "rgba(100,255,220,.35)";
+
+        ctx.lineWidth=2;
+
+        const s=70;
+
+        ctx.strokeRect(
+            W/2-s,
+            H/2-s,
+            s*2,
+            s*2
         );
 
-        return false;
+        ctx.font="11px system-ui";
+
+        ctx.fillStyle=
+            "rgba(150,255,230,.8)";
+
+        ctx.fillText(
+            "LUMEN SCANNER",
+            W/2-50,
+            H/2+s+22
+        );
+    }
+}
+
+/* =========================================================
+   HUD
+========================================================= */
+
+function updateHUD(){
+
+    levelText.textContent =
+        state.level;
+
+    lightText.textContent =
+        Math.round(state.light)+"%";
+
+    healthText.textContent =
+        Math.max(
+            0,
+            Math.round(state.health)
+        );
+
+    coreText.textContent =
+        `${state.coresCollected} / ${state.coresNeeded}`;
+
+    scoreText.textContent =
+        state.score;
+}
+
+/* =========================================================
+   MAIN LOOP
+========================================================= */
+
+let lastTime = 0;
+
+function loop(timestamp){
+
+    if(!lastTime){
+        lastTime=timestamp;
     }
 
+    let dt =
+        (timestamp-lastTime)/1000;
 
-    try {
+    lastTime=timestamp;
+
+    dt=Math.min(dt,.033);
+
+    if(
+        state.running &&
+        !state.paused &&
+        !state.gameOver &&
+        !state.won
+    ){
+
+        state.elapsed += dt;
+
+        movePlayer(dt);
+        updateCores();
+        updateEnemies(dt);
+        updateLight(dt);
+        updateParticles(dt);
+        updateCamera();
+
+        if(state.shake>0){
+            state.shake -= dt*20;
+        }
+    }
+
+    render();
+    updateHUD();
+
+    if(messageTimer>0){
+
+        messageTimer -= dt*1000;
+
+        if(messageTimer<=0){
+            message.classList.remove("show");
+        }
+    }
+
+    requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+function togglePause(){
+
+    if(!state.running ||
+       state.gameOver ||
+       state.won
+    ) return;
+
+    state.paused=!state.paused;
+
+    pauseScreen.style.display =
+        state.paused ? "flex" : "none";
+
+    pauseButton.textContent =
+        state.paused ? "▶" : "⏸";
+}
+
+pauseButton.addEventListener(
+    "click",
+    togglePause
+);
+
+resumeButton.addEventListener(
+    "click",
+    togglePause
+);
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+async function startGame(){
+
+    await requestMobilePermissions();
+
+    startScreen.classList.add("hidden");
+
+    gameOverScreen.classList.add("hidden");
+    winScreen.classList.add("hidden");
+
+    state.running=true;
+    state.paused=false;
+    state.gameOver=false;
+    state.won=false;
+
+    state.score=0;
+    state.health=100;
+    state.light=100;
+    state.coresCollected=0;
+    state.pulseCooldown=0;
+
+    createWorld();
+
+    showMessage(
+        "FIND THE 8 LIGHT CORES",
+        2200
+    );
+}
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+restartButton.addEventListener(
+    "click",
+    startGame
+);
+
+againButton.addEventListener(
+    "click",
+    startGame
+);
+
+nextButton.addEventListener(
+    "click",
+    startGame
+);
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function gameOver(){
+
+    if(state.gameOver) return;
+
+    state.gameOver=true;
+    state.running=false;
+
+    if(
+        state.score >
+        state.highScore
+    ){
+
+        state.highScore =
+            state.score;
+
+        localStorage.setItem(
+            "lumenHighScore",
+            state.highScore
+        );
+    }
+
+    finalScore.textContent =
+        state.score;
+
+    bestScore.textContent =
+        state.highScore;
+
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
+}
+
+/* =========================================================
+   WIN
+========================================================= */
+
+function winGame(){
+
+    if(state.won) return;
+
+    state.won=true;
+    state.running=false;
+
+    state.score +=
+        Math.round(
+            state.light*10
+        );
+
+    if(
+        state.score >
+        state.highScore
+    ){
+
+        state.highScore =
+            state.score;
+
+        localStorage.setItem(
+            "lumenHighScore",
+            state.highScore
+        );
+    }
+
+    winScore.textContent =
+        state.score;
+
+    winScreen.classList.remove(
+        "hidden"
+    );
+}
+
+/* =========================================================
+   MICROPHONE
+========================================================= */
+
+let audioContext=null;
+let analyser=null;
+let microphoneSource=null;
+let micData=null;
+
+const micControl={
+    enabled:false,
+    level:0
+};
+
+async function setupMicrophone(){
+
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
+
+        micStatus.textContent="Unavailable";
+        micStatus.className="sensorValue no";
+
+        return;
+    }
+
+    try{
 
         const stream =
-            await navigator
-                .mediaDevices
+            await navigator.mediaDevices
                 .getUserMedia({
                     audio:true,
                     video:false
                 });
-
 
         audioContext =
             new (
@@ -3367,1175 +2577,525 @@ async function startMicrophone() {
                 window.webkitAudioContext
             )();
 
-
         analyser =
-            audioContext
-                .createAnalyser();
+            audioContext.createAnalyser();
 
-        analyser.fftSize =
-            512;
+        analyser.fftSize=256;
 
+        microphoneSource =
+            audioContext.createMediaStreamSource(
+                stream
+            );
 
-        microphone =
-            audioContext
-                .createMediaStreamSource(
-                    stream
-                );
-
-
-        microphone.connect(
+        microphoneSource.connect(
             analyser
         );
 
-
-        audioData =
+        micData =
             new Uint8Array(
-                analyser.fftSize
+                analyser.frequencyBinCount
             );
 
+        micControl.enabled=true;
 
-        microphoneRunning = true;
+        state.micAvailable=true;
 
-        showToast(
-            "Microphone enabled."
-        );
+        micStatus.textContent="Ready";
+        micStatus.className="sensorValue ok";
 
-        return true;
+    }catch(err){
 
-    }
-    catch(error) {
+        state.micAvailable=false;
 
-        console.error(error);
-
-        showToast(
-            "Microphone permission was denied."
-        );
-
-        return false;
+        micStatus.textContent="Denied";
+        micStatus.className="sensorValue no";
     }
 }
 
+function updateMicrophone(){
 
-function stopMicrophone() {
+    if(!analyser) return;
 
-    if (microphone) {
-
-        try {
-            microphone.disconnect();
-        }
-        catch {}
-
-    }
-
-    if (audioContext) {
-
-        try {
-            audioContext.close();
-        }
-        catch {}
-
-    }
-
-    microphone = null;
-    analyser = null;
-    audioContext = null;
-
-    microphoneRunning = false;
-}
-
-
-function updateSound() {
-
-    if (
-        !microphoneRunning ||
-        !analyser
-    )
-        return;
-
-
-    analyser.getByteTimeDomainData(
-        audioData
+    analyser.getByteFrequencyData(
+        micData
     );
 
+    let sum=0;
 
-    let sum = 0;
-
-
-    for (
-        let i=0;
-        i<audioData.length;
-        i++
-    ) {
-
-        const value =
-            (
-                audioData[i] -
-                128
-            ) / 128;
-
-        sum +=
-            value * value;
+    for(const value of micData){
+        sum+=value;
     }
 
+    const average =
+        sum/micData.length;
 
-    const rms =
-        Math.sqrt(
-            sum /
-            audioData.length
-        );
-
+    micControl.level =
+        average/255;
 
     /*
-       Compress the microphone
-       range so ordinary speech
-       becomes visible.
-    */
+     * Blow/speak loudly to trigger pulse.
+     */
 
-    monsterLevel =
-        Math.min(
-            1,
-            rms * 5
-        );
+    if(
+        micControl.level>.68 &&
+        state.running &&
+        !state.paused
+    ){
 
-
-    document.getElementById(
-        "soundLevel"
-    ).textContent =
-        Math.round(
-            monsterLevel*100
-        ) + "%";
-
-
-    let state;
-
-    if (monsterLevel < .08)
-        state = "Sleeping 😴";
-    else if (monsterLevel < .25)
-        state = "Suspicious 😐";
-    else if (monsterLevel < .5)
-        state = "Awake 👀";
-    else if (monsterLevel < .75)
-        state = "Angry 😡";
-    else
-        state = "FURIOUS 👹";
-
-
-    document.getElementById(
-        "monsterState"
-    ).textContent =
-        state;
-
-
-    document.getElementById(
-        "soundFill"
-    ).style.width =
-        `${monsterLevel*100}%`;
-
-
-    drawMonster(
-        monsterLevel
-    );
-
-
-    if (
-        monsterLevel > .75 &&
-        Device.vibration
-    ) {
-
-        if (
-            Math.random() < .03
-        ) {
-
-            navigator.vibrate?.(
-                50
-            );
-
-        }
+        pulse();
     }
 }
-
-
-function soundLoop() {
-
-    if (
-        document
-            .getElementById(
-                "soundScreen"
-            )
-            .classList
-            .contains("active")
-    ) {
-
-        if (soundRunning)
-            updateSound();
-        else
-            drawMonster(0);
-
-    }
-
-    requestAnimationFrame(
-        soundLoop
-    );
-}
-
-
-document
-    .getElementById("soundPlay")
-    .onclick =
-    async () => {
-
-        if (!microphoneRunning) {
-
-            const ok =
-                await startMicrophone();
-
-            if (!ok)
-                return;
-        }
-
-
-        soundRunning =
-            !soundRunning;
-
-
-        document.getElementById(
-            "soundPlay"
-        ).textContent =
-            soundRunning
-            ? "❚❚ Pause"
-            : "▶ Play";
-    };
-
-
-document
-    .getElementById("soundStart")
-    .onclick =
-    async () => {
-
-        const ok =
-            await startMicrophone();
-
-        if (ok) {
-
-            soundRunning = true;
-
-            document.getElementById(
-                "soundOverlay"
-            ).classList.remove(
-                "show"
-            );
-
-            document.getElementById(
-                "soundPlay"
-            ).textContent =
-                "❚❚ Pause";
-        }
-    };
-
-
-document
-    .getElementById("soundReset")
-    .onclick =
-    () => {
-
-        monsterLevel = 0;
-
-        soundRunning = false;
-
-        document.getElementById(
-            "soundPlay"
-        ).textContent =
-            "▶ Play";
-
-        drawMonster(0);
-    };
-
 
 /* =========================================================
-   DON'T MOVE
+   CAMERA
 ========================================================= */
 
-let freezeRunning = false;
-let freezeStart = 0;
-let freezeBaseline = null;
-let freezeScore = 0;
-let freezeLastMotion = 0;
+let cameraStream=null;
 
+async function setupCamera(){
 
-function captureFreezeBaseline() {
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
 
-    freezeBaseline = {
-
-        alpha:
-            latestOrientation.alpha,
-
-        beta:
-            latestOrientation.beta,
-
-        gamma:
-            latestOrientation.gamma
-
-    };
-}
-
-
-function updateFreezeMovement() {
-
-    if (
-        !freezeRunning ||
-        !freezeBaseline
-    )
-        return;
-
-
-    const da =
-        angleDifference(
-            latestOrientation.alpha,
-            freezeBaseline.alpha
-        );
-
-    const db =
-        latestOrientation.beta -
-        freezeBaseline.beta;
-
-    const dg =
-        latestOrientation.gamma -
-        freezeBaseline.gamma;
-
-
-    const movement =
-        Math.sqrt(
-            da*da +
-            db*db +
-            dg*dg
-        );
-
-
-    const normalized =
-        Math.min(
-            100,
-            movement * 4
-        );
-
-
-    document.getElementById(
-        "movementValue"
-    ).textContent =
-        normalized.toFixed(1);
-
-
-    let state;
-
-    if (normalized < 5)
-        state = "Perfect";
-    else if (normalized < 15)
-        state = "Careful";
-    else if (normalized < 30)
-        state = "Moving!";
-    else
-        state = "CAUGHT!";
-
-
-    document.getElementById(
-        "freezeState"
-    ).textContent =
-        state;
-
-
-    if (
-        normalized > 30 &&
-        Date.now() -
-        freezeLastMotion >
-        1000
-    ) {
-
-        freezeLastMotion =
-            Date.now();
-
-        freezeRunning = false;
-
-        showFreezeResult();
-
-        if (
-            Device.vibration
-        ) {
-
-            navigator.vibrate?.(
-                [80,40,80]
-            );
-        }
-    }
-}
-
-
-function angleDifference(a,b) {
-
-    let d =
-        a-b;
-
-    while(d>180)
-        d-=360;
-
-    while(d<-180)
-        d+=360;
-
-    return d;
-}
-
-
-function showFreezeResult() {
-
-    const elapsed =
-        (
-            Date.now() -
-            freezeStart
-        ) / 1000;
-
-
-    document.getElementById(
-        "freezeState"
-    ).textContent =
-        "Caught!";
-
-
-    document.getElementById(
-        "freezeOverlay"
-    ).classList.add(
-        "show"
-    );
-
-
-    document.querySelector(
-        "#freezeOverlay h2"
-    ).textContent =
-        "💥 Caught!";
-
-
-    document.querySelector(
-        "#freezeOverlay p"
-    ).textContent =
-        `You survived ${elapsed.toFixed(1)} seconds.`;
-}
-
-
-document
-    .getElementById("freezeStart")
-    .onclick =
-    async () => {
-
-        const ok =
-            await enableMotion();
-
-        if (!ok)
-            return;
-
-
-        setTimeout(
-            () => {
-
-                captureFreezeBaseline();
-
-                freezeStart =
-                    Date.now();
-
-                freezeLastMotion =
-                    Date.now();
-
-                freezeRunning = true;
-
-                document.getElementById(
-                    "freezeOverlay"
-                ).classList.remove(
-                    "show"
-                );
-
-                document.getElementById(
-                    "freezeState"
-                ).textContent =
-                    "GO!";
-
-            },
-            600
-        );
-    };
-
-
-/* =========================================================
-   GRAVITY LAB
-========================================================= */
-
-const gravityCanvas =
-    document.getElementById(
-        "gravityCanvas"
-    );
-
-const gravityCtx =
-    gravityCanvas.getContext("2d");
-
-
-let particles = [];
-
-let gravityRunning = false;
-
-let gravityVector = {
-    x:0,
-    y:1
-};
-
-
-function initGravity() {
-
-    particles = [];
-
-    for (
-        let i=0;
-        i<70;
-        i++
-    ) {
-
-        particles.push({
-
-            x:
-                Math.random(),
-
-            y:
-                Math.random(),
-
-            vx:0,
-
-            vy:0,
-
-            r:
-                2 +
-                Math.random()*4
-
-        });
-    }
-}
-
-
-function updateGravityVector() {
-
-    const beta =
-        latestOrientation.beta;
-
-    const gamma =
-        latestOrientation.gamma;
-
-
-    gravityVector.x =
-        Math.max(
-            -1,
-            Math.min(
-                1,
-                gamma/45
-            )
-        );
-
-
-    gravityVector.y =
-        Math.max(
-            -1,
-            Math.min(
-                1,
-                beta/45
-            )
-        );
-
-
-    document.getElementById(
-        "gx"
-    ).textContent =
-        gravityVector.x.toFixed(2);
-
-    document.getElementById(
-        "gy"
-    ).textContent =
-        gravityVector.y.toFixed(2);
-}
-
-
-function drawGravity() {
-
-    const rect =
-        gravityCanvas.getBoundingClientRect();
-
-    const w =
-        rect.width;
-
-    const h =
-        rect.height;
-
-
-    gravityCtx.clearRect(
-        0,
-        0,
-        w,
-        h
-    );
-
-
-    const g =
-        gravityCtx.createRadialGradient(
-            w/2,
-            h/2,
-            0,
-            w/2,
-            h/2,
-            w
-        );
-
-    g.addColorStop(
-        0,
-        "#15243a"
-    );
-
-    g.addColorStop(
-        1,
-        "#05070c"
-    );
-
-    gravityCtx.fillStyle =
-        g;
-
-    gravityCtx.fillRect(
-        0,
-        0,
-        w,
-        h
-    );
-
-
-    particles.forEach(
-        p => {
-
-            gravityCtx.fillStyle =
-                "#65dfff";
-
-            gravityCtx.beginPath();
-
-            gravityCtx.arc(
-                p.x*w,
-                p.y*h,
-                p.r,
-                0,
-                Math.PI*2
-            );
-
-            gravityCtx.fill();
-
-        }
-    );
-}
-
-
-function updateGravity(dt) {
-
-    const gx =
-        gravityVector.x * 600;
-
-    const gy =
-        gravityVector.y * 600;
-
-
-    const rect =
-        gravityCanvas.getBoundingClientRect();
-
-    const w =
-        rect.width;
-
-    const h =
-        rect.height;
-
-
-    particles.forEach(
-        p => {
-
-            p.vx +=
-                gx * dt;
-
-            p.vy +=
-                gy * dt;
-
-
-            p.vx *= .995;
-            p.vy *= .995;
-
-
-            p.x +=
-                p.vx * dt / w;
-
-            p.y +=
-                p.vy * dt / h;
-
-
-            if (
-                p.x < 0
-            ) {
-
-                p.x = 0;
-
-                p.vx *= -.7;
-
-            }
-
-            if (
-                p.x > 1
-            ) {
-
-                p.x = 1;
-
-                p.vx *= -.7;
-
-            }
-
-            if (
-                p.y < 0
-            ) {
-
-                p.y = 0;
-
-                p.vy *= -.7;
-
-            }
-
-            if (
-                p.y > 1
-            ) {
-
-                p.y = 1;
-
-                p.vy *= -.7;
-
-            }
-
-        }
-    );
-}
-
-
-let gravityLast = 0;
-
-
-function gravityLoop(time) {
-
-    const dt =
-        Math.min(
-            .033,
-            (
-                time -
-                gravityLast
-            ) / 1000
-        );
-
-    gravityLast =
-        time;
-
-
-    if (
-        gravityRunning
-    ) {
-
-        updateGravity(
-            dt
-        );
-
-    }
-
-
-    if (
-        document
-            .getElementById(
-                "gravityScreen"
-            )
-            .classList
-            .contains("active")
-    ) {
-
-        drawGravity();
-
-    }
-
-
-    requestAnimationFrame(
-        gravityLoop
-    );
-}
-
-
-document
-    .getElementById("gravityPlay")
-    .onclick =
-    () => {
-
-        gravityRunning =
-            !gravityRunning;
-
-        document.getElementById(
-            "gravityPlay"
-        ).textContent =
-            gravityRunning
-            ? "❚❚ Pause"
-            : "▶ Play";
-    };
-
-
-document
-    .getElementById("gravityReset")
-    .onclick =
-    () => {
-
-        gravityRunning = false;
-
-        initGravity();
-
-        document.getElementById(
-            "gravityPlay"
-        ).textContent =
-            "▶ Play";
-    };
-
-
-document
-    .getElementById("gravityMotion")
-    .onclick =
-    () => {
-
-        permissionRequest(
-            "Motion Access",
-            "Gravity Lab uses your phone's orientation to change the simulated gravity vector.",
-            enableMotion
-        );
-    };
-
-
-function stopGravity() {
-
-    gravityRunning = false;
-
-}
-
-
-/* =========================================================
-   CAMERA LAB
-========================================================= */
-
-const cameraVideo =
-    document.getElementById(
-        "cameraVideo"
-    );
-
-let cameraStream = null;
-
-let cameraScore = 0;
-
-
-async function startCamera() {
-
-    if (!Device.media) {
-
-        showToast(
-            "Camera is unavailable."
-        );
+        cameraStatus.textContent="Unavailable";
+        cameraStatus.className="sensorValue no";
 
         return;
     }
 
-
-    try {
+    try{
 
         cameraStream =
-            await navigator
-                .mediaDevices
+            await navigator.mediaDevices
                 .getUserMedia({
-
                     video:{
-                        facingMode:{
-                            ideal:
-                                "environment"
-                        }
+                        facingMode:"environment"
                     },
-
                     audio:false
-
                 });
 
-
-        cameraVideo.srcObject =
+        camera.srcObject =
             cameraStream;
 
+        state.cameraAvailable=true;
 
-        cameraScore = 0;
+        cameraStatus.textContent="Ready";
+        cameraStatus.className="sensorValue ok";
 
-        document.getElementById(
-            "cameraScore"
-        ).textContent =
-            "0";
+    }catch(err){
 
+        state.cameraAvailable=false;
 
-        showToast(
-            "Camera enabled."
-        );
-
-    }
-    catch(error) {
-
-        console.error(error);
-
-        showToast(
-            "Camera permission was denied."
-        );
+        cameraStatus.textContent="Denied";
+        cameraStatus.className="sensorValue no";
     }
 }
 
+async function toggleCamera(){
 
-function stopCamera() {
+    if(!state.cameraAvailable){
 
-    if (cameraStream) {
+        await setupCamera();
 
-        cameraStream
-            .getTracks()
-            .forEach(
-                track =>
-                    track.stop()
+        if(!state.cameraAvailable){
+
+            showMessage(
+                "CAMERA NOT AVAILABLE",
+                1300
             );
 
-        cameraStream = null;
+            return;
+        }
     }
 
+    state.cameraMode =
+        !state.cameraMode;
 
-    cameraVideo.srcObject =
-        null;
+    if(state.cameraMode){
+
+        camera.style.display="block";
+
+        /*
+         * We deliberately keep the game canvas
+         * above the video. This gives an AR-style
+         * scanner effect.
+         */
+
+        camera.style.opacity=".55";
+
+        cameraButton.textContent="🌑";
+
+        showMessage(
+            "LUMEN CAMERA SCANNER",
+            1200
+        );
+
+    }else{
+
+        camera.style.opacity="0";
+
+        cameraButton.textContent="📷";
+    }
 }
 
+cameraButton.addEventListener(
+    "click",
+    toggleCamera
+);
 
-document
-    .getElementById("cameraStart")
-    .onclick =
-    () => {
+/* =========================================================
+   DEVICE MOTION / ORIENTATION
+========================================================= */
 
-        permissionRequest(
-            "Camera Access",
-            "Allow the rear camera so Camera Lab can place interactive targets over your environment.",
-            startCamera
-        );
-    };
+const orientationControl={
 
+    enabled:false,
 
-document
-    .getElementById("cameraStop")
-    .onclick =
-    stopCamera;
+    x:0,
+    y:0
+};
 
+function handleOrientation(e){
 
-/*
-   Move the virtual target using
-   the orientation sensor.
-*/
+    if(
+        typeof e.gamma !== "number" ||
+        typeof e.beta !== "number"
+    ){
+        return;
+    }
 
-function cameraMotionLoop() {
+    /*
+     * gamma = left/right
+     * beta = front/back
+     */
 
-    const target =
-        document.getElementById(
-            "cameraTarget"
-        );
-
-
-    if (
-        !document
-            .getElementById(
-                "cameraScreen"
+    orientationControl.x =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                e.gamma/30
             )
-            .classList
-            .contains("active")
-    ) {
-
-        requestAnimationFrame(
-            cameraMotionLoop
         );
+
+    orientationControl.y =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                e.beta/30
+            )
+        );
+
+    orientationControl.enabled=true;
+
+    state.motionAvailable=true;
+}
+
+async function setupMotion(){
+
+    /*
+     * iOS requires explicit permission.
+     */
+
+    if(
+        typeof DeviceOrientationEvent ===
+        "undefined"
+    ){
+
+        motionStatus.textContent="Unavailable";
+        motionStatus.className="sensorValue no";
 
         return;
     }
 
+    try{
 
-    const x =
-        50 +
-        latestOrientation.gamma *
-        .65;
+        if(
+            typeof DeviceOrientationEvent
+                .requestPermission ===
+            "function"
+        ){
 
-    const y =
-        50 +
-        (
-            latestOrientation.beta -
-            45
-        ) * .55;
+            const permission =
+                await DeviceOrientationEvent
+                    .requestPermission();
 
+            if(permission !== "granted"){
 
-    target.style.left =
-        `${Math.max(
-            5,
-            Math.min(
-                90,
-                x
-            )
-        )}%`;
+                motionStatus.textContent="Denied";
+                motionStatus.className=
+                    "sensorValue no";
 
+                return;
+            }
+        }
 
-    target.style.top =
-        `${Math.max(
-            5,
-            Math.min(
-                90,
-                y
-            )
-        )}%`;
+        window.addEventListener(
+            "deviceorientation",
+            handleOrientation,
+            true
+        );
 
+        motionStatus.textContent="Ready";
+        motionStatus.className="sensorValue ok";
 
-    requestAnimationFrame(
-        cameraMotionLoop
-    );
+    }catch(err){
+
+        motionStatus.textContent="Unavailable";
+        motionStatus.className=
+            "sensorValue no";
+    }
 }
 
-
 /* =========================================================
-   STOP HELPERS
+   PROXIMITY
 ========================================================= */
 
-function stopFreeze() {
+async function setupProximity(){
 
-    freezeRunning = false;
+    /*
+     * The generic web platform does NOT provide
+     * a universally supported proximity API.
+     *
+     * We detect experimental implementations
+     * without breaking the game.
+     */
 
+    if("ProximitySensor" in window){
+
+        try{
+
+            const sensor =
+                new window.ProximitySensor();
+
+            sensor.addEventListener(
+                "reading",
+                () => {
+
+                    state.proximityNear =
+                        sensor.distance < 10;
+                }
+            );
+
+            sensor.start();
+
+            state.proximityAvailable=true;
+
+            proximityStatus.textContent="Ready";
+            proximityStatus.className=
+                "sensorValue ok";
+
+            return;
+
+        }catch(err){}
+    }
+
+    proximityStatus.textContent=
+        "Not supported";
+
+    proximityStatus.className=
+        "sensorValue no";
 }
 
+/* =========================================================
+   MOBILE PERMISSIONS
+========================================================= */
 
-function stopAllExperiments() {
+async function requestMobilePermissions(){
 
-    snakeRunning = false;
+    /*
+     * These are intentionally requested after
+     * the user presses the start button.
+     * Browsers often reject permission requests
+     * made automatically during page load.
+     */
 
-    soundRunning = false;
+    await setupMotion();
 
-    gravityRunning = false;
+    /*
+     * Microphone can be resource intensive, so
+     * start it after user interaction.
+     */
 
-    freezeRunning = false;
+    await setupMicrophone();
 
-    stopCamera();
+    /*
+     * Camera is optional. We don't immediately
+     * display it.
+     */
 
-    stopMicrophone();
+    await setupCamera();
 
+    await setupProximity();
 }
 
-
 /* =========================================================
-   NAVIGATION BUTTONS
+   MICROPHONE UPDATE LOOP
 ========================================================= */
 
-document
-    .getElementById("snakeCard")
-    .onclick =
-    () => {
-
-        openScreen(
-            "snakeScreen"
-        );
-
-        resizeCanvas(
-            snakeCanvas
-        );
-
-        initSnake();
-
-    };
-
-
-document
-    .getElementById("soundCard")
-    .onclick =
-    () => {
-
-        openScreen(
-            "soundScreen"
-        );
-
-        resizeCanvas(
-            soundCanvas
-        );
-
-        drawMonster(0);
-
-    };
-
-
-document
-    .getElementById("freezeCard")
-    .onclick =
-    () => {
-
-        openScreen(
-            "freezeScreen"
-        );
-
-        document.getElementById(
-            "freezeOverlay"
-        ).classList.add(
-            "show"
-        );
-
-    };
-
-
-document
-    .getElementById("gravityCard")
-    .onclick =
-    () => {
-
-        openScreen(
-            "gravityScreen"
-        );
-
-        resizeCanvas(
-            gravityCanvas
-        );
-
-        initGravity();
-
-        drawGravity();
-
-    };
-
-
-document
-    .getElementById("cameraCard")
-    .onclick =
-    () => {
-
-        openScreen(
-            "cameraScreen"
-        );
-
-    };
-
+setInterval(
+    updateMicrophone,
+    80
+);
 
 /* =========================================================
-   BACK BUTTONS
+   PULSE BUTTON
 ========================================================= */
 
-[
-    "snakeBack",
-    "soundBack",
-    "freezeBack",
-    "gravityBack",
-    "cameraBack"
-].forEach(
-    id => {
+pulseButton.addEventListener(
+    "pointerdown",
+    e => {
 
-        document
-            .getElementById(id)
-            .onclick =
-            returnHome;
+        e.preventDefault();
 
+        pulse();
     }
 );
 
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+async function enterImmersive(){
+
+    try{
+
+        if(
+            document.documentElement.requestFullscreen
+        ){
+
+            await document.documentElement
+                .requestFullscreen();
+
+            showMessage(
+                "IMMERSIVE MODE",
+                1000
+            );
+
+            return;
+        }
+
+    }catch(err){}
+
+    /*
+     * iPhone Safari does not provide normal
+     * fullscreen for arbitrary web pages.
+     *
+     * If installed to the Home Screen,
+     * Apple allows the page to run as a
+     * standalone web app.
+     */
+
+    showMessage(
+        "For iPhone fullscreen, use Add to Home Screen",
+        2200
+    );
+}
+
+fullscreenButton.addEventListener(
+    "click",
+    enterImmersive
+);
+
+/* =========================================================
+   PREVENT UNWANTED PAGE GESTURES
+========================================================= */
+
+document.addEventListener(
+    "gesturestart",
+    e => e.preventDefault()
+);
+
+document.addEventListener(
+    "gesturechange",
+    e => e.preventDefault()
+);
+
+document.addEventListener(
+    "gestureend",
+    e => e.preventDefault()
+);
+
+/* =========================================================
+   INITIAL SENSOR DETECTION
+========================================================= */
+
+function detectFeatures(){
+
+    if(
+        typeof DeviceOrientationEvent !==
+        "undefined"
+    ){
+
+        motionStatus.textContent=
+            "Available";
+
+        motionStatus.className=
+            "sensorValue ok";
+
+    }else{
+
+        motionStatus.textContent=
+            "Not available";
+
+        motionStatus.className=
+            "sensorValue no";
+    }
+
+    if(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+    ){
+
+        micStatus.textContent=
+            "Available";
+
+        micStatus.className=
+            "sensorValue ok";
+
+        cameraStatus.textContent=
+            "Available";
+
+        cameraStatus.className=
+            "sensorValue ok";
+
+    }else{
+
+        micStatus.textContent=
+            "Not available";
+
+        micStatus.className=
+            "sensorValue no";
+
+        cameraStatus.textContent=
+            "Not available";
+
+        cameraStatus.className=
+            "sensorValue no";
+    }
+
+    if("ProximitySensor" in window){
+
+        proximityStatus.textContent=
+            "Available";
+
+        proximityStatus.className=
+            "sensorValue ok";
+
+    }else{
+
+        proximityStatus.textContent=
+            "Browser dependent";
+
+        proximityStatus.className=
+            "sensorValue wait";
+    }
+}
+
+detectFeatures();
 
 /* =========================================================
    PAGE VISIBILITY
@@ -4545,96 +3105,68 @@ document.addEventListener(
     "visibilitychange",
     () => {
 
-        if (
-            document.hidden
-        ) {
+        /*
+         * Automatically pause if user leaves
+         * the browser tab.
+         */
 
-            stopAllExperiments();
+        if(
+            document.hidden &&
+            state.running &&
+            !state.paused
+        ){
 
+            togglePause();
         }
-
     }
 );
 
-
 /* =========================================================
-   RESIZE
+   PREVENT MOBILE SLEEP-LIKE SCROLLING
 ========================================================= */
 
 window.addEventListener(
-    "resize",
-    () => {
+    "touchmove",
+    e => {
 
-        screens.forEach(
-            id => {
+        if(e.target.closest("#game")){
+            e.preventDefault();
+        }
 
-                const screen =
-                    document.getElementById(
-                        id
-                    );
-
-                if (
-                    screen.classList
-                        .contains("active")
-                ) {
-
-                    const canvas =
-                        screen.querySelector(
-                            "canvas"
-                        );
-
-                    if (canvas)
-                        resizeCanvas(
-                            canvas
-                        );
-
-                }
-
-            }
-        );
-
-    }
+    },
+    {passive:false}
 );
-
 
 /* =========================================================
-   INIT
+   INITIAL RENDER
 ========================================================= */
 
-resizeCanvas(
-    snakeCanvas
-);
+createWorld();
+updateHUD();
 
-resizeCanvas(
-    soundCanvas
-);
+/* =========================================================
+   DEBUG / PC INFORMATION
+========================================================= */
 
-resizeCanvas(
-    gravityCanvas
-);
+console.log(
+`
+LUMEN initialized.
 
-initSnake();
+PC:
+WASD / Arrow keys = movement
+SPACE = Light Pulse
+ESC = Pause
 
-initGravity();
+Mobile:
+Joystick = movement
+✦ = Light Pulse
+Tilt = movement when available
+Microphone = shout/blow for Light Pulse
+Camera = Scanner Mode
 
-drawMonster(0);
-
-drawGravity();
-
-requestAnimationFrame(
-    snakeLoop
-);
-
-requestAnimationFrame(
-    soundLoop
-);
-
-requestAnimationFrame(
-    gravityLoop
-);
-
-requestAnimationFrame(
-    cameraMotionLoop
+The game gracefully falls back when
+a hardware feature is unavailable.
+`
 );
 
 </script>
