@@ -3,918 +3,999 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no,
+               viewport-fit=cover">
 
-<meta name="theme-color" content="#02050a">
+<meta name="theme-color" content="#05050a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 
-<title>LUMEN — The Last Light</title>
+<title>LUMEN — Escape the Shadow Lab</title>
 
 <style>
+:root{
+    --bg:#05050a;
+    --panel:rgba(10,12,24,.86);
+    --line:rgba(120,150,255,.22);
+    --cyan:#63f7ff;
+    --blue:#4b7dff;
+    --purple:#a76cff;
+    --danger:#ff466e;
+    --gold:#ffe66d;
+    --text:#eef3ff;
+}
+
 *{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
 }
 
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#000;
-  color:#dff7ff;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#000;
+    color:var(--text);
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
-button{
-  border:1px solid #31546d;
-  background:#091624;
-  color:#e4faff;
-  border-radius:12px;
-  padding:10px 14px;
-  cursor:pointer;
-  font-size:14px;
+body{
+    touch-action:none;
+    overscroll-behavior:none;
 }
 
-button:active{
-  transform:scale(.96);
-}
+/* =========================================================
+   GAME ROOT
+========================================================= */
 
-button.primary{
-  background:#08677a;
-  border-color:#59e7ff;
-}
-
-button.danger{
-  border-color:#a53d50;
-}
-
-#app{
-  position:fixed;
-  inset:0;
-  overflow:hidden;
-  background:#010409;
+#game{
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100dvh;
+    overflow:hidden;
+    background:#020208;
 }
 
 canvas{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  touch-action:none;
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
 }
 
+/* Camera sits behind the game */
+
 #camera{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;
-  opacity:.25;
-  filter:brightness(.65) contrast(1.15);
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    opacity:0;
+    display:none;
+    z-index:0;
+    filter:saturate(.65) brightness(.42) contrast(1.15);
+}
+
+#gameCanvas{
+    z-index:1;
 }
 
 #vignette{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:
-    radial-gradient(
-      circle,
-      transparent 30%,
-      rgba(0,0,0,.25) 65%,
-      rgba(0,0,0,.95) 100%
-    );
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 35%,
+            rgba(0,0,0,.25) 65%,
+            rgba(0,0,0,.82) 100%
+        );
 }
 
-#crosshair{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:34px;
-  height:34px;
-  transform:translate(-50%,-50%);
-  border:1px solid #62e9ff;
-  border-radius:50%;
-  box-shadow:0 0 20px #4de8ff55;
-  pointer-events:none;
-}
+/* =========================================================
+   TOP HUD
+========================================================= */
 
 #hud{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
+    position:absolute;
+    z-index:10;
+    top:0;
+    left:0;
+    right:0;
+
+    padding:
+        max(12px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        8px
+        max(12px, env(safe-area-inset-left));
+
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+
+    pointer-events:none;
 }
 
-.top{
-  position:absolute;
-  top:max(12px,env(safe-area-inset-top));
-  left:12px;
-  right:12px;
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
+.hudGroup{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
 }
 
-.badge,
-.readout{
-  background:rgba(3,10,17,.76);
-  border:1px solid #1e4059;
-  border-radius:12px;
-  padding:8px 11px;
-  backdrop-filter:blur(8px);
-  font-size:12px;
+.stat{
+    min-width:76px;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:rgba(4,6,15,.72);
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 20px rgba(60,90,255,.08);
 }
 
-.readout{
-  min-width:155px;
+.stat small{
+    display:block;
+    color:#8993b8;
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:1px;
 }
 
-#mode{
-  color:#63e6ff;
+.stat strong{
+    display:block;
+    margin-top:2px;
+    font-size:15px;
 }
 
-.small{
-  color:#7f9db5;
-  font-size:11px;
+/* =========================================================
+   SCREENS
+========================================================= */
+
+.screen{
+    position:absolute;
+    inset:0;
+    z-index:30;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:
+        calc(25px + env(safe-area-inset-top))
+        20px
+        calc(25px + env(safe-area-inset-bottom));
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            rgba(66,92,255,.13),
+            transparent 45%
+        ),
+        rgba(1,2,8,.88);
+
+    backdrop-filter:blur(14px);
 }
 
-.bar{
-  width:100%;
-  height:6px;
-  background:#12202c;
-  border-radius:8px;
-  overflow:hidden;
-  margin-top:5px;
+.panel{
+    width:min(620px, 94vw);
+    max-height:90dvh;
+    overflow:auto;
+
+    padding:28px;
+    border-radius:24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,21,44,.95),
+            rgba(5,7,16,.96)
+        );
+
+    border:1px solid rgba(115,150,255,.28);
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.65),
+        inset 0 1px rgba(255,255,255,.06);
 }
 
-#energyFill{
-  width:100%;
-  height:100%;
-  background:#63e6ff;
+.logo{
+    text-align:center;
+    font-size:clamp(42px,11vw,82px);
+    font-weight:900;
+    letter-spacing:.16em;
+    margin-left:.16em;
+
+    color:#fff;
+
+    text-shadow:
+        0 0 15px var(--cyan),
+        0 0 50px rgba(90,150,255,.8);
 }
 
-#objective{
-  position:absolute;
-  top:86px;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(92vw,700px);
-  text-align:center;
-  background:rgba(3,10,17,.68);
-  border:1px solid #1b394e;
-  border-radius:10px;
-  padding:8px 12px;
-  color:#bad7e8;
-  font-size:13px;
-}
-
-#controls{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:max(12px,env(safe-area-inset-bottom));
-  display:flex;
-  justify-content:space-between;
-  align-items:end;
-  gap:10px;
-}
-
-.cluster{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  pointer-events:auto;
-}
-
-.cluster button{
-  min-width:55px;
-}
-
-#toast{
-  position:absolute;
-  left:50%;
-  bottom:110px;
-  transform:translateX(-50%);
-  max-width:90vw;
-  padding:10px 15px;
-  background:#071721ee;
-  border:1px solid #2d607b;
-  border-radius:12px;
-  text-align:center;
-  opacity:0;
-  transition:.25s;
-  z-index:30;
-  pointer-events:none;
-}
-
-#toast.show{
-  opacity:1;
-}
-
-/* Menus */
-
-.overlay{
-  position:absolute;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(0,0,0,.78);
-  backdrop-filter:blur(9px);
-  z-index:50;
-}
-
-.card{
-  width:min(720px,96vw);
-  max-height:92vh;
-  overflow:auto;
-  background:
-    linear-gradient(
-      180deg,
-      #07131f,
-      #03080e
-    );
-  border:1px solid #264b64;
-  border-radius:22px;
-  padding:24px;
-  box-shadow:0 25px 100px #000;
-}
-
-.kicker{
-  color:#63e6ff;
-  letter-spacing:.2em;
-  text-transform:uppercase;
-  font-size:12px;
-}
-
-h1{
-  margin:4px 0;
-  font-size:clamp(38px,8vw,68px);
-  letter-spacing:.08em;
-}
-
-h2{
-  margin:6px 0 12px;
-}
-
-p{
-  color:#a9c2d4;
-  line-height:1.55;
+.subtitle{
+    text-align:center;
+    color:#9ea8ca;
+    letter-spacing:.2em;
+    font-size:12px;
+    text-transform:uppercase;
+    margin-bottom:25px;
 }
 
 .story{
-  font-size:18px;
-  color:#d9edf7;
+    color:#cbd2ea;
+    line-height:1.65;
+    font-size:14px;
+    text-align:center;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:
-    repeat(auto-fit,minmax(170px,1fr));
-  gap:10px;
-  margin:15px 0;
+button{
+    appearance:none;
+    border:0;
+    color:white;
+    font:inherit;
+    cursor:pointer;
 }
 
-.tile{
-  background:#06101a;
-  border:1px solid #1c3b51;
-  border-radius:14px;
-  padding:12px;
+.primary{
+    width:100%;
+    margin-top:22px;
+    padding:16px 20px;
+    border-radius:15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #436cff,
+            #8a55ff
+        );
+
+    box-shadow:
+        0 10px 35px rgba(79,91,255,.3);
+
+    font-weight:800;
+    letter-spacing:.08em;
 }
 
-.tile b{
-  display:block;
-  margin-bottom:5px;
-  color:#dffaff;
+.secondary{
+    padding:11px 15px;
+    border-radius:12px;
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.1);
 }
 
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:16px;
+.primary:active,
+.secondary:active{
+    transform:scale(.97);
 }
 
-kbd{
-  border:1px solid #49667c;
-  border-radius:5px;
-  padding:2px 5px;
-  background:#08131e;
+/* =========================================================
+   SENSOR PANEL
+========================================================= */
+
+#sensorPanel{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
 }
 
-#saveInfo{
-  color:#7896ad;
-  font-size:12px;
-  margin-top:10px;
+.sensor{
+    padding:10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.06);
 }
 
-/* Title */
-
-#titleScreen{
-  display:flex;
+.sensorName{
+    font-size:10px;
+    color:#818bab;
+    text-transform:uppercase;
+    letter-spacing:1px;
 }
 
-/* Observer indicator */
-
-#observerHelp{
-  position:absolute;
-  left:14px;
-  bottom:80px;
-  color:#8eafc3;
-  font-size:12px;
-  pointer-events:none;
+.sensorValue{
+    margin-top:4px;
+    font-size:12px;
+    font-weight:700;
 }
 
-/* Mobile */
+.ok{
+    color:#65ffa6;
+}
+
+.no{
+    color:#ff647d;
+}
+
+.wait{
+    color:#ffe66d;
+}
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+#controls{
+    position:absolute;
+    z-index:15;
+    left:0;
+    right:0;
+    bottom:0;
+
+    padding:
+        10px
+        max(14px, env(safe-area-inset-right))
+        max(14px, env(safe-area-inset-bottom))
+        max(14px, env(safe-area-inset-left));
+
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+
+    pointer-events:none;
+}
+
+#joystick{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(80,120,255,.13),
+            rgba(10,15,35,.5)
+        );
+
+    border:1px solid rgba(120,150,255,.22);
+
+    position:relative;
+    pointer-events:auto;
+
+    touch-action:none;
+}
+
+#stick{
+    position:absolute;
+    width:58px;
+    height:58px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #c7ffff,
+            #4fceff 35%,
+            #5768ff 75%
+        );
+
+    box-shadow:
+        0 0 25px rgba(80,200,255,.55);
+}
+
+.actionButtons{
+    display:flex;
+    gap:10px;
+    pointer-events:auto;
+}
+
+.action{
+    width:68px;
+    height:68px;
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(110,130,255,.24),
+            rgba(20,25,55,.9)
+        );
+
+    border:1px solid rgba(120,150,255,.28);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:24px;
+    user-select:none;
+}
+
+.action:active{
+    transform:scale(.9);
+}
+
+#pulseButton{
+    border-color:rgba(99,247,255,.55);
+    box-shadow:0 0 25px rgba(99,247,255,.18);
+}
+
+/* =========================================================
+   GAME INFO
+========================================================= */
+
+#message{
+    position:absolute;
+    z-index:20;
+    left:50%;
+    top:20%;
+    transform:translateX(-50%);
+
+    padding:10px 18px;
+    border-radius:20px;
+
+    background:rgba(3,5,15,.75);
+    border:1px solid rgba(120,150,255,.2);
+
+    color:#dfe8ff;
+
+    font-size:13px;
+    text-align:center;
+
+    opacity:0;
+    pointer-events:none;
+
+    transition:opacity .25s;
+}
+
+#message.show{
+    opacity:1;
+}
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+#pauseScreen{
+    display:none;
+}
+
+.pauseTitle{
+    font-size:38px;
+    font-weight:900;
+    text-align:center;
+}
+
+/* =========================================================
+   SENSOR HINT
+========================================================= */
+
+#sensorHint{
+    margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    background:rgba(255,230,100,.06);
+    border:1px solid rgba(255,230,100,.12);
+    color:#bfc5dc;
+    font-size:11px;
+    line-height:1.5;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media(max-width:600px){
 
-  .readout{
-    min-width:125px;
-  }
+    .panel{
+        padding:22px;
+        border-radius:20px;
+    }
 
-  .top{
-    font-size:11px;
-  }
+    #joystick{
+        width:125px;
+        height:125px;
+    }
 
-  #objective{
-    top:78px;
-    font-size:12px;
-  }
+    .action{
+        width:62px;
+        height:62px;
+    }
 
-  button{
-    padding:9px 10px;
-  }
+    .stat{
+        min-width:65px;
+        padding:6px 8px;
+    }
+
+    .stat strong{
+        font-size:13px;
+    }
+}
+
+/* Hide controls for mouse/keyboard desktop */
+
+@media(pointer:fine){
+    #joystick{
+        opacity:.45;
+    }
+}
+
+/* =========================================================
+   LANDSCAPE
+========================================================= */
+
+@media(max-height:500px){
+
+    #joystick{
+        width:100px;
+        height:100px;
+    }
+
+    #stick{
+        width:46px;
+        height:46px;
+    }
+
+    .action{
+        width:52px;
+        height:52px;
+        font-size:20px;
+    }
+
+    .panel{
+        padding:18px;
+    }
+}
+
+.hidden{
+    display:none !important;
 }
 </style>
 </head>
 
 <body>
 
-<div id="app">
+<div id="game">
 
-<video id="camera"
-       autoplay
-       muted
-       playsinline></video>
+    <video id="camera"
+           autoplay
+           playsinline
+           muted></video>
 
-<canvas id="game"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
-<div id="vignette"></div>
+    <div id="vignette"></div>
 
-<div id="crosshair"></div>
+    <!-- HUD -->
 
-<div id="hud">
+    <div id="hud">
 
-  <div class="top">
+        <div class="hudGroup">
 
-    <div class="badge">
-      <b>LUMEN</b>
-      <span id="mode">LAB</span>
-      <br>
-      <span class="small" id="sensorStatus">
-        Sensors: keyboard mode
-      </span>
-    </div>
+            <div class="stat">
+                <small>Level</small>
+                <strong id="levelText">1</strong>
+            </div>
 
-    <div class="readout">
+            <div class="stat">
+                <small>Light</small>
+                <strong id="lightText">100%</strong>
+            </div>
 
-      ENERGY
-      <span id="energyText">100%</span>
+            <div class="stat">
+                <small>Health</small>
+                <strong id="healthText">100</strong>
+            </div>
 
-      <div class="bar">
-        <div id="energyFill"></div>
-      </div>
+        </div>
 
-      <span class="small">
-        THREAT:
-        <span id="threatText">LOW</span>
-      </span>
+        <div class="hudGroup">
 
-    </div>
+            <div class="stat">
+                <small>Cores</small>
+                <strong id="coreText">0 / 8</strong>
+            </div>
 
-  </div>
+            <div class="stat">
+                <small>Score</small>
+                <strong id="scoreText">0</strong>
+            </div>
 
-  <div id="objective">
-    Calibrate your device and find the first Light Node.
-  </div>
-
-  <div id="controls">
-
-    <div class="cluster">
-
-      <button id="left">◀</button>
-      <button id="forward">▲</button>
-      <button id="right">▶</button>
-      <button id="back">▼</button>
+        </div>
 
     </div>
 
-    <div class="cluster">
+    <div id="message"></div>
 
-      <button id="pulse" class="primary">
-        PULSE
-      </button>
+    <!-- GAME CONTROLS -->
 
-      <button id="scan">
-        SCAN
-      </button>
+    <div id="controls">
 
-      <button id="observer">
-        OBSERVER
-      </button>
+        <div id="joystick">
+            <div id="stick"></div>
+        </div>
 
-      <button id="pause">
-        Ⅱ
-      </button>
+        <div class="actionButtons">
+
+            <button
+                class="action"
+                id="cameraButton"
+                title="Camera">
+                📷
+            </button>
+
+            <button
+                class="action"
+                id="pulseButton"
+                title="Light pulse">
+                ✦
+            </button>
+
+            <button
+                class="action"
+                id="pauseButton"
+                title="Pause">
+                ⏸
+            </button>
+
+        </div>
 
     </div>
 
-  </div>
+    <!-- START SCREEN -->
+
+    <section class="screen" id="startScreen">
+
+        <div class="panel">
+
+            <div class="logo">LUMEN</div>
+
+            <div class="subtitle">
+                Escape the Shadow Lab
+            </div>
+
+            <p class="story">
+                The laboratory has lost its artificial sun.
+                <br><br>
+                Eight <b>Light Cores</b> are scattered through
+                the abandoned facility.
+                <br><br>
+                Unfortunately, the darkness is alive.
+            </p>
+
+            <p class="story">
+                Move through the laboratory, collect the cores,
+                and use your light to destroy the creatures
+                hiding in the shadows.
+            </p>
+
+            <div id="sensorPanel">
+
+                <div class="sensor">
+                    <div class="sensorName">Motion</div>
+                    <div class="sensorValue wait"
+                         id="motionStatus">
+                        Checking...
+                    </div>
+                </div>
+
+                <div class="sensor">
+                    <div class="sensorName">Microphone</div>
+                    <div class="sensorValue wait"
+                         id="micStatus">
+                        Checking...
+                    </div>
+                </div>
+
+                <div class="sensor">
+                    <div class="sensorName">Camera</div>
+                    <div class="sensorValue wait"
+                         id="cameraStatus">
+                        Checking...
+                    </div>
+                </div>
+
+                <div class="sensor">
+                    <div class="sensorName">Proximity</div>
+                    <div class="sensorValue wait"
+                         id="proximityStatus">
+                        Checking...
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="sensorHint">
+                The game works without these sensors too.
+                On mobile, motion and microphone can provide
+                extra abilities. Camera mode creates an
+                augmented-reality style experience where supported.
+            </div>
+
+            <button class="primary" id="startButton">
+                ENTER THE LAB
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- PAUSE -->
+
+    <section class="screen" id="pauseScreen">
+
+        <div class="panel">
+
+            <div class="pauseTitle">PAUSED</div>
+
+            <p class="story">
+                The laboratory is frozen.
+                The shadows cannot move while the simulation
+                is paused.
+            </p>
+
+            <button class="primary" id="resumeButton">
+                RESUME
+            </button>
+
+            <button class="secondary"
+                    id="restartButton"
+                    style="width:100%;margin-top:10px">
+                RESTART
+            </button>
+
+            <button class="secondary"
+                    id="fullscreenButton"
+                    style="width:100%;margin-top:10px">
+                IMMERSIVE MODE
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- GAME OVER -->
+
+    <section class="screen hidden" id="gameOverScreen">
+
+        <div class="panel">
+
+            <div class="logo"
+                 style="font-size:44px">
+                SIGNAL LOST
+            </div>
+
+            <p class="story">
+                The darkness consumed the laboratory.
+            </p>
+
+            <div class="story">
+                Score:
+                <b id="finalScore">0</b>
+            </div>
+
+            <div class="story">
+                Best:
+                <b id="bestScore">0</b>
+            </div>
+
+            <button class="primary" id="againButton">
+                TRY AGAIN
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- WIN -->
+
+    <section class="screen hidden" id="winScreen">
+
+        <div class="panel">
+
+            <div class="logo"
+                 style="font-size:44px">
+                LIGHT RESTORED
+            </div>
+
+            <p class="story">
+                You recovered every Light Core.
+                <br><br>
+                The artificial sun is coming back online.
+            </p>
+
+            <div class="story">
+                Score:
+                <b id="winScore">0</b>
+            </div>
+
+            <button class="primary" id="nextButton">
+                NEXT RUN
+            </button>
+
+        </div>
+
+    </section>
 
 </div>
-
-<div id="observerHelp"></div>
-
-<div id="toast"></div>
-
-
-<!-- TITLE -->
-
-<div id="titleScreen" class="overlay">
-
-<div class="card">
-
-<div class="kicker">
-interactive light-field survival
-</div>
-
-<h1>LUMEN</h1>
-
-<div class="story">
-THE LAST LIGHT
-</div>
-
-<p>
-You are carrying a prototype light-field scanner inside
-an abandoned laboratory.
-</p>
-
-<p>
-Something called <b>The Hollow</b> moves through darkness.
-Your phone is the scanner.
-</p>
-
-<div class="grid">
-
-<div class="tile">
-<b>🧭 Motion</b>
-Tilt and rotate your phone to control the scanner.
-PC uses keyboard controls.
-</div>
-
-<div class="tile">
-<b>🎤 Microphone</b>
-Make noise to create sound events.
-The Hollow can hear you.
-</div>
-
-<div class="tile">
-<b>📷 Camera</b>
-Optional reality scanner using your phone camera.
-</div>
-
-<div class="tile">
-<b>🔦 Light</b>
-Use reflections, refractions and shadows.
-</div>
-
-</div>
-
-<div class="actions">
-
-<button id="begin"
-        class="primary">
-BEGIN / TUTORIAL
-</button>
-
-<button id="fullscreen">
-FULLSCREEN
-</button>
-
-<button id="load">
-LOAD SAVE
-</button>
-
-</div>
-
-<div id="saveInfo"></div>
-
-</div>
-
-</div>
-
-
-<!-- TUTORIAL -->
-
-<div id="tutorial" class="overlay">
-
-<div class="card">
-
-<div class="kicker">
-field tutorial
-</div>
-
-<h2>
-FIRST CONTACT
-</h2>
-
-<p>
-Before entering the laboratory, learn how the
-LUMEN device works.
-</p>
-
-<div class="grid">
-
-<div class="tile">
-<b>🧭 Motion</b>
-
-Allow motion access on iPhone/iPad.
-Hold the phone normally.
-Tilt it gently to aim.
-
-On PC use <kbd>WASD</kbd>.
-</div>
-
-<div class="tile">
-<b>🎤 Microphone</b>
-
-Allow microphone access.
-Speak, clap or make noise.
-The Hollow reacts to sound.
-</div>
-
-<div class="tile">
-<b>📷 Camera</b>
-
-SCAN requests your rear camera.
-Camera mode is optional.
-</div>
-
-<div class="tile">
-<b>🔦 PULSE</b>
-
-Consumes 18 energy.
-It pushes The Hollow away.
-</div>
-
-<div class="tile">
-<b>🔬 OBSERVER</b>
-
-Switches to a laboratory overview.
-Inspect light rays and shadows.
-</div>
-
-<div class="tile">
-<b>⏸ PAUSE</b>
-
-Stops the simulation completely.
-SAVE stores your progress locally.
-</div>
-
-</div>
-
-<p class="small">
-This game does not require a server for sensors.
-Camera and microphone permissions are requested
-only when you activate those features.
-</p>
-
-<div class="actions">
-
-<button id="calibrate"
-        class="primary">
-CALIBRATE + ENTER LAB
-</button>
-
-<button id="skipTutorial">
-SKIP
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- PAUSE -->
-
-<div id="pauseScreen" class="overlay">
-
-<div class="card">
-
-<div class="kicker">
-system paused
-</div>
-
-<h2>
-LIGHT FIELD FROZEN
-</h2>
-
-<p>
-The simulation, monster, sound events and animation
-are completely stopped.
-</p>
-
-<div class="actions">
-
-<button id="resume"
-        class="primary">
-RESUME
-</button>
-
-<button id="saveGame">
-SAVE GAME
-</button>
-
-<button id="exitGame"
-        class="danger">
-EXIT TO TITLE
-</button>
-
-</div>
-
-</div>
-
-</div>
-
 
 <script>
-
 "use strict";
+
+/*
+=========================================================
+ LUMEN — ESCAPE THE SHADOW LAB
+ Single-file HTML game
+
+ Features:
+ - Canvas rendering
+ - Touch joystick
+ - Keyboard controls
+ - Device orientation
+ - Microphone amplitude
+ - Camera
+ - Proximity API detection
+ - Fullscreen where supported
+ - Local high score
+ - Mobile responsive UI
+=========================================================
+*/
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const camera = document.getElementById("camera");
+
+const startScreen = document.getElementById("startScreen");
+const pauseScreen = document.getElementById("pauseScreen");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const winScreen = document.getElementById("winScreen");
+
+const startButton = document.getElementById("startButton");
+const pauseButton = document.getElementById("pauseButton");
+const resumeButton = document.getElementById("resumeButton");
+const restartButton = document.getElementById("restartButton");
+const againButton = document.getElementById("againButton");
+const nextButton = document.getElementById("nextButton");
+const fullscreenButton = document.getElementById("fullscreenButton");
+const cameraButton = document.getElementById("cameraButton");
+const pulseButton = document.getElementById("pulseButton");
+
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
+
+const message = document.getElementById("message");
+
+const levelText = document.getElementById("levelText");
+const lightText = document.getElementById("lightText");
+const healthText = document.getElementById("healthText");
+const coreText = document.getElementById("coreText");
+const scoreText = document.getElementById("scoreText");
+
+const motionStatus = document.getElementById("motionStatus");
+const micStatus = document.getElementById("micStatus");
+const cameraStatus = document.getElementById("cameraStatus");
+const proximityStatus = document.getElementById("proximityStatus");
+
+const finalScore = document.getElementById("finalScore");
+const bestScore = document.getElementById("bestScore");
+const winScore = document.getElementById("winScore");
 
 /* =========================================================
    CANVAS
 ========================================================= */
 
-const canvas =
-document.getElementById("game");
-
-const ctx =
-canvas.getContext("2d");
-
-let W = innerWidth;
-let H = innerHeight;
-let DPR = Math.min(devicePixelRatio || 1,2);
+let W = 0;
+let H = 0;
+let DPR = 1;
 
 function resize(){
 
-  W = innerWidth;
-  H = innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-  DPR = Math.min(devicePixelRatio || 1,2);
+    W = window.innerWidth;
+    H = window.innerHeight;
 
-  canvas.width = W * DPR;
-  canvas.height = H * DPR;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
 
-  canvas.style.width = W+"px";
-  canvas.style.height = H+"px";
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
 
-  ctx.setTransform(
-    DPR,0,0,DPR,0,0
-  );
+    ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-addEventListener("resize",resize);
+window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", resize);
 
 resize();
-
-
-/* =========================================================
-   UI
-========================================================= */
-
-const UI = {
-
-  title:
-  document.getElementById("titleScreen"),
-
-  tutorial:
-  document.getElementById("tutorial"),
-
-  pause:
-  document.getElementById("pauseScreen"),
-
-  objective:
-  document.getElementById("objective"),
-
-  energy:
-  document.getElementById("energyText"),
-
-  energyFill:
-  document.getElementById("energyFill"),
-
-  threat:
-  document.getElementById("threatText"),
-
-  sensor:
-  document.getElementById("sensorStatus"),
-
-  mode:
-  document.getElementById("mode"),
-
-  toast:
-  document.getElementById("toast"),
-
-  camera:
-  document.getElementById("camera")
-
-};
-
 
 /* =========================================================
    GAME STATE
 ========================================================= */
 
-let gameRunning = false;
-let gamePaused = false;
+const state = {
 
-let gameTime = 0;
-let lastTime = 0;
+    running:false,
+    paused:false,
+    gameOver:false,
+    won:false,
 
-let energy = 100;
+    level:1,
 
-let chapter = 0;
+    score:0,
+    health:100,
+    light:100,
 
-let observerMode = false;
-let scanMode = false;
+    coresCollected:0,
+    coresNeeded:8,
 
-let motionAvailable = false;
-let microphoneAvailable = false;
-let cameraAvailable = false;
+    elapsed:0,
 
-let soundLevel = 0;
+    pulseCooldown:0,
 
-let deviceBeta = 0;
-let deviceGamma = 0;
+    cameraMode:false,
 
-let calibrationBeta = 0;
-let calibrationGamma = 0;
+    proximityNear:false,
 
-const world = {
-  width:1800,
-  height:1100
+    motionAvailable:false,
+
+    micAvailable:false,
+
+    cameraAvailable:false,
+
+    proximityAvailable:false,
+
+    shake:0,
+
+    highScore:Number(
+        localStorage.getItem("lumenHighScore") || 0
+    )
 };
+
+/* =========================================================
+   PLAYER
+========================================================= */
 
 const player = {
 
-  x:180,
-  y:500,
+    x:0,
+    y:0,
 
-  angle:0
+    radius:14,
 
+    speed:250,
+
+    vx:0,
+    vy:0,
+
+    angle:0,
+
+    invulnerable:0
 };
-
-const monster = {
-
-  x:1250,
-  y:420,
-
-  stun:0,
-
-  visibility:.05,
-
-  targetX:1250,
-  targetY:420
-
-};
-
 
 /* =========================================================
-   MATERIALS — REAL APPROXIMATE REFRACTIVE INDICES
+   WORLD
 ========================================================= */
 
-const materials = {
+let worldWidth = 2400;
+let worldHeight = 1500;
 
-  mirror:{
-    name:"MIRROR",
-    n:1,
-    reflection:1,
-    transmission:0
-  },
-
-  glass:{
-    name:"GLASS",
-    n:1.50,
-    reflection:.08,
-    transmission:.92
-  },
-
-  water:{
-    name:"WATER",
-    n:1.333,
-    reflection:.02,
-    transmission:.98
-  },
-
-  diamond:{
-    name:"DIAMOND",
-    n:2.417,
-    reflection:.17,
-    transmission:.83
-  },
-
-  paper:{
-    name:"PAPER",
-    n:1.50,
-    reflection:0,
-    transmission:0
-  }
-
-};
-
-
-/* =========================================================
-   WORLD OBJECTS
-========================================================= */
-
-const objects = [
-
-  {
-    x:680,
-    y:280,
-    w:180,
-    h:20,
-    angle:0,
-    material:"mirror"
-  },
-
-  {
-    x:1050,
-    y:500,
-    w:180,
-    h:24,
-    angle:-.45,
-    material:"glass"
-  },
-
-  {
-    x:900,
-    y:760,
-    w:190,
-    h:25,
-    angle:.2,
-    material:"water"
-  },
-
-  {
-    x:1390,
-    y:300,
-    w:150,
-    h:25,
-    angle:.55,
-    material:"diamond"
-  },
-
-  {
-    x:540,
-    y:760,
-    w:110,
-    h:120,
-    angle:0,
-    material:"paper"
-  }
-
-];
-
-
-const nodes = [
-
-  {
-    x:420,
-    y:280,
-    activated:false
-  },
-
-  {
-    x:1350,
-    y:780,
-    activated:false
-  },
-
-  {
-    x:1550,
-    y:520,
-    activated:false
-  }
-
-];
-
+let cameraX = 0;
+let cameraY = 0;
 
 /* =========================================================
    INPUT
@@ -922,1086 +1003,927 @@ const nodes = [
 
 const keys = {};
 
-const touch = {
-  left:false,
-  right:false,
-  forward:false,
-  back:false
+window.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    if(
+        e.key === " " ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+    ){
+        e.preventDefault();
+    }
+
+    if(e.key === "Escape"){
+        togglePause();
+    }
+
+    if(e.key === " "){
+        pulse();
+    }
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+let joystickPointer = null;
+
+const joystickInput = {
+    x:0,
+    y:0
 };
 
-addEventListener(
-"keydown",
-e=>{
+function updateJoystick(clientX, clientY){
 
-  keys[e.key.toLowerCase()] = true;
+    const rect = joystick.getBoundingClientRect();
 
-  if(e.code === "Space"){
-    e.preventDefault();
-    pulse();
-  }
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
-  if(e.key === "Escape"){
-    togglePause();
-  }
+    let dx = clientX - cx;
+    let dy = clientY - cy;
 
+    const max = rect.width * .34;
+
+    const distance = Math.hypot(dx,dy);
+
+    if(distance > max){
+
+        dx = dx / distance * max;
+        dy = dy / distance * max;
+    }
+
+    joystickInput.x = dx / max;
+    joystickInput.y = dy / max;
+
+    stick.style.transform =
+        `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+}
+
+function resetJoystick(){
+
+    joystickInput.x = 0;
+    joystickInput.y = 0;
+
+    stick.style.transform =
+        "translate(-50%,-50%)";
+}
+
+joystick.addEventListener("pointerdown", e => {
+
+    joystickPointer = e.pointerId;
+
+    joystick.setPointerCapture(e.pointerId);
+
+    updateJoystick(e.clientX,e.clientY);
 });
 
-addEventListener(
-"keyup",
-e=>{
-  keys[e.key.toLowerCase()] = false;
+joystick.addEventListener("pointermove", e => {
+
+    if(e.pointerId !== joystickPointer) return;
+
+    updateJoystick(e.clientX,e.clientY);
 });
 
+joystick.addEventListener("pointerup", e => {
 
-function holdButton(id,key){
+    if(e.pointerId !== joystickPointer) return;
 
-  const el =
-  document.getElementById(id);
+    joystickPointer = null;
 
-  el.addEventListener(
-  "pointerdown",
-  e=>{
-    e.preventDefault();
-    touch[key] = true;
-  });
+    resetJoystick();
+});
 
-  [
-    "pointerup",
-    "pointercancel",
-    "pointerleave"
-  ].forEach(event=>{
-
-    el.addEventListener(
-    event,
-    e=>{
-      e.preventDefault();
-      touch[key] = false;
-    });
-
-  });
-
-}
-
-holdButton("left","left");
-holdButton("right","right");
-holdButton("forward","forward");
-holdButton("back","back");
-
+joystick.addEventListener("pointercancel", resetJoystick);
 
 /* =========================================================
-   HELPERS
+   WORLD OBJECTS
 ========================================================= */
 
-function clamp(v,min,max){
-
-  return Math.max(
-    min,
-    Math.min(max,v)
-  );
-
-}
-
-function distance(a,b){
-
-  return Math.hypot(
-    a.x-b.x,
-    a.y-b.y
-  );
-
-}
-
-function normalize(x,y){
-
-  const l =
-  Math.hypot(x,y)||1;
-
-  return {
-    x:x/l,
-    y:y/l
-  };
-
-}
-
-function dot(a,b){
-
-  return a.x*b.x +
-         a.y*b.y;
-
-}
-
-function reflection(v,n){
-
-  const d = dot(v,n);
-
-  return {
-    x:v.x-2*d*n.x,
-    y:v.y-2*d*n.y
-  };
-
-}
-
-
-/* Snell's law */
-
-function refraction(
-  v,
-  n,
-  n1,
-  n2
-){
-
-  const ratio = n1/n2;
-
-  const cosI =
-  -dot(v,n);
-
-  const k =
-  1 -
-  ratio*ratio*
-  (1-cosI*cosI);
-
-  if(k < 0){
-
-    return null;
-
-  }
-
-  return {
-
-    x:
-    ratio*v.x +
-    (ratio*cosI-Math.sqrt(k))*n.x,
-
-    y:
-    ratio*v.y +
-    (ratio*cosI-Math.sqrt(k))*n.y
-
-  };
-
-}
-
+let cores = [];
+let enemies = [];
+let walls = [];
+let particles = [];
+let stars = [];
 
 /* =========================================================
-   TOAST
+   RANDOM
 ========================================================= */
 
-let toastTimer;
-
-function toast(message,time=2200){
-
-  UI.toast.textContent =
-  message;
-
-  UI.toast.classList.add("show");
-
-  clearTimeout(toastTimer);
-
-  toastTimer =
-  setTimeout(
-    ()=>{
-      UI.toast.classList.remove("show");
-    },
-    time
-  );
-
+function rand(min,max){
+    return Math.random() * (max-min) + min;
 }
 
+function dist(a,b){
+    return Math.hypot(a.x-b.x,a.y-b.y);
+}
 
 /* =========================================================
-   OBJECTIVE
+   MESSAGE
 ========================================================= */
 
-function objective(text){
+let messageTimer = 0;
 
-  UI.objective.textContent =
-  text;
+function showMessage(text,duration=2000){
 
+    message.textContent = text;
+    message.classList.add("show");
+
+    messageTimer = duration;
 }
-
 
 /* =========================================================
-   WORLD DRAWING
+   WORLD CREATION
 ========================================================= */
 
-function worldToScreen(x,y){
+function createWorld(){
 
-  if(observerMode){
+    cores = [];
+    enemies = [];
+    walls = [];
+    particles = [];
+    stars = [];
 
-    const zoom =
-    Math.min(
-      W/world.width,
-      H/world.height
-    )*.82;
+    player.x = worldWidth/2;
+    player.y = worldHeight/2;
 
-    return {
+    player.vx = 0;
+    player.vy = 0;
 
-      x:
-      (x-world.width/2)*
-      zoom+W/2,
+    /* Walls */
 
-      y:
-      (y-world.height/2)*
-      zoom+H/2
+    for(let i=0;i<18;i++){
 
-    };
+        const horizontal = Math.random() > .5;
 
-  }
+        const w = horizontal
+            ? rand(180,420)
+            : rand(25,50);
 
-  return {
+        const h = horizontal
+            ? rand(25,50)
+            : rand(180,360);
 
-    x:x-player.x+W/2,
-    y:y-player.y+H/2
+        const x = rand(100,worldWidth-w-100);
+        const y = rand(100,worldHeight-h-100);
 
-  };
+        walls.push({
+            x,
+            y,
+            w,
+            h
+        });
+    }
 
+    /* Cores */
+
+    for(let i=0;i<state.coresNeeded;i++){
+
+        let p;
+
+        do{
+
+            p = {
+                x:rand(100,worldWidth-100),
+                y:rand(100,worldHeight-100)
+            };
+
+        }while(
+            Math.hypot(
+                p.x-player.x,
+                p.y-player.y
+            ) < 300
+        );
+
+        cores.push({
+            ...p,
+            radius:10,
+            phase:Math.random()*Math.PI*2,
+            collected:false
+        });
+    }
+
+    /* Enemies */
+
+    const enemyCount = 4 + state.level * 2;
+
+    for(let i=0;i<enemyCount;i++){
+
+        let p;
+
+        do{
+
+            p = {
+                x:rand(80,worldWidth-80),
+                y:rand(80,worldHeight-80)
+            };
+
+        }while(
+            Math.hypot(
+                p.x-player.x,
+                p.y-player.y
+            ) < 500
+        );
+
+        enemies.push({
+
+            x:p.x,
+            y:p.y,
+
+            radius:22,
+
+            speed:35 + state.level*8,
+
+            hp:100,
+
+            angle:0,
+
+            dead:false,
+
+            pulse:0
+        });
+    }
+
+    /* Background stars */
+
+    for(let i=0;i<250;i++){
+
+        stars.push({
+
+            x:Math.random()*worldWidth,
+            y:Math.random()*worldHeight,
+
+            size:Math.random()*2+.5,
+
+            alpha:Math.random()*.6+.2
+        });
+    }
 }
-
-
-function draw(){
-
-  ctx.clearRect(
-    0,0,W,H
-  );
-
-  if(observerMode){
-
-    drawObserver();
-
-  }else{
-
-    drawLaboratory();
-
-  }
-
-}
-
 
 /* =========================================================
-   LABORATORY
+   COLLISION
 ========================================================= */
 
-function drawLaboratory(){
+function circleRectCollision(circle,rect){
 
-  ctx.save();
+    const closestX =
+        Math.max(
+            rect.x,
+            Math.min(circle.x,rect.x+rect.w)
+        );
 
-  ctx.translate(
-    W/2-player.x,
-    H/2-player.y
-  );
+    const closestY =
+        Math.max(
+            rect.y,
+            Math.min(circle.y,rect.y+rect.h)
+        );
 
-  ctx.fillStyle =
-  "#02070d";
+    const dx = circle.x-closestX;
+    const dy = circle.y-closestY;
 
-  ctx.fillRect(
-    0,0,
-    world.width,
-    world.height
-  );
-
-
-  /* floor grid */
-
-  ctx.strokeStyle =
-  "#0b2432";
-
-  ctx.lineWidth=1;
-
-  for(
-    let x=0;
-    x<world.width;
-    x+=80
-  ){
-
-    ctx.beginPath();
-
-    ctx.moveTo(x,0);
-    ctx.lineTo(x,world.height);
-
-    ctx.stroke();
-
-  }
-
-  for(
-    let y=0;
-    y<world.height;
-    y+=80
-  ){
-
-    ctx.beginPath();
-
-    ctx.moveTo(0,y);
-    ctx.lineTo(world.width,y);
-
-    ctx.stroke();
-
-  }
-
-
-  /* boundary */
-
-  ctx.strokeStyle =
-  "#1c465b";
-
-  ctx.lineWidth=5;
-
-  ctx.strokeRect(
-    20,20,
-    world.width-40,
-    world.height-40
-  );
-
-
-  drawObjects();
-
-  drawNodes();
-
-  drawMonster();
-
-  drawPlayer();
-
-  ctx.restore();
-
-
-  drawPlayerBeam();
-
+    return dx*dx + dy*dy <
+           circle.radius*circle.radius;
 }
 
-
 /* =========================================================
-   OBJECTS
+   MOVE PLAYER
 ========================================================= */
 
-function drawObjects(){
+function movePlayer(dt){
 
-  for(const o of objects){
+    let ix = joystickInput.x;
+    let iy = joystickInput.y;
+
+    if(keys["w"] || keys["arrowup"]) iy -= 1;
+    if(keys["s"] || keys["arrowdown"]) iy += 1;
+    if(keys["a"] || keys["arrowleft"]) ix -= 1;
+    if(keys["d"] || keys["arrowright"]) ix += 1;
+
+    /* Device tilt */
+
+    if(orientationControl.enabled){
+
+        ix += orientationControl.x;
+        iy += orientationControl.y;
+    }
+
+    const magnitude = Math.hypot(ix,iy);
+
+    if(magnitude > 1){
+
+        ix /= magnitude;
+        iy /= magnitude;
+    }
+
+    player.vx = ix * player.speed;
+    player.vy = iy * player.speed;
+
+    const oldX = player.x;
+    const oldY = player.y;
+
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+
+    player.x =
+        Math.max(
+            player.radius,
+            Math.min(
+                worldWidth-player.radius,
+                player.x
+            )
+        );
+
+    player.y =
+        Math.max(
+            player.radius,
+            Math.min(
+                worldHeight-player.radius,
+                player.y
+            )
+        );
+
+    for(const wall of walls){
+
+        if(circleRectCollision(player,wall)){
+
+            player.x = oldX;
+            player.y = oldY;
+
+            break;
+        }
+    }
+
+    if(magnitude>.1){
+
+        player.angle =
+            Math.atan2(iy,ix);
+    }
+}
+
+/* =========================================================
+   CORES
+========================================================= */
+
+function updateCores(){
+
+    for(const core of cores){
+
+        if(core.collected) continue;
+
+        core.phase += .04;
+
+        if(
+            Math.hypot(
+                player.x-core.x,
+                player.y-core.y
+            ) <
+            player.radius+core.radius+10
+        ){
+
+            core.collected = true;
+
+            state.coresCollected++;
+
+            state.score += 250;
+
+            state.light =
+                Math.min(100,state.light+15);
+
+            createExplosion(
+                core.x,
+                core.y,
+                25
+            );
+
+            showMessage(
+                `LIGHT CORE ${state.coresCollected}/${state.coresNeeded}`,
+                1200
+            );
+
+            if(
+                state.coresCollected >=
+                state.coresNeeded
+            ){
+                winGame();
+            }
+        }
+    }
+}
+
+/* =========================================================
+   ENEMIES
+========================================================= */
+
+function updateEnemies(dt){
+
+    for(const enemy of enemies){
+
+        if(enemy.dead) continue;
+
+        enemy.pulse += dt;
+
+        const dx = player.x-enemy.x;
+        const dy = player.y-enemy.y;
+
+        const d = Math.hypot(dx,dy);
+
+        /*
+         * Shadow creatures become weaker when
+         * illuminated.
+         */
+
+        const lightDistance = 220;
+
+        if(d < lightDistance){
+
+            enemy.hp -=
+                dt *
+                (state.light > 50 ? 10 : 4);
+
+            enemy.speed =
+                Math.max(
+                    15,
+                    enemy.speed*.995
+                );
+
+            if(enemy.hp <= 0){
+
+                enemy.dead = true;
+
+                state.score += 500;
+
+                createExplosion(
+                    enemy.x,
+                    enemy.y,
+                    40
+                );
+
+                showMessage(
+                    "SHADOW DESTROYED +500",
+                    900
+                );
+
+                continue;
+            }
+        }
+
+        if(d > 1){
+
+            enemy.angle =
+                Math.atan2(dy,dx);
+
+            let speed = enemy.speed;
+
+            /*
+             * If player has low light,
+             * shadows become aggressive.
+             */
+
+            if(state.light < 25){
+                speed *= 1.5;
+            }
+
+            enemy.x +=
+                Math.cos(enemy.angle) *
+                speed *
+                dt;
+
+            enemy.y +=
+                Math.sin(enemy.angle) *
+                speed *
+                dt;
+        }
+
+        /* Player collision */
+
+        if(
+            d <
+            player.radius+enemy.radius
+        ){
+
+            if(player.invulnerable <= 0){
+
+                state.health -= 20;
+
+                player.invulnerable = 1.2;
+
+                state.shake = 12;
+
+                showMessage(
+                    "THE SHADOW TOUCHED YOU!",
+                    1000
+                );
+
+                if(state.health <= 0){
+
+                    gameOver();
+                }
+            }
+        }
+    }
+}
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+function updateLight(dt){
+
+    /*
+     * Light naturally drains.
+     */
+
+    state.light -= dt * .9;
+
+    if(state.light < 0){
+        state.light = 0;
+    }
+
+    /*
+     * Darkness increases enemy pressure.
+     */
+
+    if(state.light < 20){
+
+        state.health -= dt*1.3;
+
+        if(state.health <= 0){
+            gameOver();
+        }
+    }
+
+    if(player.invulnerable > 0){
+        player.invulnerable -= dt;
+    }
+
+    if(state.pulseCooldown > 0){
+        state.pulseCooldown -= dt;
+    }
+}
+
+/* =========================================================
+   LIGHT PULSE
+========================================================= */
+
+function pulse(){
+
+    if(!state.running || state.paused) return;
+
+    if(state.pulseCooldown > 0) return;
+
+    if(state.light < 12){
+
+        showMessage(
+            "NOT ENOUGH LIGHT",
+            800
+        );
+
+        return;
+    }
+
+    state.light -= 12;
+
+    state.pulseCooldown = .7;
+
+    state.shake = 7;
+
+    createExplosion(
+        player.x,
+        player.y,
+        90
+    );
+
+    for(const enemy of enemies){
+
+        if(enemy.dead) continue;
+
+        const d =
+            Math.hypot(
+                player.x-enemy.x,
+                player.y-enemy.y
+            );
+
+        if(d < 300){
+
+            enemy.hp -=
+                Math.max(
+                    0,
+                    100 -
+                    d/3
+                );
+
+            enemy.x +=
+                Math.cos(
+                    Math.atan2(
+                        enemy.y-player.y,
+                        enemy.x-player.x
+                    )
+                ) * 40;
+
+            enemy.y +=
+                Math.sin(
+                    Math.atan2(
+                        enemy.y-player.y,
+                        enemy.x-player.x
+                    )
+                ) * 40;
+        }
+    }
+}
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function createExplosion(x,y,count){
+
+    for(let i=0;i<count;i++){
+
+        const angle =
+            Math.random()*Math.PI*2;
+
+        const speed =
+            rand(30,240);
+
+        particles.push({
+
+            x,
+            y,
+
+            vx:Math.cos(angle)*speed,
+            vy:Math.sin(angle)*speed,
+
+            life:rand(.3,1),
+
+            maxLife:1,
+
+            size:rand(1,4)
+        });
+    }
+}
+
+function updateParticles(dt){
+
+    for(let i=particles.length-1;i>=0;i--){
+
+        const p = particles[i];
+
+        p.life -= dt;
+
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+
+        p.vx *= .96;
+        p.vy *= .96;
+
+        if(p.life <= 0){
+            particles.splice(i,1);
+        }
+    }
+}
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+function updateCamera(){
+
+    const targetX =
+        player.x - W/2;
+
+    const targetY =
+        player.y - H/2;
+
+    cameraX +=
+        (targetX-cameraX)*.08;
+
+    cameraY +=
+        (targetY-cameraY)*.08;
+
+    cameraX =
+        Math.max(
+            0,
+            Math.min(
+                worldWidth-W,
+                cameraX
+            )
+        );
+
+    cameraY =
+        Math.max(
+            0,
+            Math.min(
+                worldHeight-H,
+                cameraY
+            )
+        );
+}
+
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
+
+function drawBackground(){
+
+    ctx.fillStyle="#020208";
+
+    ctx.fillRect(0,0,W,H);
 
     ctx.save();
 
-    ctx.translate(
-      o.x,
-      o.y
-    );
+    ctx.translate(-cameraX,-cameraY);
 
-    ctx.rotate(o.angle);
+    /* Stars */
 
-    const m =
-    materials[o.material];
+    for(const s of stars){
 
-    if(o.material==="mirror"){
+        ctx.globalAlpha=s.alpha;
 
-      ctx.fillStyle =
-      "#bceeff";
+        ctx.fillStyle="#9db7ff";
 
-    }else if(o.material==="diamond"){
-
-      ctx.fillStyle =
-      "#8edcff";
-
-    }else if(o.material==="water"){
-
-      ctx.fillStyle =
-      "#267d9f";
-
-    }else if(o.material==="glass"){
-
-      ctx.fillStyle =
-      "#55a5c6";
-
-    }else{
-
-      ctx.fillStyle =
-      "#96866e";
-
+        ctx.fillRect(
+            s.x,
+            s.y,
+            s.size,
+            s.size
+        );
     }
 
-    ctx.fillRect(
-      -o.w/2,
-      -o.h/2,
-      o.w,
-      o.h
-    );
+    ctx.globalAlpha=1;
 
-    ctx.strokeStyle =
-    "#6ccce8";
+    /* Grid */
 
-    ctx.strokeRect(
-      -o.w/2,
-      -o.h/2,
-      o.w,
-      o.h
-    );
+    ctx.strokeStyle=
+        "rgba(60,90,160,.08)";
 
-    ctx.fillStyle =
-    "#00131d";
+    ctx.lineWidth=1;
 
-    ctx.font =
-    "11px system-ui";
+    const grid=80;
 
-    ctx.textAlign =
-    "center";
+    const startX =
+        Math.floor(cameraX/grid)*grid;
 
-    ctx.fillText(
-      m.name+
-      "  n="+
-      m.n,
-      0,
-      o.h/2+16
-    );
+    const startY =
+        Math.floor(cameraY/grid)*grid;
 
-    ctx.restore();
-
-  }
-
-}
-
-
-/* =========================================================
-   LIGHT NODES
-========================================================= */
-
-function drawNodes(){
-
-  for(const n of nodes){
-
-    const pulse =
-    20+
-    Math.sin(gameTime*4)*3;
-
-    ctx.beginPath();
-
-    ctx.arc(
-      n.x,
-      n.y,
-      pulse,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fillStyle =
-    n.activated
-      ? "#74f0a7"
-      : "#63e6ff";
-
-    ctx.shadowBlur=30;
-
-    ctx.shadowColor =
-    ctx.fillStyle;
-
-    ctx.fill();
-
-    ctx.shadowBlur=0;
-
-    ctx.fillStyle =
-    "#00141c";
-
-    ctx.font =
-    "11px system-ui";
-
-    ctx.textAlign =
-    "center";
-
-    ctx.fillText(
-      n.activated
-        ? "ONLINE"
-        : "NODE",
-      n.x,
-      n.y+4
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   PLAYER
-========================================================= */
-
-function drawPlayer(){
-
-  ctx.save();
-
-  ctx.translate(
-    player.x,
-    player.y
-  );
-
-  ctx.rotate(
-    player.angle
-  );
-
-  ctx.fillStyle =
-  "#e4fbff";
-
-  ctx.beginPath();
-
-  ctx.moveTo(24,0);
-  ctx.lineTo(-14,-11);
-  ctx.lineTo(-10,11);
-
-  ctx.closePath();
-
-  ctx.fill();
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   MONSTER
-========================================================= */
-
-function drawMonster(){
-
-  const d =
-  distance(player,monster);
-
-  const visible =
-    monster.visibility >
-    .15 ||
-    soundLevel>.1 ||
-    d<300;
-
-  ctx.save();
-
-  ctx.globalAlpha =
-  visible
-    ? .8
-    : .12;
-
-  ctx.translate(
-    monster.x,
-    monster.y
-  );
-
-  ctx.fillStyle =
-  "#ff4565";
-
-  ctx.shadowBlur=35;
-
-  ctx.shadowColor =
-  "#ff4565";
-
-  ctx.beginPath();
-
-  ctx.arc(
-    0,
-    0,
-    30+
-    Math.sin(gameTime*5)*5,
-    0,
-    Math.PI*2
-  );
-
-  ctx.fill();
-
-  ctx.shadowBlur=0;
-
-  ctx.fillStyle="#fff";
-
-  ctx.beginPath();
-
-  ctx.arc(-9,-5,4,0,Math.PI*2);
-  ctx.arc(9,-5,4,0,Math.PI*2);
-
-  ctx.fill();
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   PLAYER LIGHT
-========================================================= */
-
-function drawPlayerBeam(){
-
-  ctx.save();
-
-  ctx.translate(
-    W/2,
-    H/2
-  );
-
-  const length=700;
-
-  const gradient =
-  ctx.createLinearGradient(
-    0,0,
-    length,0
-  );
-
-  gradient.addColorStop(
-    0,
-    "rgba(90,235,255,.32)"
-  );
-
-  gradient.addColorStop(
-    1,
-    "rgba(90,235,255,0)"
-  );
-
-  ctx.strokeStyle =
-  gradient;
-
-  ctx.lineWidth=8;
-
-  ctx.beginPath();
-
-  ctx.moveTo(0,0);
-
-  ctx.lineTo(length,0);
-
-  ctx.stroke();
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   RAY INTERSECTION
-========================================================= */
-
-function rayHit(
-  x,
-  y,
-  dx,
-  dy,
-  maxDistance=1200
-){
-
-  let closest=null;
-
-  let closestT=maxDistance;
-
-  for(const o of objects){
-
-    const c =
-    Math.cos(-o.angle);
-
-    const s =
-    Math.sin(-o.angle);
-
-    const lx =
-    (x-o.x)*c -
-    (y-o.y)*s;
-
-    const ly =
-    (x-o.x)*s +
-    (y-o.y)*c;
-
-    const ldx =
-    dx*c-dy*s;
-
-    const ldy =
-    dx*s+dy*c;
-
-    const tx1 =
-    (-o.w/2-lx)/
-    (ldx||1e-9);
-
-    const tx2 =
-    (o.w/2-lx)/
-    (ldx||1e-9);
-
-    const ty1 =
-    (-o.h/2-ly)/
-    (ldy||1e-9);
-
-    const ty2 =
-    (o.h/2-ly)/
-    (ldy||1e-9);
-
-    const tMin =
-    Math.max(
-      Math.min(tx1,tx2),
-      Math.min(ty1,ty2)
-    );
-
-    const tMax =
-    Math.min(
-      Math.max(tx1,tx2),
-      Math.max(ty1,ty2)
-    );
-
-    if(
-      tMax>=Math.max(0,tMin) &&
-      tMin>2 &&
-      tMin<closestT
+    for(
+        let x=startX;
+        x<cameraX+W+grid;
+        x+=grid
     ){
 
-      let normal;
-
-      const px =
-      lx+ldx*tMin;
-
-      const py =
-      ly+ldy*tMin;
-
-      if(
-        Math.abs(
-          Math.abs(px)-o.w/2
-        )
-        <
-        Math.abs(
-          Math.abs(py)-o.h/2
-        )
-      ){
-
-        normal={
-          x:Math.sign(px),
-          y:0
-        };
-
-      }else{
-
-        normal={
-          x:0,
-          y:Math.sign(py)
-        };
-
-      }
-
-      const worldNormal={
-
-        x:
-        normal.x*Math.cos(o.angle)-
-        normal.y*Math.sin(o.angle),
-
-        y:
-        normal.x*Math.sin(o.angle)+
-        normal.y*Math.cos(o.angle)
-
-      };
-
-      closest={
-
-        object:o,
-
-        point:{
-          x:x+dx*tMin,
-          y:y+dy*tMin
-        },
-
-        normal:worldNormal
-
-      };
-
-      closestT=tMin;
-
+        ctx.beginPath();
+        ctx.moveTo(x,cameraY);
+        ctx.lineTo(x,cameraY+H);
+        ctx.stroke();
     }
 
-  }
+    for(
+        let y=startY;
+        y<cameraY+H+grid;
+        y+=grid
+    ){
 
-  return closest;
-
-}
-
-
-/* =========================================================
-   RAY TRACING
-========================================================= */
-
-const rays=[];
-
-function traceRay(
-  origin,
-  direction,
-  depth=0
-){
-
-  if(depth>5)return;
-
-  const d =
-  normalize(
-    direction.x,
-    direction.y
-  );
-
-  const hit =
-  rayHit(
-    origin.x,
-    origin.y,
-    d.x,
-    d.y
-  );
-
-  const end =
-  hit
-    ? hit.point
-    : {
-        x:
-        origin.x+d.x*1000,
-
-        y:
-        origin.y+d.y*1000
-      };
-
-  rays.push({
-    start:origin,
-    end:end,
-    depth:depth
-  });
-
-  if(!hit)return;
-
-  const object =
-  hit.object;
-
-  const material =
-  materials[object.material];
-
-  let normal =
-  hit.normal;
-
-  if(
-    dot(d,normal)>0
-  ){
-
-    normal={
-      x:-normal.x,
-      y:-normal.y
-    };
-
-  }
-
-
-  /* Mirror */
-
-  if(object.material==="mirror"){
-
-    const reflected =
-    reflection(
-      d,
-      normal
-    );
-
-    traceRay(
-      {
-        x:end.x+normal.x*2,
-        y:end.y+normal.y*2
-      },
-      reflected,
-      depth+1
-    );
-
-    return;
-
-  }
-
-
-  /* Refractive materials */
-
-  if(material.transmission>0){
-
-    const refracted =
-    refraction(
-      d,
-      normal,
-      1,
-      material.n
-    );
-
-    if(refracted){
-
-      traceRay(
-        {
-          x:end.x-normal.x*2,
-          y:end.y-normal.y*2
-        },
-        refracted,
-        depth+1
-      );
-
+        ctx.beginPath();
+        ctx.moveTo(cameraX,y);
+        ctx.lineTo(cameraX+W,y);
+        ctx.stroke();
     }
 
-  }
+    /* Walls */
 
+    for(const wall of walls){
+
+        ctx.fillStyle=
+            "rgba(17,24,45,.9)";
+
+        ctx.fillRect(
+            wall.x,
+            wall.y,
+            wall.w,
+            wall.h
+        );
+
+        ctx.strokeStyle=
+            "rgba(75,115,220,.25)";
+
+        ctx.strokeRect(
+            wall.x,
+            wall.y,
+            wall.w,
+            wall.h
+        );
+    }
+
+    ctx.restore();
 }
-
-
-function renderRays(){
-
-  rays.length=0;
-
-  for(
-    let i=-4;
-    i<=4;
-    i++
-  ){
-
-    const angle =
-    player.angle+
-    i*.025;
-
-    traceRay(
-      player,
-      {
-        x:Math.cos(angle),
-        y:Math.sin(angle)
-      }
-    );
-
-  }
-
-}
-
 
 /* =========================================================
-   OBSERVER MODE
+   LIGHT RAYS
 ========================================================= */
 
-function drawObserver(){
-
-  const zoom =
-  Math.min(
-    W/world.width,
-    H/world.height
-  )*.82;
-
-  ctx.save();
-
-  ctx.translate(
-    W/2,
-    H/2
-  );
-
-  ctx.scale(
-    zoom,
-    zoom
-  );
-
-  ctx.translate(
-    -world.width/2,
-    -world.height/2
-  );
-
-  ctx.fillStyle =
-  "#02070d";
-
-  ctx.fillRect(
-    0,
-    0,
-    world.width,
-    world.height
-  );
-
-  /* grid */
-
-  ctx.strokeStyle =
-  "#0b2432";
-
-  ctx.lineWidth=
-  1/zoom;
-
-  for(
-    let x=0;
-    x<world.width;
-    x+=80
-  ){
-
-    ctx.beginPath();
-
-    ctx.moveTo(x,0);
-    ctx.lineTo(x,world.height);
-
-    ctx.stroke();
-
-  }
-
-  for(
-    let y=0;
-    y<world.height;
-    y+=80
-  ){
-
-    ctx.beginPath();
-
-    ctx.moveTo(0,y);
-    ctx.lineTo(world.width,y);
-
-    ctx.stroke();
-
-  }
-
-  drawObjects();
-
-  drawNodes();
-
-  renderRays();
-
-  ctx.lineWidth=
-  3/zoom;
-
-  ctx.strokeStyle=
-  "#63e6ff";
-
-  for(const ray of rays){
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      ray.start.x,
-      ray.start.y
-    );
-
-    ctx.lineTo(
-      ray.end.x,
-      ray.end.y
-    );
-
-    ctx.stroke();
-
-  }
-
-
-  /* Shadows */
-
-  for(
-    const o of objects
-  ){
-
-    if(
-      o.material!=="paper"
-    )continue;
+function drawLight(){
 
     ctx.save();
 
     ctx.translate(
-      o.x,
-      o.y
+        player.x-cameraX,
+        player.y-cameraY
     );
 
-    ctx.rotate(
-      o.angle
+    /*
+     * Main radial light.
+     */
+
+    const radius =
+        120 + state.light*2.2;
+
+    const gradient =
+        ctx.createRadialGradient(
+            0,0,
+            5,
+            0,0,
+            radius
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(150,255,255,.30)"
     );
 
-    ctx.fillStyle =
-    "rgba(0,0,0,.48)";
+    gradient.addColorStop(
+        .25,
+        "rgba(80,220,255,.15)"
+    );
+
+    gradient.addColorStop(
+        .7,
+        "rgba(60,100,255,.04)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+    ctx.fillStyle=gradient;
+
+    ctx.beginPath();
+    ctx.arc(0,0,radius,0,Math.PI*2);
+    ctx.fill();
+
+    /*
+     * Directional cone.
+     */
+
+    const coneLength =
+        230 + state.light*2;
+
+    const coneWidth=.42;
+
+    const g =
+        ctx.createLinearGradient(
+            0,0,
+            Math.cos(player.angle)*coneLength,
+            Math.sin(player.angle)*coneLength
+        );
+
+    g.addColorStop(
+        0,
+        "rgba(170,255,255,.20)"
+    );
+
+    g.addColorStop(
+        1,
+        "rgba(80,120,255,0)"
+    );
+
+    ctx.fillStyle=g;
 
     ctx.beginPath();
 
-    ctx.moveTo(
-      o.w/2,
-      -o.h/2
+    ctx.moveTo(0,0);
+
+    ctx.lineTo(
+        Math.cos(player.angle-coneWidth)*
+        coneLength,
+        Math.sin(player.angle-coneWidth)*
+        coneLength
     );
 
     ctx.lineTo(
-      o.w/2+300,
-      -o.h/2+110
-    );
-
-    ctx.lineTo(
-      o.w/2+300,
-      o.h/2+110
-    );
-
-    ctx.lineTo(
-      o.w/2,
-      o.h/2
+        Math.cos(player.angle+coneWidth)*
+        coneLength,
+        Math.sin(player.angle+coneWidth)*
+        coneLength
     );
 
     ctx.closePath();
@@ -2009,369 +1931,371 @@ function drawObserver(){
     ctx.fill();
 
     ctx.restore();
-
-  }
-
-
-  drawMonster();
-
-  drawPlayer();
-
-  ctx.restore();
-
-
-  document.getElementById(
-    "observerHelp"
-  ).textContent =
-  "OBSERVER MODE • drag across the screen to rotate the laboratory view";
-
 }
 
-
 /* =========================================================
-   PARTICLES
+   DRAW CORES
 ========================================================= */
 
-const particles=[];
+function drawCores(){
 
-function createPulseParticles(){
+    ctx.save();
 
-  for(
-    let i=0;
-    i<45;
-    i++
-  ){
+    ctx.translate(-cameraX,-cameraY);
 
-    particles.push({
+    for(const core of cores){
 
-      x:player.x,
+        if(core.collected) continue;
 
-      y:player.y,
+        const pulse =
+            1+
+            Math.sin(
+                core.phase
+            )*.25;
 
-      vx:
-      (Math.random()-.5)*
-      500,
+        ctx.shadowBlur=25;
 
-      vy:
-      (Math.random()-.5)*
-      500,
+        ctx.shadowColor="#6effff";
 
-      life:1
+        ctx.fillStyle="#a9ffff";
 
-    });
+        ctx.beginPath();
 
-  }
+        ctx.arc(
+            core.x,
+            core.y,
+            core.radius*pulse,
+            0,
+            Math.PI*2
+        );
 
-}
+        ctx.fill();
 
+        ctx.shadowBlur=0;
 
-/* =========================================================
-   UPDATE
-========================================================= */
+        ctx.strokeStyle=
+            "rgba(120,255,255,.4)";
 
-function update(dt){
+        ctx.beginPath();
 
-  gameTime+=dt;
+        ctx.arc(
+            core.x,
+            core.y,
+            22,
+            0,
+            Math.PI*2
+        );
 
-  if(observerMode){
-
-    return;
-
-  }
-
-
-  /* keyboard */
-
-  let x=0;
-  let y=0;
-
-  if(
-    keys.d ||
-    touch.right
-  )x++;
-
-  if(
-    keys.a ||
-    touch.left
-  )x--;
-
-  if(
-    keys.s ||
-    touch.back
-  )y++;
-
-  if(
-    keys.w ||
-    touch.forward
-  )y--;
-
-
-  /* movement */
-
-  const speed=180;
-
-  const forwardX =
-  Math.cos(player.angle);
-
-  const forwardY =
-  Math.sin(player.angle);
-
-  const sideX =
-  -forwardY;
-
-  const sideY =
-  forwardX;
-
-  player.x +=
-  (
-    forwardX*y+
-    sideX*x
-  )*
-  speed*
-  dt;
-
-  player.y +=
-  (
-    forwardY*y+
-    sideY*x
-  )*
-  speed*
-  dt;
-
-
-  player.x=
-  clamp(
-    player.x,
-    40,
-    world.width-40
-  );
-
-  player.y=
-  clamp(
-    player.y,
-    40,
-    world.height-40
-  );
-
-
-  /* phone motion */
-
-  if(motionAvailable){
-
-    const deltaGamma =
-    deviceGamma-
-    calibrationGamma;
-
-    const deltaBeta =
-    deviceBeta-
-    calibrationBeta;
-
-    player.angle +=
-    clamp(
-      deltaGamma*.002,
-      -.035,
-      .035
-    );
-
-    player.x +=
-    clamp(
-      deltaBeta*.08,
-      -2,
-      2
-    );
-
-  }
-
-
-  /* monster */
-
-  const d =
-  distance(
-    player,
-    monster
-  );
-
-  if(monster.stun>0){
-
-    monster.stun-=dt;
-
-  }else{
-
-    let chase=0;
-
-    if(d<750)
-      chase+=1;
-
-    chase+=
-    soundLevel*2;
-
-    if(chase>0){
-
-      const direction =
-      normalize(
-        player.x-monster.x,
-        player.y-monster.y
-      );
-
-      const monsterSpeed =
-      30+
-      soundLevel*55;
-
-      monster.x +=
-      direction.x*
-      monsterSpeed*
-      dt;
-
-      monster.y +=
-      direction.y*
-      monsterSpeed*
-      dt;
-
-      monster.visibility =
-      clamp(
-        1-d/800+
-        soundLevel,
-        .05,
-        1
-      );
-
-    }else{
-
-      monster.visibility=
-      Math.max(
-        .05,
-        monster.visibility-
-        dt*.2
-      );
-
+        ctx.stroke();
     }
 
-  }
+    ctx.restore();
+}
 
+/* =========================================================
+   DRAW ENEMIES
+========================================================= */
 
-  /* sound decay */
+function drawEnemies(){
 
-  soundLevel =
-  Math.max(
-    0,
-    soundLevel-dt*.8
-  );
+    ctx.save();
 
+    ctx.translate(-cameraX,-cameraY);
 
-  /* energy */
+    for(const enemy of enemies){
 
-  energy =
-  clamp(
-    energy+
-    dt*1.2,
-    0,
-    100
-  );
+        if(enemy.dead) continue;
 
+        const alpha =
+            .45+
+            Math.sin(
+                enemy.pulse*4
+            )*.12;
 
-  /* nodes */
+        ctx.shadowBlur=25;
 
-  for(
-    const node of nodes
-  ){
+        ctx.shadowColor=
+            "rgba(130,60,255,.65)";
 
-    if(
-      !node.activated &&
-      distance(player,node)<70
-    ){
+        ctx.fillStyle=
+            `rgba(70,20,110,${alpha})`;
 
-      node.activated=true;
+        ctx.beginPath();
 
-      chapter++;
+        ctx.arc(
+            enemy.x,
+            enemy.y,
+            enemy.radius,
+            0,
+            Math.PI*2
+        );
 
-      energy=
-      clamp(
-        energy+20,
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        /*
+         * Eyes
+         */
+
+        ctx.fillStyle="#ff527d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            enemy.x-7,
+            enemy.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.arc(
+            enemy.x+7,
+            enemy.y-3,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        /*
+         * Health
+         */
+
+        ctx.fillStyle=
+            "rgba(0,0,0,.6)";
+
+        ctx.fillRect(
+            enemy.x-20,
+            enemy.y-32,
+            40,
+            4
+        );
+
+        ctx.fillStyle="#b05cff";
+
+        ctx.fillRect(
+            enemy.x-20,
+            enemy.y-32,
+            40*Math.max(
+                0,
+                enemy.hp/100
+            ),
+            4
+        );
+    }
+
+    ctx.restore();
+}
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(){
+
+    ctx.save();
+
+    ctx.translate(
+        player.x-cameraX,
+        player.y-cameraY
+    );
+
+    ctx.rotate(player.angle);
+
+    /*
+     * Player light aura
+     */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#63f7ff";
+
+    ctx.fillStyle="#d8ffff";
+
+    ctx.beginPath();
+
+    ctx.arc(
         0,
-        100
-      );
+        0,
+        player.radius,
+        0,
+        Math.PI*2
+    );
 
-      advanceStory();
+    ctx.fill();
 
-    }
+    ctx.shadowBlur=0;
 
-  }
+    /*
+     * Direction indicator
+     */
 
+    ctx.fillStyle="#63f7ff";
 
-  /* particles */
+    ctx.beginPath();
 
-  for(
-    let i=particles.length-1;
-    i>=0;
-    i--
-  ){
+    ctx.moveTo(25,0);
+    ctx.lineTo(8,-7);
+    ctx.lineTo(8,7);
 
-    const p=
-    particles[i];
+    ctx.closePath();
 
-    p.life-=dt;
+    ctx.fill();
 
-    p.x+=
-    p.vx*dt;
-
-    p.y+=
-    p.vy*dt;
-
-    if(p.life<=0)
-      particles.splice(i,1);
-
-  }
-
-
-  updateHUD();
-
+    ctx.restore();
 }
-
 
 /* =========================================================
-   STORY
+   DRAW PARTICLES
 ========================================================= */
 
-function advanceStory(){
+function drawParticles(){
 
-  if(chapter===1){
+    ctx.save();
 
-    objective(
-      "LIGHT NODE ONLINE. Find the MIRROR. Watch the beam reflect."
-    );
+    ctx.translate(-cameraX,-cameraY);
 
-    toast(
-      "OPTICAL SYSTEM ONLINE"
-    );
+    for(const p of particles){
 
-  }
+        ctx.globalAlpha =
+            Math.max(
+                0,
+                p.life/p.maxLife
+            );
 
-  else if(chapter===2){
+        ctx.fillStyle="#9fffff";
 
-    objective(
-      "The GLASS bends light. Its refractive index is n = 1.50."
-    );
+        ctx.beginPath();
 
-    toast(
-      "REFRACTION DETECTED"
-    );
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI*2
+        );
 
-  }
+        ctx.fill();
+    }
 
-  else if(chapter>=3){
+    ctx.globalAlpha=1;
 
-    objective(
-      "The Hollow has found you. Use PULSE to drive it away."
-    );
-
-    toast(
-      "THE HOLLOW HAS NOTICED YOU"
-    );
-
-  }
-
+    ctx.restore();
 }
 
+/* =========================================================
+   DARKNESS / VISION
+========================================================= */
+
+function drawDarkness(){
+
+    /*
+     * Everything outside the player's light
+     * becomes dark.
+     */
+
+    const px =
+        player.x-cameraX;
+
+    const py =
+        player.y-cameraY;
+
+    const radius =
+        150 + state.light*2.0;
+
+    const gradient =
+        ctx.createRadialGradient(
+            px,
+            py,
+            Math.max(30,radius*.35),
+            px,
+            py,
+            radius
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+    gradient.addColorStop(
+        .55,
+        "rgba(0,0,0,.25)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,.92)"
+    );
+
+    ctx.fillStyle=gradient;
+
+    ctx.fillRect(0,0,W,H);
+
+    /*
+     * Camera mode slightly changes the darkness.
+     */
+
+    if(state.cameraMode){
+
+        ctx.fillStyle=
+            "rgba(30,100,90,.08)";
+
+        ctx.fillRect(0,0,W,H);
+    }
+}
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render(){
+
+    ctx.clearRect(0,0,W,H);
+
+    drawBackground();
+    drawCores();
+    drawEnemies();
+    drawLight();
+    drawPlayer();
+    drawParticles();
+    drawDarkness();
+
+    /*
+     * Camera scanning overlay
+     */
+
+    if(state.cameraMode){
+
+        ctx.strokeStyle=
+            "rgba(100,255,220,.35)";
+
+        ctx.lineWidth=2;
+
+        const s=70;
+
+        ctx.strokeRect(
+            W/2-s,
+            H/2-s,
+            s*2,
+            s*2
+        );
+
+        ctx.font="11px system-ui";
+
+        ctx.fillStyle=
+            "rgba(150,255,230,.8)";
+
+        ctx.fillText(
+            "LUMEN SCANNER",
+            W/2-50,
+            H/2+s+22
+        );
+    }
+}
 
 /* =========================================================
    HUD
@@ -2379,510 +2303,81 @@ function advanceStory(){
 
 function updateHUD(){
 
-  UI.energy.textContent =
-  Math.round(energy)+"%";
-
-  UI.energyFill.style.width =
-  energy+"%";
-
-  const d =
-  distance(
-    player,
-    monster
-  );
-
-  let threat;
-
-  if(d<220)
-    threat="CRITICAL";
-  else if(d<450)
-    threat="HIGH";
-  else if(d<700)
-    threat="MEDIUM";
-  else
-    threat="LOW";
-
-  UI.threat.textContent =
-  threat;
-
-  UI.threat.style.color =
-  threat==="CRITICAL"
-    ? "#ff5d73"
-    : threat==="HIGH"
-      ? "#ffd166"
-      : "#74f0a7";
-
-}
-
-
-/* =========================================================
-   PULSE
-========================================================= */
-
-function pulse(){
-
-  if(
-    !gameRunning ||
-    gamePaused
-  )return;
-
-  if(energy<18){
-
-    toast(
-      "LUMEN ENERGY TOO LOW"
-    );
-
-    return;
-
-  }
-
-  energy-=18;
-
-  monster.stun=2.5;
-
-  monster.visibility=
-  Math.max(
-    0,
-    monster.visibility-.7
-  );
-
-
-  const push =
-  normalize(
-    monster.x-player.x,
-    monster.y-player.y
-  );
-
-  monster.x +=
-  push.x*220;
-
-  monster.y +=
-  push.y*220;
-
-  soundLevel=.2;
-
-  createPulseParticles();
-
-  playTone(
-    110,
-    .25,
-    "sine",
-    .05
-  );
-
-  toast(
-    "LUMEN PULSE — THE HOLLOW RECOILS"
-  );
-
-}
-
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-async function toggleCamera(){
-
-  scanMode=
-  !scanMode;
-
-  if(
-    scanMode &&
-    !cameraAvailable
-  ){
-
-    try{
-
-      const stream =
-      await navigator.mediaDevices
-      .getUserMedia({
-        video:{
-          facingMode:"environment"
-        },
-        audio:false
-      });
-
-      UI.camera.srcObject=
-      stream;
-
-      cameraAvailable=true;
-
-    }catch(error){
-
-      cameraAvailable=false;
-
-      toast(
-        "Camera permission unavailable. Scanner remains simulated."
-      );
-
-    }
-
-  }
-
-  UI.camera.style.display =
-  scanMode &&
-  cameraAvailable
-    ? "block"
-    : "none";
-
-  UI.mode.textContent =
-  scanMode
-    ? "SCAN"
-    : observerMode
-      ? "OBSERVER"
-      : "LAB";
-
-}
-
-
-/* =========================================================
-   MICROPHONE
-========================================================= */
-
-async function setupMicrophone(){
-
-  try{
-
-    const stream =
-    await navigator.mediaDevices
-    .getUserMedia({
-      audio:true,
-      video:false
-    });
-
-    const AudioContext =
-    window.AudioContext ||
-    window.webkitAudioContext;
-
-    const audio =
-    new AudioContext();
-
-    const source =
-    audio.createMediaStreamSource(
-      stream
-    );
-
-    const analyser =
-    audio.createAnalyser();
-
-    analyser.fftSize=512;
-
-    source.connect(analyser);
-
-    const data =
-    new Uint8Array(
-      analyser.fftSize
-    );
-
-    microphoneAvailable=true;
-
-    function analyse(){
-
-      if(!microphoneAvailable)
-        return;
-
-      analyser.getByteTimeDomainData(
-        data
-      );
-
-      let sum=0;
-
-      for(
-        let i=0;
-        i<data.length;
-        i++
-      ){
-
-        const value =
-        (data[i]-128)/128;
-
-        sum+=
-        value*value;
-
-      }
-
-      const rms =
-      Math.sqrt(
-        sum/data.length
-      );
-
-      if(rms>.08){
-
-        soundLevel =
-        clamp(
-          rms*5,
-          0,
-          1
+    levelText.textContent =
+        state.level;
+
+    lightText.textContent =
+        Math.round(state.light)+"%";
+
+    healthText.textContent =
+        Math.max(
+            0,
+            Math.round(state.health)
         );
 
-      }
+    coreText.textContent =
+        `${state.coresCollected} / ${state.coresNeeded}`;
 
-      requestAnimationFrame(
-        analyse
-      );
-
-    }
-
-    analyse();
-
-  }catch(error){
-
-    microphoneAvailable=false;
-
-  }
-
+    scoreText.textContent =
+        state.score;
 }
 
-
 /* =========================================================
-   MOTION
+   MAIN LOOP
 ========================================================= */
 
-async function setupMotion(){
+let lastTime = 0;
 
-  try{
+function loop(timestamp){
+
+    if(!lastTime){
+        lastTime=timestamp;
+    }
+
+    let dt =
+        (timestamp-lastTime)/1000;
+
+    lastTime=timestamp;
+
+    dt=Math.min(dt,.033);
 
     if(
-      typeof DeviceOrientationEvent!=="undefined" &&
-      typeof DeviceOrientationEvent.requestPermission==="function"
+        state.running &&
+        !state.paused &&
+        !state.gameOver &&
+        !state.won
     ){
 
-      const permission =
-      await DeviceOrientationEvent
-      .requestPermission();
+        state.elapsed += dt;
 
-      if(
-        permission!=="granted"
-      ){
+        movePlayer(dt);
+        updateCores();
+        updateEnemies(dt);
+        updateLight(dt);
+        updateParticles(dt);
+        updateCamera();
 
-        throw new Error(
-          "Motion permission denied"
-        );
-
-      }
-
+        if(state.shake>0){
+            state.shake -= dt*20;
+        }
     }
 
-    addEventListener(
-      "deviceorientation",
-      event=>{
+    render();
+    updateHUD();
 
-        deviceBeta =
-        event.beta || 0;
+    if(messageTimer>0){
 
-        deviceGamma =
-        event.gamma || 0;
+        messageTimer -= dt*1000;
 
-      }
-    );
-
-    motionAvailable=true;
-
-    calibrationBeta=
-    deviceBeta;
-
-    calibrationGamma=
-    deviceGamma;
-
-  }catch(error){
-
-    motionAvailable=false;
-
-  }
-
-}
-
-
-/* =========================================================
-   SENSOR SETUP
-========================================================= */
-
-async function setupSensors(){
-
-  await setupMotion();
-
-  await setupMicrophone();
-
-  UI.sensor.textContent =
-    (motionAvailable
-      ? "Motion ✓"
-      : "Motion fallback")
-    +" • "+
-    (microphoneAvailable
-      ? "Mic ✓"
-      : "Mic fallback");
-
-}
-
-
-/* =========================================================
-   SAVE / LOAD
-========================================================= */
-
-const SAVE_KEY=
-"lumen-last-light-save";
-
-
-function saveGame(){
-
-  const save={
-
-    player:{
-      x:player.x,
-      y:player.y,
-      angle:player.angle
-    },
-
-    monster:{
-      x:monster.x,
-      y:monster.y,
-      visibility:monster.visibility,
-      stun:monster.stun
-    },
-
-    energy,
-
-    chapter,
-
-    nodes,
-
-    gameTime
-
-  };
-
-  localStorage.setItem(
-    SAVE_KEY,
-    JSON.stringify(save)
-  );
-
-  updateSaveInfo();
-
-  toast(
-    "GAME SAVED"
-  );
-
-}
-
-
-function loadGame(){
-
-  try{
-
-    const raw=
-    localStorage.getItem(
-      SAVE_KEY
-    );
-
-    if(!raw){
-
-      toast(
-        "NO SAVE FOUND"
-      );
-
-      return false;
-
+        if(messageTimer<=0){
+            message.classList.remove("show");
+        }
     }
 
-    const save=
-    JSON.parse(raw);
-
-    Object.assign(
-      player,
-      save.player
-    );
-
-    Object.assign(
-      monster,
-      save.monster
-    );
-
-    energy=
-    save.energy;
-
-    chapter=
-    save.chapter;
-
-    for(
-      let i=0;
-      i<nodes.length;
-      i++
-    ){
-
-      nodes[i].activated=
-      save.nodes[i].activated;
-
-    }
-
-    gameTime=
-    save.gameTime || 0;
-
-    toast(
-      "SAVE LOADED"
-    );
-
-    return true;
-
-  }catch(error){
-
-    toast(
-      "SAVE DATA INVALID"
-    );
-
-    return false;
-
-  }
-
+    requestAnimationFrame(loop);
 }
 
-
-function updateSaveInfo(){
-
-  const saved =
-  localStorage.getItem(
-    SAVE_KEY
-  );
-
-  document.getElementById(
-    "saveInfo"
-  ).textContent =
-  saved
-    ? "✓ Save available on this device/browser."
-    : "No local save yet.";
-
-}
-
-updateSaveInfo();
-
-
-/* =========================================================
-   FULLSCREEN
-========================================================= */
-
-async function fullscreen(){
-
-  try{
-
-    if(document.fullscreenElement){
-
-      await document.exitFullscreen();
-
-    }else{
-
-      await document.documentElement
-      .requestFullscreen();
-
-    }
-
-  }catch(error){
-
-    toast(
-      "Fullscreen is unavailable in this browser."
-    );
-
-  }
-
-}
-
+requestAnimationFrame(loop);
 
 /* =========================================================
    PAUSE
@@ -2890,535 +2385,788 @@ async function fullscreen(){
 
 function togglePause(){
 
-  if(!gameRunning)
-    return;
+    if(!state.running ||
+       state.gameOver ||
+       state.won
+    ) return;
 
-  if(gamePaused){
+    state.paused=!state.paused;
 
-    resumeGame();
+    pauseScreen.style.display =
+        state.paused ? "flex" : "none";
 
-  }else{
-
-    pauseGame();
-
-  }
-
+    pauseButton.textContent =
+        state.paused ? "▶" : "⏸";
 }
 
+pauseButton.addEventListener(
+    "click",
+    togglePause
+);
 
-function pauseGame(){
-
-  gamePaused=true;
-
-  document
-  .getElementById("pauseScreen")
-  .style.display="flex";
-
-  stopMusic();
-
-}
-
-
-function resumeGame(){
-
-  gamePaused=false;
-
-  document
-  .getElementById("pauseScreen")
-  .style.display="none";
-
-  startMusic();
-
-}
-
-
-function exitToTitle(){
-
-  gameRunning=false;
-
-  gamePaused=false;
-
-  stopMusic();
-
-  document
-  .getElementById("pauseScreen")
-  .style.display="none";
-
-  document
-  .getElementById("titleScreen")
-  .style.display="flex";
-
-}
-
+resumeButton.addEventListener(
+    "click",
+    togglePause
+);
 
 /* =========================================================
-   TUTORIAL
+   START GAME
 ========================================================= */
 
-async function beginTutorial(){
+async function startGame(){
 
-  UI.titleScreen =
-  document.getElementById(
-    "titleScreen"
-  );
+    await requestMobilePermissions();
 
-  UI.titleScreen.style.display=
-  "none";
+    startScreen.classList.add("hidden");
 
-  document
-  .getElementById("tutorial")
-  .style.display="flex";
+    gameOverScreen.classList.add("hidden");
+    winScreen.classList.add("hidden");
 
+    state.running=true;
+    state.paused=false;
+    state.gameOver=false;
+    state.won=false;
+
+    state.score=0;
+    state.health=100;
+    state.light=100;
+    state.coresCollected=0;
+    state.pulseCooldown=0;
+
+    createWorld();
+
+    showMessage(
+        "FIND THE 8 LIGHT CORES",
+        2200
+    );
 }
 
+startButton.addEventListener(
+    "click",
+    startGame
+);
 
-async function enterLab(){
+restartButton.addEventListener(
+    "click",
+    startGame
+);
 
-  document
-  .getElementById("tutorial")
-  .style.display="none";
+againButton.addEventListener(
+    "click",
+    startGame
+);
 
-  gameRunning=true;
-
-  gamePaused=false;
-
-  await setupSensors();
-
-  objective(
-    "Move toward the cyan LIGHT NODE. This is your first lesson."
-  );
-
-  toast(
-    "CALIBRATION COMPLETE"
-  );
-
-  startMusic();
-
-}
-
-
-function skipTutorial(){
-
-  document
-  .getElementById("tutorial")
-  .style.display="none";
-
-  gameRunning=true;
-
-  gamePaused=false;
-
-  objective(
-    "Find the cyan LIGHT NODE."
-  );
-
-  startMusic();
-
-}
-
+nextButton.addEventListener(
+    "click",
+    startGame
+);
 
 /* =========================================================
-   OBSERVER
+   GAME OVER
 ========================================================= */
 
-document
-.getElementById("observer")
-.addEventListener(
-"click",
-()=>{
+function gameOver(){
 
-  observerMode=
-  !observerMode;
+    if(state.gameOver) return;
 
-  UI.mode.textContent =
-  observerMode
-    ? "OBSERVER"
-    : scanMode
-      ? "SCAN"
-      : "LAB";
+    state.gameOver=true;
+    state.running=false;
 
-  document
-  .getElementById(
-    "observerHelp"
-  ).textContent =
-  observerMode
-    ? "OBSERVER MODE • drag horizontally to rotate the view"
-    : "";
+    if(
+        state.score >
+        state.highScore
+    ){
 
-  toast(
-    observerMode
-      ? "OBSERVER MODE — LIGHT + SHADOW VIEW"
-      : "LABORATORY POV"
-  );
+        state.highScore =
+            state.score;
 
-});
+        localStorage.setItem(
+            "lumenHighScore",
+            state.highScore
+        );
+    }
 
+    finalScore.textContent =
+        state.score;
+
+    bestScore.textContent =
+        state.highScore;
+
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
+}
 
 /* =========================================================
-   OBSERVER DRAG
+   WIN
 ========================================================= */
 
-let dragging=false;
-let previousX=0;
+function winGame(){
 
-canvas.addEventListener(
-"pointerdown",
-event=>{
+    if(state.won) return;
 
-  dragging=true;
+    state.won=true;
+    state.running=false;
 
-  previousX=
-  event.clientX;
+    state.score +=
+        Math.round(
+            state.light*10
+        );
 
-});
+    if(
+        state.score >
+        state.highScore
+    ){
 
+        state.highScore =
+            state.score;
 
-canvas.addEventListener(
-"pointermove",
-event=>{
+        localStorage.setItem(
+            "lumenHighScore",
+            state.highScore
+        );
+    }
 
-  if(
-    !dragging ||
-    !observerMode
-  )return;
+    winScore.textContent =
+        state.score;
 
-  const delta =
-  event.clientX-
-  previousX;
-
-  player.angle +=
-  delta*.006;
-
-  previousX=
-  event.clientX;
-
-});
-
-
-canvas.addEventListener(
-"pointerup",
-()=>{
-
-  dragging=false;
-
-});
-
-
-canvas.addEventListener(
-"pointercancel",
-()=>{
-
-  dragging=false;
-
-});
-
+    winScreen.classList.remove(
+        "hidden"
+    );
+}
 
 /* =========================================================
-   AUDIO
-   Generated locally — no external music files.
+   MICROPHONE
 ========================================================= */
 
 let audioContext=null;
-let musicTimer=null;
-let musicPlaying=false;
+let analyser=null;
+let microphoneSource=null;
+let micData=null;
 
-function playTone(
-  frequency,
-  duration,
-  type="sine",
-  volume=.03
-){
+const micControl={
+    enabled:false,
+    level:0
+};
 
-  if(!audioContext)
-    return;
+async function setupMicrophone(){
 
-  const oscillator =
-  audioContext
-  .createOscillator();
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
 
-  const gain =
-  audioContext
-  .createGain();
+        micStatus.textContent="Unavailable";
+        micStatus.className="sensorValue no";
 
-  oscillator.type=
-  type;
+        return;
+    }
 
-  oscillator.frequency.value=
-  frequency;
+    try{
 
-  gain.gain.setValueAtTime(
-    volume,
-    audioContext.currentTime
-  );
+        const stream =
+            await navigator.mediaDevices
+                .getUserMedia({
+                    audio:true,
+                    video:false
+                });
 
-  gain.gain.exponentialRampToValueAtTime(
-    .0001,
-    audioContext.currentTime+
-    duration
-  );
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
 
-  oscillator
-  .connect(gain)
-  .connect(
-    audioContext.destination
-  );
+        analyser =
+            audioContext.createAnalyser();
 
-  oscillator.start();
+        analyser.fftSize=256;
 
-  oscillator.stop(
-    audioContext.currentTime+
-    duration+
-    .03
-  );
+        microphoneSource =
+            audioContext.createMediaStreamSource(
+                stream
+            );
 
-}
-
-
-function startMusic(){
-
-  if(musicPlaying)
-    return;
-
-  const AudioContext =
-  window.AudioContext ||
-  window.webkitAudioContext;
-
-  if(!AudioContext)
-    return;
-
-  if(!audioContext){
-
-    audioContext=
-    new AudioContext();
-
-  }
-
-  audioContext.resume();
-
-  musicPlaying=true;
-
-  const notes=[
-    110,
-    130.81,
-    146.83,
-    123.47,
-    164.81,
-    146.83
-  ];
-
-  let index=0;
-
-  musicTimer=
-  setInterval(
-    ()=>{
-
-      if(
-        !gamePaused &&
-        gameRunning
-      ){
-
-        playTone(
-          notes[
-            index++%
-            notes.length
-          ],
-          .55,
-          "triangle",
-          .018
+        microphoneSource.connect(
+            analyser
         );
 
-      }
+        micData =
+            new Uint8Array(
+                analyser.frequencyBinCount
+            );
 
-    },
-    700
-  );
+        micControl.enabled=true;
 
+        state.micAvailable=true;
+
+        micStatus.textContent="Ready";
+        micStatus.className="sensorValue ok";
+
+    }catch(err){
+
+        state.micAvailable=false;
+
+        micStatus.textContent="Denied";
+        micStatus.className="sensorValue no";
+    }
 }
 
+function updateMicrophone(){
 
-function stopMusic(){
+    if(!analyser) return;
 
-  musicPlaying=false;
-
-  if(musicTimer){
-
-    clearInterval(
-      musicTimer
+    analyser.getByteFrequencyData(
+        micData
     );
 
-    musicTimer=null;
+    let sum=0;
 
-  }
+    for(const value of micData){
+        sum+=value;
+    }
 
+    const average =
+        sum/micData.length;
+
+    micControl.level =
+        average/255;
+
+    /*
+     * Blow/speak loudly to trigger pulse.
+     */
+
+    if(
+        micControl.level>.68 &&
+        state.running &&
+        !state.paused
+    ){
+
+        pulse();
+    }
 }
 
-
 /* =========================================================
-   BUTTONS
+   CAMERA
 ========================================================= */
 
-document
-.getElementById("begin")
-.addEventListener(
-"click",
-beginTutorial
+let cameraStream=null;
+
+async function setupCamera(){
+
+    if(
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ){
+
+        cameraStatus.textContent="Unavailable";
+        cameraStatus.className="sensorValue no";
+
+        return;
+    }
+
+    try{
+
+        cameraStream =
+            await navigator.mediaDevices
+                .getUserMedia({
+                    video:{
+                        facingMode:"environment"
+                    },
+                    audio:false
+                });
+
+        camera.srcObject =
+            cameraStream;
+
+        state.cameraAvailable=true;
+
+        cameraStatus.textContent="Ready";
+        cameraStatus.className="sensorValue ok";
+
+    }catch(err){
+
+        state.cameraAvailable=false;
+
+        cameraStatus.textContent="Denied";
+        cameraStatus.className="sensorValue no";
+    }
+}
+
+async function toggleCamera(){
+
+    if(!state.cameraAvailable){
+
+        await setupCamera();
+
+        if(!state.cameraAvailable){
+
+            showMessage(
+                "CAMERA NOT AVAILABLE",
+                1300
+            );
+
+            return;
+        }
+    }
+
+    state.cameraMode =
+        !state.cameraMode;
+
+    if(state.cameraMode){
+
+        camera.style.display="block";
+
+        /*
+         * We deliberately keep the game canvas
+         * above the video. This gives an AR-style
+         * scanner effect.
+         */
+
+        camera.style.opacity=".55";
+
+        cameraButton.textContent="🌑";
+
+        showMessage(
+            "LUMEN CAMERA SCANNER",
+            1200
+        );
+
+    }else{
+
+        camera.style.opacity="0";
+
+        cameraButton.textContent="📷";
+    }
+}
+
+cameraButton.addEventListener(
+    "click",
+    toggleCamera
 );
-
-
-document
-.getElementById("calibrate")
-.addEventListener(
-"click",
-enterLab
-);
-
-
-document
-.getElementById("skipTutorial")
-.addEventListener(
-"click",
-skipTutorial
-);
-
-
-document
-.getElementById("fullscreen")
-.addEventListener(
-"click",
-fullscreen
-);
-
-
-document
-.getElementById("load")
-.addEventListener(
-"click",
-()=>{
-
-  if(
-    loadGame()
-  ){
-
-    document
-    .getElementById(
-      "titleScreen"
-    )
-    .style.display="none";
-
-    gameRunning=true;
-
-    startMusic();
-
-  }
-
-});
-
-
-document
-.getElementById("pause")
-.addEventListener(
-"click",
-togglePause
-);
-
-
-document
-.getElementById("resume")
-.addEventListener(
-"click",
-resumeGame
-);
-
-
-document
-.getElementById("saveGame")
-.addEventListener(
-"click",
-saveGame
-);
-
-
-document
-.getElementById("exitGame")
-.addEventListener(
-"click",
-exitToTitle
-);
-
-
-document
-.getElementById("pulse")
-.addEventListener(
-"click",
-pulse
-);
-
-
-document
-.getElementById("scan")
-.addEventListener(
-"click",
-toggleCamera
-);
-
 
 /* =========================================================
-   VISIBILITY SAFETY
+   DEVICE MOTION / ORIENTATION
+========================================================= */
+
+const orientationControl={
+
+    enabled:false,
+
+    x:0,
+    y:0
+};
+
+function handleOrientation(e){
+
+    if(
+        typeof e.gamma !== "number" ||
+        typeof e.beta !== "number"
+    ){
+        return;
+    }
+
+    /*
+     * gamma = left/right
+     * beta = front/back
+     */
+
+    orientationControl.x =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                e.gamma/30
+            )
+        );
+
+    orientationControl.y =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                e.beta/30
+            )
+        );
+
+    orientationControl.enabled=true;
+
+    state.motionAvailable=true;
+}
+
+async function setupMotion(){
+
+    /*
+     * iOS requires explicit permission.
+     */
+
+    if(
+        typeof DeviceOrientationEvent ===
+        "undefined"
+    ){
+
+        motionStatus.textContent="Unavailable";
+        motionStatus.className="sensorValue no";
+
+        return;
+    }
+
+    try{
+
+        if(
+            typeof DeviceOrientationEvent
+                .requestPermission ===
+            "function"
+        ){
+
+            const permission =
+                await DeviceOrientationEvent
+                    .requestPermission();
+
+            if(permission !== "granted"){
+
+                motionStatus.textContent="Denied";
+                motionStatus.className=
+                    "sensorValue no";
+
+                return;
+            }
+        }
+
+        window.addEventListener(
+            "deviceorientation",
+            handleOrientation,
+            true
+        );
+
+        motionStatus.textContent="Ready";
+        motionStatus.className="sensorValue ok";
+
+    }catch(err){
+
+        motionStatus.textContent="Unavailable";
+        motionStatus.className=
+            "sensorValue no";
+    }
+}
+
+/* =========================================================
+   PROXIMITY
+========================================================= */
+
+async function setupProximity(){
+
+    /*
+     * The generic web platform does NOT provide
+     * a universally supported proximity API.
+     *
+     * We detect experimental implementations
+     * without breaking the game.
+     */
+
+    if("ProximitySensor" in window){
+
+        try{
+
+            const sensor =
+                new window.ProximitySensor();
+
+            sensor.addEventListener(
+                "reading",
+                () => {
+
+                    state.proximityNear =
+                        sensor.distance < 10;
+                }
+            );
+
+            sensor.start();
+
+            state.proximityAvailable=true;
+
+            proximityStatus.textContent="Ready";
+            proximityStatus.className=
+                "sensorValue ok";
+
+            return;
+
+        }catch(err){}
+    }
+
+    proximityStatus.textContent=
+        "Not supported";
+
+    proximityStatus.className=
+        "sensorValue no";
+}
+
+/* =========================================================
+   MOBILE PERMISSIONS
+========================================================= */
+
+async function requestMobilePermissions(){
+
+    /*
+     * These are intentionally requested after
+     * the user presses the start button.
+     * Browsers often reject permission requests
+     * made automatically during page load.
+     */
+
+    await setupMotion();
+
+    /*
+     * Microphone can be resource intensive, so
+     * start it after user interaction.
+     */
+
+    await setupMicrophone();
+
+    /*
+     * Camera is optional. We don't immediately
+     * display it.
+     */
+
+    await setupCamera();
+
+    await setupProximity();
+}
+
+/* =========================================================
+   MICROPHONE UPDATE LOOP
+========================================================= */
+
+setInterval(
+    updateMicrophone,
+    80
+);
+
+/* =========================================================
+   PULSE BUTTON
+========================================================= */
+
+pulseButton.addEventListener(
+    "pointerdown",
+    e => {
+
+        e.preventDefault();
+
+        pulse();
+    }
+);
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+async function enterImmersive(){
+
+    try{
+
+        if(
+            document.documentElement.requestFullscreen
+        ){
+
+            await document.documentElement
+                .requestFullscreen();
+
+            showMessage(
+                "IMMERSIVE MODE",
+                1000
+            );
+
+            return;
+        }
+
+    }catch(err){}
+
+    /*
+     * iPhone Safari does not provide normal
+     * fullscreen for arbitrary web pages.
+     *
+     * If installed to the Home Screen,
+     * Apple allows the page to run as a
+     * standalone web app.
+     */
+
+    showMessage(
+        "For iPhone fullscreen, use Add to Home Screen",
+        2200
+    );
+}
+
+fullscreenButton.addEventListener(
+    "click",
+    enterImmersive
+);
+
+/* =========================================================
+   PREVENT UNWANTED PAGE GESTURES
 ========================================================= */
 
 document.addEventListener(
-"visibilitychange",
-()=>{
+    "gesturestart",
+    e => e.preventDefault()
+);
 
-  if(
-    document.hidden &&
-    gameRunning &&
-    !gamePaused
-  ){
+document.addEventListener(
+    "gesturechange",
+    e => e.preventDefault()
+);
 
-    pauseGame();
-
-  }
-
-});
-
+document.addEventListener(
+    "gestureend",
+    e => e.preventDefault()
+);
 
 /* =========================================================
-   MAIN LOOP
+   INITIAL SENSOR DETECTION
 ========================================================= */
 
-function gameLoop(time){
+function detectFeatures(){
 
-  const dt =
-  Math.min(
-    .035,
-    (time-lastTime)/1000 ||
-    0
-  );
+    if(
+        typeof DeviceOrientationEvent !==
+        "undefined"
+    ){
 
-  lastTime=time;
+        motionStatus.textContent=
+            "Available";
 
-  if(
-    gameRunning &&
-    !gamePaused
-  ){
+        motionStatus.className=
+            "sensorValue ok";
 
-    update(dt);
+    }else{
 
-  }
+        motionStatus.textContent=
+            "Not available";
 
-  draw();
+        motionStatus.className=
+            "sensorValue no";
+    }
 
-  updateHUD();
+    if(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+    ){
 
-  requestAnimationFrame(
-    gameLoop
-  );
+        micStatus.textContent=
+            "Available";
 
+        micStatus.className=
+            "sensorValue ok";
+
+        cameraStatus.textContent=
+            "Available";
+
+        cameraStatus.className=
+            "sensorValue ok";
+
+    }else{
+
+        micStatus.textContent=
+            "Not available";
+
+        micStatus.className=
+            "sensorValue no";
+
+        cameraStatus.textContent=
+            "Not available";
+
+        cameraStatus.className=
+            "sensorValue no";
+    }
+
+    if("ProximitySensor" in window){
+
+        proximityStatus.textContent=
+            "Available";
+
+        proximityStatus.className=
+            "sensorValue ok";
+
+    }else{
+
+        proximityStatus.textContent=
+            "Browser dependent";
+
+        proximityStatus.className=
+            "sensorValue wait";
+    }
 }
 
+detectFeatures();
 
-requestAnimationFrame(
-gameLoop
+/* =========================================================
+   PAGE VISIBILITY
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        /*
+         * Automatically pause if user leaves
+         * the browser tab.
+         */
+
+        if(
+            document.hidden &&
+            state.running &&
+            !state.paused
+        ){
+
+            togglePause();
+        }
+    }
+);
+
+/* =========================================================
+   PREVENT MOBILE SLEEP-LIKE SCROLLING
+========================================================= */
+
+window.addEventListener(
+    "touchmove",
+    e => {
+
+        if(e.target.closest("#game")){
+            e.preventDefault();
+        }
+
+    },
+    {passive:false}
+);
+
+/* =========================================================
+   INITIAL RENDER
+========================================================= */
+
+createWorld();
+updateHUD();
+
+/* =========================================================
+   DEBUG / PC INFORMATION
+========================================================= */
+
+console.log(
+`
+LUMEN initialized.
+
+PC:
+WASD / Arrow keys = movement
+SPACE = Light Pulse
+ESC = Pause
+
+Mobile:
+Joystick = movement
+✦ = Light Pulse
+Tilt = movement when available
+Microphone = shout/blow for Light Pulse
+Camera = Scanner Mode
+
+The game gracefully falls back when
+a hardware feature is unavailable.
+`
 );
 
 </script>
