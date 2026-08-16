@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sensory Survival</title>
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --danger: #ff3366;
+            --bg: #111;
+            --panel: rgba(0, 0, 0, 0.85);
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #000; color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; touch-action: none; user-select: none;
+            -webkit-user-select: none;
+        }
+        * { box-sizing: border-box; }
+        
+        #game-canvas {
+            display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;
+        }
+        video { display: none; }
+        
+        /* UI Layers */
+        .ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: var(--panel); backdrop-filter: blur(5px);
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        .hidden { display: none !important; }
+        
+        h1 { color: var(--primary); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        p { text-align: center; max-width: 400px; line-height: 1.5; padding: 0 20px; }
+        
+        button {
+            background: transparent; border: 2px solid var(--primary); color: var(--primary);
+            padding: 15px 30px; font-size: 1.2rem; font-family: inherit; font-weight: bold;
+            cursor: pointer; margin: 10px; border-radius: 5px; text-transform: uppercase;
+            transition: all 0.2s; touch-action: manipulation;
+        }
+        button:hover, button:active { background: var(--primary); color: #000; }
+        button.danger { border-color: var(--danger); color: var(--danger); }
+        button.danger:hover, button.danger:active { background: var(--danger); color: #000; }
+        
+        /* Specific Screens */
+        .checklist { text-align: left; margin: 20px 0; font-size: 1.2rem; }
+        .checklist span { display: block; margin: 10px 0; }
+        .status-icon { display: inline-block; width: 25px; }
+
+        /* HUD */
+        #hud {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
+            pointer-events: none; padding: env(safe-area-inset-top) 10px 10px 10px;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .hud-panel { background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #333; border-radius: 5px; }
+        
+        #noise-meter-container { width: 100px; height: 15px; background: #333; border-radius: 8px; overflow: hidden; margin-top: 5px;}
+        #noise-meter { width: 0%; height: 100%; background: #0f0; transition: width 0.1s, background 0.2s; }
+        
+        #energy-bar-container { width: 150px; height: 15px; background: #333; border-radius: 8px; overflow: hidden; margin-top: 5px;}
+        #energy-bar { width: 100%; height: 100%; background: var(--primary); }
+
+        .hud-bottom { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: env(safe-area-inset-bottom); pointer-events: auto;}
+        
+        /* Mobile Touch Controls */
+        .touch-zone { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; position: relative; }
+        .touch-nub { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.5); position: absolute; }
+        .action-btns { display: flex; flex-direction: column; gap: 10px; }
+        .action-btn { width: 60px; height: 60px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; background: rgba(0, 0, 0, 0.5); }
+        
+        #fullscreen-btn, #pause-btn { pointer-events: auto; background: rgba(0,0,0,0.5); border: 1px solid #fff; padding: 8px 12px; margin: 0 5px; }
+        
+        .desktop-hint { font-size: 0.8rem; color: #888; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- Camera Feed -->
+    <video id="camera-feed" autoplay playsinline></video>
+
+    <!-- Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+        <div class="hud-top">
+            <div class="hud-panel">
+                <div>Objective: <span id="hud-obj">Find Signal 1</span></div>
+                <div>Status: <span id="hud-status" style="color:var(--primary)">Clear</span></div>
+            </div>
+            <div class="hud-panel" style="text-align: right;">
+                <div style="display:flex; justify-content:flex-end;">
+                    <button id="pause-btn">||</button>
+                    <button id="fullscreen-btn">⛶</button>
+                </div>
+                <div>Energy</div>
+                <div id="energy-bar-container"><div id="energy-bar"></div></div>
+                <div>Mic Noise</div>
+                <div id="noise-meter-container"><div id="noise-meter"></div></div>
+            </div>
+        </div>
+        <div class="hud-bottom">
+            <div class="touch-zone" id="joystick-left">
+                <div class="touch-nub" id="nub-left"></div>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn" id="btn-scan">SCAN</button>
+                <button class="action-btn danger" id="btn-shake">SHAKE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="screen-menu" class="ui-layer">
+        <h1>Sensory Survival</h1>
+        <p>Your phone is your only lifeline. The entity hunts by sound. Do not drop the device.</p>
+        <button id="btn-start">Start Initialization</button>
+        <button id="btn-load" class="hidden">Load Saved Game</button>
+        <div class="desktop-hint">Desktop fallback enabled: WASD to move, Mouse to look, Space to shake, Shift to scan.</div>
+    </div>
+
+    <!-- Capabilities Screen -->
+    <div id="screen-caps" class="ui-layer hidden">
+        <h1>Device Sensors</h1>
+        <p>To survive, we need to connect to your device hardware. Please grant permissions if asked.</p>
+        <div class="checklist">
+            <span id="cap-motion"><span class="status-icon">❓</span> Motion & Tilt (Steering)</span>
+            <span id="cap-mic"><span class="status-icon">❓</span> Microphone (Noise level)</span>
+            <span id="cap-cam"><span class="status-icon">❓</span> Camera (AR Scanner)</span>
+        </div>
+        <button id="btn-req-sensors">Detect & Authorize</button>
+        <button id="btn-continue-tut" class="hidden">Continue to Tutorial</button>
+    </div>
+
+    <!-- Tutorial Screen -->
+    <div id="screen-tutorial" class="ui-layer hidden">
+        <h1>Training</h1>
+        <p id="tut-text">Tilt your phone forward to move, and left/right to look around. (Or use WASD + Mouse).</p>
+        <h2 id="tut-progress" style="color:var(--primary)">0%</h2>
+        <button id="btn-skip-tut" style="margin-top:40px; font-size: 0.8rem;">Skip Tutorial</button>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="screen-pause" class="ui-layer hidden">
+        <h1>Paused</h1>
+        <button id="btn-resume">Resume</button>
+        <button id="btn-save">Save Game</button>
+        <button id="btn-quit" class="danger">Quit to Menu</button>
+    </div>
+
+    <!-- Game Over -->
+    <div id="screen-gameover" class="ui-layer hidden">
+        <h1 style="color:var(--danger)">YOU WERE HEARD</h1>
+        <p>The entity found you.</p>
+        <button id="btn-restart">Restart</button>
+    </div>
+
+    <!-- Victory -->
+    <div id="screen-victory" class="ui-layer hidden">
+        <h1 style="color:var(--primary)">EXTRACTION SUCCESSFUL</h1>
+        <p>You made it out alive.</p>
+        <button id="btn-restart-vic">Play Again</button>
+    </div>
+
+<script>
+/**
+ * SINGLE FILE GAME ENGINE & LOGIC
+ */
+
+// --- Global State ---
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const video = document.getElementById('camera-feed');
+
+let state = 'menu'; // menu, caps, tutorial, playing, paused, gameover, victory
+let lastTime = 0;
+let reqId;
+
+const capabilities = { motion: false, mic: false, cam: false };
+const keys = {};
+const mouse = { x: 0, y: 0 };
+let touchJoy = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
+
+// --- Audio System (Web Audio API) ---
+let audioCtx;
+let analyser;
+let micDataArray;
+let micLevel = 0; // 0 to 100
+let backgroundOsc, backgroundGain;
+
+function initAudio() {
+    if (audioCtx) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+    
+    // Background ambient drone
+    backgroundOsc = audioCtx.createOscillator();
+    backgroundGain = audioCtx.createGain();
+    backgroundOsc.type = 'sine';
+    backgroundOsc.frequency.value = 50;
+    backgroundGain.gain.value = 0.05;
+    backgroundOsc.connect(backgroundGain);
+    backgroundGain.connect(audioCtx.destination);
+    backgroundOsc.start();
+}
+
+function playSound(type) {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+    if (type === 'step') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'shake') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.5);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+    } else if (type === 'signal') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.setValueAtTime(800, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+    } else if (type === 'roar') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + 1.0);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 1.0);
+        osc.start(now); osc.stop(now + 1.0);
+    }
+}
+
+// --- Game Objects ---
+const mapSize = 2000;
+const walls = [
+    // Outer boundary
+    {x: 0, y: 0, w: mapSize, h: 20}, {x: 0, y: 0, w: 20, h: mapSize},
+    {x: 0, y: mapSize-20, w: mapSize, h: 20}, {x: mapSize-20, y: 0, w: 20, h: mapSize},
+    // Inner maze pieces
+    {x: 300, y: 300, w: 20, h: 400}, {x: 300, y: 300, w: 400, h: 20},
+    {x: 800, y: 200, w: 20, h: 600}, {x: 500, y: 600, w: 500, h: 20},
+    {x: 200, y: 900, w: 600, h: 20}, {x: 1200, y: 400, w: 20, h: 800},
+    {x: 1000, y: 1200, w: 600, h: 20}, {x: 500, y: 1400, w: 20, h: 400}
+];
+
+let player = {
+    x: 150, y: 150, radius: 15, angle: 0, speed: 150, 
+    energy: 100, maxEnergy: 100, isScanning: false, stepDist: 0
+};
+
+let monster = {
+    x: 1800, y: 1800, radius: 25, speed: 90, state: 'idle', // idle, investigating, chasing, stunned
+    targetX: null, targetY: null, stunTimer: 0
+};
+
+let objectives = [
+    {x: 600, y: 450, active: true, id: 1},
+    {x: 1400, y: 800, active: false, id: 2},
+    {x: 300, y: 1600, active: false, id: 3},
+    {x: 1800, y: 100, active: false, id: 'Extraction', isExt: true}
+];
+let currentObj = 0;
+
+// --- Input Handling ---
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+// Touch Joystick
+const joyLeft = document.getElementById('joystick-left');
+const nubLeft = document.getElementById('nub-left');
+
+function handleTouchStart(e) {
+    if(state !== 'playing' && state !== 'tutorial') return;
+    const touch = e.changedTouches[0];
+    const rect = joyLeft.getBoundingClientRect();
+    if(touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        touchJoy.active = true;
+        updateJoy(touch, rect);
+    }
+}
+function handleTouchMove(e) {
+    if(!touchJoy.active) return;
+    e.preventDefault();
+    const rect = joyLeft.getBoundingClientRect();
+    const touch = Array.from(e.touches).find(t => 
+        t.clientX >= rect.left-50 && t.clientX <= rect.right+50 && 
+        t.clientY >= rect.top-50 && t.clientY <= rect.bottom+50
+    );
+    if(touch) updateJoy(touch, rect);
+}
+function handleTouchEnd(e) {
+    touchJoy.active = false;
+    touchJoy.dx = 0; touchJoy.dy = 0;
+    nubLeft.style.transform = `translate(0px, 0px)`;
+}
+function updateJoy(touch, rect) {
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    let dx = touch.clientX - cx;
+    let dy = touch.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxR = rect.width/2 - 25;
+    if(dist > maxR) { dx = (dx/dist)*maxR; dy = (dy/dist)*maxR; }
+    nubLeft.style.transform = `translate(${dx}px, ${dy}px)`;
+    touchJoy.dx = dx / maxR; // -1 to 1
+    touchJoy.dy = dy / maxR;
+}
+joyLeft.addEventListener('touchstart', handleTouchStart, {passive:false});
+joyLeft.addEventListener('touchmove', handleTouchMove, {passive:false});
+joyLeft.addEventListener('touchend', handleTouchEnd);
+joyLeft.addEventListener('touchcancel', handleTouchEnd);
+
+// Action buttons
+const btnScan = document.getElementById('btn-scan');
+const btnShake = document.getElementById('btn-shake');
+btnScan.addEventListener('touchstart', () => { if(state==='playing'||state==='tutorial') keys['ShiftLeft'] = true; }, {passive:true});
+btnScan.addEventListener('touchend', () => keys['ShiftLeft'] = false);
+btnScan.addEventListener('mousedown', () => keys['ShiftLeft'] = true);
+btnScan.addEventListener('mouseup', () => keys['ShiftLeft'] = false);
+
+btnShake.addEventListener('touchstart', triggerShake, {passive:true});
+btnShake.addEventListener('mousedown', triggerShake);
+
+// PC Mouse Look
+canvas.addEventListener('mousemove', e => {
+    if(!capabilities.motion && (state === 'playing' || state === 'tutorial')) {
+        mouse.x = e.clientX; mouse.y = e.clientY;
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        player.angle = Math.atan2(mouse.y - cy, mouse.x - cx);
+    }
+});
+
+function triggerShake() {
+    if ((state === 'playing' || state === 'tutorial') && player.energy > 30) {
+        player.energy -= 30;
+        playSound('shake');
+        if(state === 'tutorial') tutProgress.shake = true;
+        if(monster.state !== 'stunned') {
+            monster.state = 'stunned';
+            monster.stunTimer = 3;
+            playSound('roar');
+        }
+    }
+}
+
+// Device Orientation (Tilt to move/look)
+let tilt = { pitch: 0, roll: 0 };
+window.addEventListener('deviceorientation', e => {
+    if(state === 'playing' || state === 'tutorial') {
+        tilt.pitch = e.beta || 0; // -180 to 180 (forward/back)
+        tilt.roll = e.gamma || 0; // -90 to 90 (left/right)
+    }
+});
+
+// Device Motion (Shake)
+let lastAcc = {x:0, y:0, z:0};
+window.addEventListener('devicemotion', e => {
+    if(state === 'playing' || state === 'tutorial') {
+        let acc = e.accelerationIncludingGravity;
+        if(!acc) return;
+        let delta = Math.abs(acc.x - lastAcc.x) + Math.abs(acc.y - lastAcc.y) + Math.abs(acc.z - lastAcc.z);
+        if(delta > 35) triggerShake(); // Strong shake
+        lastAcc = {x: acc.x, y: acc.y, z: acc.z};
+    }
+});
+
+
+// --- Setup & Capabilities ---
+const UIs = {
+    menu: document.getElementById('screen-menu'),
+    caps: document.getElementById('screen-caps'),
+    tutorial: document.getElementById('screen-tutorial'),
+    hud: document.getElementById('hud'),
+    pause: document.getElementById('screen-pause'),
+    gameover: document.getElementById('screen-gameover'),
+    victory: document.getElementById('screen-victory')
+};
+
+function switchState(newState) {
+    state = newState;
+    Object.values(UIs).forEach(ui => ui.classList.add('hidden'));
+    
+    if(state === 'menu') UIs.menu.classList.remove('hidden');
+    if(state === 'caps') UIs.caps.classList.remove('hidden');
+    if(state === 'tutorial') UIs.tutorial.classList.remove('hidden');
+    if(state === 'playing') UIs.hud.classList.remove('hidden');
+    if(state === 'paused') { UIs.hud.classList.remove('hidden'); UIs.pause.classList.remove('hidden'); }
+    if(state === 'gameover') UIs.gameover.classList.remove('hidden');
+    if(state === 'victory') UIs.victory.classList.remove('hidden');
+    
+    if(state === 'playing' && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+document.getElementById('btn-start').addEventListener('click', () => {
+    initAudio();
+    if(localStorage.getItem('sensorySave')) document.getElementById('btn-load').classList.remove('hidden');
+    switchState('caps');
+});
+
+document.getElementById('btn-load').addEventListener('click', () => {
+    initAudio();
+    loadGame();
+});
+
+document.getElementById('btn-req-sensors').addEventListener('click', async () => {
+    // 1. Motion
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission === 'granted') capabilities.motion = true;
+        } catch(e){ console.warn(e); }
+    } else {
+        capabilities.motion = true; // Assume standard non-iOS device
+    }
+    document.getElementById('cap-motion').innerHTML = `${capabilities.motion ? '✅' : '❌'} Motion & Tilt`;
+
+    // 2. Microphone
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        capabilities.mic = true;
+        if(audioCtx) {
+            const source = audioCtx.createMediaStreamSource(stream);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            micDataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+    } catch(e) { console.warn("Mic denied"); }
+    document.getElementById('cap-mic').innerHTML = `${capabilities.mic ? '✅' : '❌'} Microphone`;
+
+    // 3. Camera
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        capabilities.cam = true;
+        video.srcObject = stream;
+    } catch(e) { console.warn("Camera denied"); }
+    document.getElementById('cap-cam').innerHTML = `${capabilities.cam ? '✅' : '❌'} Camera`;
+
+    document.getElementById('btn-continue-tut').classList.remove('hidden');
+});
+
+document.getElementById('btn-continue-tut').addEventListener('click', () => {
+    switchState('tutorial');
+    startTutorial();
+});
+
+// Fullscreen
+document.getElementById('fullscreen-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+// Pause / Resume / Save
+document.getElementById('pause-btn').addEventListener('click', () => switchState('paused'));
+document.getElementById('btn-resume').addEventListener('click', () => switchState('playing'));
+window.addEventListener('keydown', e => { if(e.code === 'Escape') switchState(state === 'playing' ? 'paused' : 'playing'); });
+
+document.getElementById('btn-save').addEventListener('click', () => {
+    const data = {
+        px: player.x, py: player.y, pEnergy: player.energy,
+        mx: monster.x, my: monster.y, mState: monster.state,
+        objs: objectives, currObj: currentObj
+    };
+    localStorage.setItem('sensorySave', JSON.stringify(data));
+    alert("Game Saved!");
+});
+
+function loadGame() {
+    const data = JSON.parse(localStorage.getItem('sensorySave'));
+    if(data) {
+        player.x = data.px; player.y = data.py; player.energy = data.pEnergy;
+        monster.x = data.mx; monster.y = data.my; monster.state = data.mState;
+        objectives = data.objs; currentObj = data.currObj;
+        updateObjectiveUI();
+        switchState('playing');
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+document.getElementById('btn-quit').addEventListener('click', () => { location.reload(); });
+document.getElementById('btn-restart').addEventListener('click', () => { location.reload(); });
+document.getElementById('btn-restart-vic').addEventListener('click', () => { location.reload(); });
+
+// --- Tutorial Logic ---
+let tutProgress = { move: false, mic: false, shake: false, scan: false, step: 0 };
+function startTutorial() {
+    player.x = 150; player.y = 150; // safe zone
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+function updateTutorial() {
+    const text = document.getElementById('tut-text');
+    const prog = document.getElementById('tut-progress');
+    
+    if (tutProgress.step === 0) {
+        text.innerText = "Tilt phone forward/back or use WASD to move. Tilt left/right or use mouse to look.";
+        if (keys['KeyW'] || keys['KeyA'] || keys['KeyS'] || keys['KeyD'] || Math.abs(tilt.pitch)>15 || touchJoy.dx !== 0 || touchJoy.dy !== 0) {
+            tutProgress.move = true;
+            tutProgress.step++;
+        }
+    } else if (tutProgress.step === 1) {
+        text.innerText = capabilities.mic ? "Make some noise! (Speak into mic)" : "Noise system disabled. Press SPACE to simulate noise.";
+        prog.innerText = "25%";
+        if (micLevel > 30 || keys['Space']) { tutProgress.mic = true; tutProgress.step++; }
+    } else if (tutProgress.step === 2) {
+        text.innerText = "If caught, SHAKE device or press SHAKE button to stun the entity (uses energy).";
+        prog.innerText = "50%";
+        if (tutProgress.shake || keys['Space']) { tutProgress.step++; }
+    } else if (tutProgress.step === 3) {
+        text.innerText = "Hold SCAN (Shift) to use the augmented scanner and see through the dark. Drains energy.";
+        prog.innerText = "75%";
+        if (keys['ShiftLeft']) { tutProgress.scan = true; tutProgress.step++; }
+    } else if (tutProgress.step === 4) {
+        prog.innerText = "100%";
+        text.innerText = "Tutorial complete. Find the signals to escape.";
+        setTimeout(() => { if(state==='tutorial') { switchState('playing'); updateObjectiveUI(); } }, 2000);
+        tutProgress.step++;
+    }
+}
+document.getElementById('btn-skip-tut').addEventListener('click', () => {
+    switchState('playing');
+    updateObjectiveUI();
+});
+
+// --- Main Engine ---
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function rectIntersect(x1, y1, w1, h1, x2, y2, r) {
+    let testX = x2; let testY = y2;
+    if (x2 < x1) testX = x1; else if (x2 > x1 + w1) testX = x1 + w1;
+    if (y2 < y1) testY = y1; else if (y2 > y1 + h1) testY = y1 + h1;
+    let distX = x2 - testX; let distY = y2 - testY;
+    return (distX*distX + distY*distY) <= (r*r);
+}
+
+function resolveCollision(obj) {
+    for (let w of walls) {
+        if (rectIntersect(w.x, w.y, w.w, w.h, obj.x, obj.y, obj.radius)) {
+            // Simple push out
+            let cx = w.x + w.w/2; let cy = w.y + w.h/2;
+            let dx = obj.x - cx; let dy = obj.y - cy;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 0) obj.x = w.x + w.w + obj.radius;
+                else obj.x = w.x - obj.radius;
+            } else {
+                if(dy > 0) obj.y = w.y + w.h + obj.radius;
+                else obj.y = w.y - obj.radius;
+            }
+        }
+    }
+    // Boundaries
+    obj.x = Math.max(obj.radius, Math.min(mapSize - obj.radius, obj.x));
+    obj.y = Math.max(obj.radius, Math.min(mapSize - obj.radius, obj.y));
+}
+
+function lineOfSight(x1, y1, x2, y2) {
+    // Simple raycast against walls
+    for(let w of walls) {
+        // Line intersection check with AABB is complex, 
+        // quick hack: sample points along the line
+        let dist = Math.hypot(x2-x1, y2-y1);
+        let steps = dist / 20;
+        let dx = (x2-x1)/steps; let dy = (y2-y1)/steps;
+        for(let i=1; i<steps; i++) {
+            let px = x1 + dx*i; let py = y1 + dy*i;
+            if(px > w.x && px < w.x+w.w && py > w.y && py < w.y+w.h) return false;
+        }
+    }
+    return true;
+}
+
+function updateMic() {
+    if (capabilities.mic && analyser) {
+        analyser.getByteFrequencyData(micDataArray);
+        let sum = 0;
+        for(let i = 0; i < micDataArray.length; i++) sum += micDataArray[i];
+        let avg = sum / micDataArray.length;
+        micLevel = Math.min(100, avg * 1.5); // scale
+    } else {
+        if(keys['Space'] && state !== 'tutorial') micLevel = 80;
+        else micLevel = Math.max(0, micLevel - 5);
+    }
+    
+    if(state === 'playing') {
+        const meter = document.getElementById('noise-meter');
+        meter.style.width = micLevel + '%';
+        meter.style.background = micLevel > 60 ? 'red' : (micLevel > 30 ? 'yellow' : 'lime');
+    }
+}
+
+function updateObjectiveUI() {
+    if(currentObj < objectives.length) {
+        let obj = objectives[currentObj];
+        document.getElementById('hud-obj').innerText = obj.isExt ? "REACH EXTRACTION" : `Activate Signal ${obj.id}`;
+    }
+}
+
+function updateLogic(dt) {
+    updateMic();
+    
+    // Player Move
+    let dx = 0; let dy = 0;
+    if (keys['KeyW']) dy -= 1; if (keys['KeyS']) dy += 1;
+    if (keys['KeyA']) dx -= 1; if (keys['KeyD']) dx += 1;
+    
+    // Touch override
+    if(touchJoy.active) {
+        dx = touchJoy.dx; dy = touchJoy.dy;
+    } 
+    // Tilt override (if significant tilt and no other inputs)
+    else if (capabilities.motion && !keys['KeyW'] && !keys['KeyS']) {
+        // Pitch controls forward/back (-90 flat, -45 tilted forward)
+        // Adjust baseline based on holding device naturally
+        let pitch = tilt.pitch;
+        if(pitch > 10) dy = 1; else if(pitch < -10) dy = -1;
+        
+        // Roll controls rotation
+        let roll = tilt.roll;
+        if (Math.abs(roll) > 10) {
+            player.angle += (roll / 90) * Math.PI * dt; // rotate
+        }
+    }
+    
+    // Normalize and apply speed
+    let moveMag = Math.sqrt(dx*dx + dy*dy);
+    if(moveMag > 0) {
+        if (!capabilities.motion || touchJoy.active) {
+            // Absolute movement (WASD / Touch)
+            dx = dx/moveMag; dy = dy/moveMag;
+            player.x += dx * player.speed * dt;
+            player.y += dy * player.speed * dt;
+        } else {
+            // Relative movement (forward/back based on angle)
+            player.x += Math.cos(player.angle) * -dy * player.speed * dt;
+            player.y += Math.sin(player.angle) * -dy * player.speed * dt;
+        }
+        
+        player.stepDist += player.speed * dt;
+        if(player.stepDist > 60) {
+            playSound('step');
+            player.stepDist = 0;
+            // moving creates noise
+            if(!capabilities.mic) micLevel = 40; 
+        }
+    }
+    
+    resolveCollision(player);
+
+    // Scanner
+    player.isScanning = keys['ShiftLeft'] && player.energy > 0;
+    if(player.isScanning) {
+        player.energy -= 10 * dt;
+    } else {
+        player.energy += 2 * dt;
+    }
+    player.energy = Math.max(0, Math.min(player.maxEnergy, player.energy));
+    document.getElementById('energy-bar').style.width = player.energy + '%';
+
+    if(state === 'tutorial') { updateTutorial(); return; }
+
+    // --- GAMEPLAY LOOP ---
+    
+    // Objectives
+    if (currentObj < objectives.length) {
+        let target = objectives[currentObj];
+        if (Math.hypot(player.x - target.x, player.y - target.y) < 40) {
+            playSound('signal');
+            target.active = false;
+            currentObj++;
+            if(currentObj < objectives.length) {
+                objectives[currentObj].active = true;
+                updateObjectiveUI();
+            } else {
+                switchState('victory');
+            }
+        }
+    }
+
+    // Monster AI
+    const distToPlayer = Math.hypot(player.x - monster.x, player.y - monster.y);
+    const hasLOS = lineOfSight(monster.x, monster.y, player.x, player.y);
+    const statusTxt = document.getElementById('hud-status');
+
+    if (monster.state === 'stunned') {
+        statusTxt.innerText = "STUNNED"; statusTxt.style.color = "yellow";
+        monster.stunTimer -= dt;
+        if(monster.stunTimer <= 0) monster.state = 'idle';
+    } else {
+        // State transitions
+        if (micLevel > 60) {
+            monster.state = 'investigating';
+            monster.targetX = player.x; monster.targetY = player.y;
+        }
+        
+        if (distToPlayer < 400 && hasLOS) {
+            monster.state = 'chasing';
+        } else if (monster.state === 'chasing' && !hasLOS && distToPlayer > 500) {
+            monster.state = 'investigating';
+            monster.targetX = player.x; monster.targetY = player.y;
+        }
+
+        // State actions
+        if (monster.state === 'idle') {
+            statusTxt.innerText = "Clear"; statusTxt.style.color = "var(--primary)";
+            // Wander slowly
+            monster.x += (Math.random()-0.5) * 20 * dt;
+            monster.y += (Math.random()-0.5) * 20 * dt;
+        } else if (monster.state === 'investigating') {
+            statusTxt.innerText = "Searching"; statusTxt.style.color = "orange";
+            let mdx = monster.targetX - monster.x;
+            let mdy = monster.targetY - monster.y;
+            let mdist = Math.hypot(mdx, mdy);
+            if(mdist > 10) {
+                monster.x += (mdx/mdist) * (monster.speed * 0.7) * dt;
+                monster.y += (mdy/mdist) * (monster.speed * 0.7) * dt;
+            } else {
+                monster.state = 'idle';
+            }
+        } else if (monster.state === 'chasing') {
+            statusTxt.innerText = "HUNTING"; statusTxt.style.color = "var(--danger)";
+            let mdx = player.x - monster.x;
+            let mdy = player.y - monster.y;
+            let mdist = Math.hypot(mdx, mdy);
+            monster.x += (mdx/mdist) * monster.speed * dt;
+            monster.y += (mdy/mdist) * monster.speed * dt;
+            
+            // Catch condition
+            if (mdist < player.radius + monster.radius) {
+                switchState('gameover');
+                playSound('roar');
+            }
+        }
+        resolveCollision(monster);
+    }
+}
+
+function render() {
+    // Clear
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    // Camera follow player
+    const cx = canvas.width/2; const cy = canvas.height/2;
+    ctx.translate(cx - player.x, cy - player.y);
+
+    // Draw Map & Video feed
+    if(capabilities.cam && player.isScanning) {
+        ctx.save();
+        ctx.globalAlpha = 0.3; // faint video background
+        // Map video to fill visible area relative to player
+        try { ctx.drawImage(video, player.x - cx, player.y - cy, canvas.width, canvas.height); } catch(e){}
+        ctx.restore();
+    }
+
+    // Grid (floor)
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let i=0; i<mapSize; i+=100) {
+        ctx.moveTo(i, 0); ctx.lineTo(i, mapSize);
+        ctx.moveTo(0, i); ctx.lineTo(mapSize, i);
+    }
+    ctx.stroke();
+
+    // Walls
+    ctx.fillStyle = player.isScanning ? '#0f4' : '#555';
+    for(let w of walls) {
+        ctx.fillRect(w.x, w.y, w.w, w.h);
+        if(player.isScanning) ctx.strokeRect(w.x, w.y, w.w, w.h);
+    }
+
+    // Objectives
+    for(let obj of objectives) {
+        if(obj.active) {
+            ctx.fillStyle = obj.isExt ? '#0ff' : '#0f0';
+            ctx.beginPath();
+            ctx.arc(obj.x, obj.y, 20 + Math.sin(performance.now()/200)*5, 0, Math.PI*2);
+            ctx.fill();
+            if(player.isScanning) {
+                ctx.strokeStyle = '#fff';
+                ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(obj.x, obj.y); ctx.stroke();
+            }
+        }
+    }
+
+    // Monster
+    if (state !== 'tutorial' || player.isScanning) {
+        ctx.fillStyle = monster.state === 'stunned' ? '#555' : 'red';
+        ctx.beginPath();
+        ctx.arc(monster.x, monster.y, monster.radius, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    // Player
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Player direction indicator
+    ctx.strokeStyle = '#0ff';
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.lineTo(player.x + Math.cos(player.angle)*30, player.y + Math.sin(player.angle)*30);
+    ctx.stroke();
+
+    ctx.restore(); // reset translation
+
+    // --- Lighting / Fog of War ---
+    if (!player.isScanning) {
+        ctx.globalCompositeOperation = 'destination-in';
+        let gradient = ctx.createRadialGradient(cx, cy, 50, cx, cy, 350);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        
+        ctx.beginPath();
+        if (capabilities.motion) {
+            // Flashlight cone based on angle
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, 400, player.angle - 0.7, player.angle + 0.7);
+        } else {
+            // Circle around player
+            ctx.arc(cx, cy, 250, 0, Math.PI*2);
+        }
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // Add absolute darkness outside
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over';
+    } else {
+        // Scan overlay effect
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // scanlines
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        for(let i=0; i<canvas.height; i+=4) ctx.fillRect(0, i, canvas.width, 1);
+    }
+    
+    // Blood vignette if monster is close
+    const distToPlayer = Math.hypot(player.x - monster.x, player.y - monster.y);
+    if(state === 'playing' && distToPlayer < 400) {
+        const intensity = 1 - (distToPlayer/400);
+        let g = ctx.createRadialGradient(cx,cy, cx*0.5, cx,cy, cx*1.2);
+        g.addColorStop(0, 'transparent');
+        g.addColorStop(1, `rgba(255,0,0,${intensity * 0.8})`);
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
+}
+
+function gameLoop(time) {
+    if(!lastTime) lastTime = time;
+    let dt = (time - lastTime) / 1000;
+    lastTime = time;
+    
+    // Cap dt to prevent massive jumps
+    if (dt > 0.1) dt = 0.1;
+
+    if (state === 'playing' || state === 'tutorial') {
+        updateLogic(dt);
+        render();
+    }
+    
+    reqId = requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
