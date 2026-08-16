@@ -1,0 +1,4643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no,
+               viewport-fit=cover">
+
+<meta name="theme-color" content="#05070c">
+
+<meta name="apple-mobile-web-app-capable"
+      content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent">
+
+<title>Mobile Lab</title>
+
+<style>
+:root {
+    --bg:#05070c;
+    --panel:#0d121c;
+    --panel2:#131b28;
+    --border:#263348;
+    --text:#f5f7fb;
+    --muted:#8995a8;
+    --green:#43e58a;
+    --blue:#55a9ff;
+    --yellow:#ffd166;
+    --red:#ff5c72;
+    --purple:#ad7cff;
+    --cyan:#45e6ff;
+
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-left:env(safe-area-inset-left,0px);
+    --safe-right:env(safe-area-inset-right,0px);
+}
+
+* {
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body {
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+
+    background:var(--bg);
+    color:var(--text);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    touch-action:none;
+}
+
+button {
+    font:inherit;
+}
+
+#app {
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    padding:
+        calc(8px + var(--safe-top))
+        calc(10px + var(--safe-right))
+        calc(8px + var(--safe-bottom))
+        calc(10px + var(--safe-left));
+}
+
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+#topbar {
+    flex:0 0 auto;
+
+    min-height:50px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:8px;
+}
+
+.logo {
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    font-weight:900;
+    font-size:18px;
+}
+
+.logoIcon {
+    width:34px;
+    height:34px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:10px;
+
+    background:var(--panel2);
+    border:1px solid var(--border);
+}
+
+.topActions {
+    display:flex;
+    gap:6px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+    min-height:40px;
+
+    padding:8px 12px;
+
+    border-radius:10px;
+
+    border:1px solid var(--border);
+
+    background:var(--panel);
+    color:white;
+
+    font-weight:800;
+    font-size:12px;
+
+    cursor:pointer;
+
+    touch-action:manipulation;
+}
+
+.btn:active {
+    transform:scale(.95);
+}
+
+.btn.primary {
+    background:#12653f;
+    border-color:#21875a;
+}
+
+.btn.blue {
+    background:#123d6a;
+    border-color:#2768a7;
+}
+
+.btn.red {
+    background:#51202b;
+    border-color:#7a3040;
+}
+
+.btn.yellow {
+    background:#51421e;
+    border-color:#786328;
+}
+
+.btn:disabled {
+    opacity:.4;
+    pointer-events:none;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+#main {
+    position:relative;
+
+    flex:1;
+
+    min-height:0;
+}
+
+
+/* =========================================================
+   HOME
+========================================================= */
+
+#home {
+    width:100%;
+    height:100%;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    padding:5px 2px 30px;
+
+    touch-action:pan-y;
+}
+
+.hero {
+    text-align:center;
+
+    padding:12px 8px 20px;
+}
+
+.hero h1 {
+    margin:0;
+
+    font-size:
+        clamp(34px,8vw,60px);
+
+    letter-spacing:-3px;
+}
+
+.hero p {
+    margin:8px auto 0;
+
+    max-width:680px;
+
+    color:var(--muted);
+
+    line-height:1.5;
+    font-size:13px;
+}
+
+
+/* =========================================================
+   DEVICE STATUS
+========================================================= */
+
+.devicePanel {
+    max-width:900px;
+
+    margin:0 auto 15px;
+
+    padding:12px;
+
+    background:var(--panel);
+
+    border:1px solid var(--border);
+
+    border-radius:15px;
+}
+
+.deviceTitle {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:10px;
+
+    font-size:12px;
+    font-weight:900;
+}
+
+.deviceGrid {
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(150px,1fr)
+        );
+
+    gap:7px;
+}
+
+.cap {
+    padding:9px;
+
+    border-radius:10px;
+
+    border:1px solid var(--border);
+
+    background:#0a0f17;
+}
+
+.capTop {
+    display:flex;
+    gap:7px;
+    align-items:center;
+}
+
+.capIcon {
+    font-size:18px;
+}
+
+.capName {
+    font-size:11px;
+    font-weight:900;
+}
+
+.capStatus {
+    margin-top:3px;
+
+    color:var(--muted);
+
+    font-size:9px;
+}
+
+.cap.ok {
+    border-color:#1d5139;
+}
+
+.cap.ok .capStatus {
+    color:var(--green);
+}
+
+.cap.warn {
+    border-color:#5b4c27;
+}
+
+.cap.warn .capStatus {
+    color:var(--yellow);
+}
+
+.cap.no {
+    border-color:#512b34;
+}
+
+.cap.no .capStatus {
+    color:var(--red);
+}
+
+
+/* =========================================================
+   EXPERIMENTS
+========================================================= */
+
+.sectionTitle {
+    max-width:900px;
+
+    margin:0 auto 8px;
+
+    font-size:12px;
+    font-weight:900;
+
+    color:var(--muted);
+
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.experiments {
+    max-width:900px;
+
+    margin:auto;
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(210px,1fr)
+        );
+
+    gap:10px;
+}
+
+.card {
+    position:relative;
+
+    min-height:160px;
+
+    padding:17px;
+
+    border-radius:17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #121a28,
+            #090d15
+        );
+
+    border:1px solid var(--border);
+
+    cursor:pointer;
+
+    overflow:hidden;
+
+    transition:
+        transform .15s,
+        border-color .15s;
+}
+
+.card:hover {
+    transform:translateY(-2px);
+    border-color:#3a4b66;
+}
+
+.card:active {
+    transform:scale(.98);
+}
+
+.cardEmoji {
+    font-size:31px;
+}
+
+.card h2 {
+    margin:9px 0 5px;
+
+    font-size:18px;
+}
+
+.card p {
+    margin:0;
+
+    color:var(--muted);
+
+    line-height:1.45;
+
+    font-size:11px;
+}
+
+.tag {
+    position:absolute;
+
+    top:12px;
+    right:12px;
+
+    padding:4px 7px;
+
+    border-radius:7px;
+
+    background:#1a2434;
+
+    color:#9eb1ca;
+
+    font-size:8px;
+    font-weight:900;
+}
+
+
+/* =========================================================
+   EXPERIMENT SCREEN
+========================================================= */
+
+.screen {
+    position:absolute;
+
+    inset:0;
+
+    display:none;
+
+    flex-direction:column;
+
+    min-height:0;
+}
+
+.screen.active {
+    display:flex;
+}
+
+.screenHeader {
+    flex:0 0 auto;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:8px;
+
+    padding:4px 0 8px;
+}
+
+.screenTitle {
+    font-size:15px;
+    font-weight:900;
+}
+
+.screenActions {
+    display:flex;
+    gap:5px;
+}
+
+
+/* =========================================================
+   LAB AREA
+========================================================= */
+
+.labArea {
+    position:relative;
+
+    flex:1;
+
+    min-height:0;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+}
+
+.labCanvasWrap {
+    position:relative;
+
+    width:
+        min(
+            94vw,
+            82vh,
+            850px
+        );
+
+    aspect-ratio:1 / 1;
+}
+
+canvas {
+    display:block;
+
+    width:100%;
+    height:100%;
+
+    background:#05090f;
+
+    border:1px solid #28364b;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 25px 90px rgba(0,0,0,.55);
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.bottomControls {
+    flex:0 0 auto;
+
+    display:flex;
+
+    justify-content:center;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+
+    padding:8px 0 2px;
+}
+
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+.overlay {
+    position:absolute;
+
+    inset:0;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+
+    border-radius:18px;
+
+    background:
+        rgba(0,0,0,.72);
+
+    backdrop-filter:blur(5px);
+
+    z-index:10;
+}
+
+.overlay.show {
+    display:flex;
+}
+
+.overlayBox {
+    max-width:350px;
+
+    padding:20px;
+}
+
+.overlayBox h2 {
+    margin:0 0 7px;
+
+    font-size:28px;
+}
+
+.overlayBox p {
+    margin:0 0 15px;
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    line-height:1.5;
+}
+
+
+/* =========================================================
+   SENSOR HUD
+========================================================= */
+
+.hud {
+    position:absolute;
+
+    top:12px;
+    left:12px;
+
+    padding:8px 10px;
+
+    border-radius:9px;
+
+    background:
+        rgba(5,8,14,.75);
+
+    border:1px solid rgba(255,255,255,.1);
+
+    backdrop-filter:blur(6px);
+
+    font-size:10px;
+
+    z-index:5;
+}
+
+.hud strong {
+    color:var(--green);
+}
+
+
+/* =========================================================
+   D-PAD
+========================================================= */
+
+.dpad {
+    display:none;
+
+    grid-template-columns:
+        repeat(3,50px);
+
+    grid-template-rows:
+        repeat(2,43px);
+
+    gap:5px;
+}
+
+.dpad button {
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    background:var(--panel);
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:900;
+
+    touch-action:manipulation;
+}
+
+#dUp {
+    grid-column:2;
+}
+
+#dLeft {
+    grid-column:1;
+}
+
+#dDown {
+    grid-column:2;
+}
+
+#dRight {
+    grid-column:3;
+}
+
+
+/* =========================================================
+   SOUND MONSTER
+========================================================= */
+
+.soundMeter {
+    position:absolute;
+
+    left:50%;
+    transform:translateX(-50%);
+
+    bottom:22px;
+
+    width:70%;
+
+    height:16px;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    background:#121925;
+
+    border:1px solid #2b394d;
+
+    z-index:5;
+}
+
+.soundFill {
+    width:0%;
+    height:100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #43e58a,
+            #ffd166,
+            #ff5c72
+        );
+
+    transition:width .05s;
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+#cameraVideo {
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    border-radius:18px;
+
+    background:#05070c;
+}
+
+.cameraTarget {
+    position:absolute;
+
+    width:54px;
+    height:54px;
+
+    border-radius:50%;
+
+    border:3px solid var(--cyan);
+
+    box-shadow:
+        0 0 25px rgba(69,230,255,.65);
+
+    display:grid;
+
+    place-items:center;
+
+    font-size:24px;
+
+    z-index:5;
+}
+
+
+/* =========================================================
+   INSTALL CARD
+========================================================= */
+
+.install {
+    max-width:900px;
+
+    margin:15px auto 0;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    background:#101825;
+
+    border:1px solid var(--border);
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+.install strong {
+    color:white;
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toast {
+    position:fixed;
+
+    left:50%;
+
+    bottom:
+        calc(
+            20px +
+            var(--safe-bottom)
+        );
+
+    transform:
+        translate(-50%,20px);
+
+    opacity:0;
+
+    pointer-events:none;
+
+    z-index:1000;
+
+    max-width:90%;
+
+    padding:10px 14px;
+
+    border-radius:10px;
+
+    background:#141c2a;
+
+    border:1px solid #304059;
+
+    color:white;
+
+    font-size:11px;
+
+    font-weight:800;
+
+    transition:
+        opacity .2s,
+        transform .2s;
+}
+
+#toast.show {
+    opacity:1;
+
+    transform:
+        translate(-50%,0);
+}
+
+
+/* =========================================================
+   PERMISSION MODAL
+========================================================= */
+
+#permission {
+    position:fixed;
+
+    inset:0;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+    z-index:2000;
+
+    background:
+        rgba(0,0,0,.82);
+
+    backdrop-filter:blur(10px);
+}
+
+#permission.show {
+    display:flex;
+}
+
+.permissionCard {
+    width:min(440px,100%);
+
+    padding:22px;
+
+    border-radius:18px;
+
+    background:#0d131e;
+
+    border:1px solid var(--border);
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.7);
+}
+
+.permissionCard h2 {
+    margin:0 0 8px;
+}
+
+.permissionCard p {
+    color:var(--muted);
+
+    font-size:12px;
+
+    line-height:1.55;
+}
+
+.permissionActions {
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+
+    margin-top:15px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px) {
+
+    .experiments {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .card {
+        min-height:145px;
+        padding:13px;
+    }
+
+    .card h2 {
+        font-size:15px;
+    }
+
+    .card p {
+        font-size:10px;
+    }
+
+    .dpad {
+        display:grid;
+    }
+
+}
+
+
+/* =========================================================
+   LANDSCAPE
+========================================================= */
+
+@media(orientation:landscape) {
+
+    #topbar {
+        min-height:42px;
+    }
+
+    .labCanvasWrap {
+        width:
+            min(
+                70vh,
+                700px
+            );
+    }
+
+    .dpad {
+        position:fixed;
+
+        right:
+            calc(
+                10px +
+                var(--safe-right)
+            );
+
+        bottom:
+            calc(
+                10px +
+                var(--safe-bottom)
+            );
+
+        z-index:20;
+    }
+
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media(min-width:900px) {
+
+    .dpad {
+        display:none;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<header id="topbar">
+
+    <div class="logo">
+        <div class="logoIcon">🧪</div>
+        Mobile Lab
+    </div>
+
+    <div class="topActions">
+
+        <button
+            class="btn"
+            id="fullscreenBtn">
+            ⛶ Fullscreen
+        </button>
+
+        <button
+            class="btn"
+            id="homeBtn"
+            style="display:none">
+            ⌂ Lab
+        </button>
+
+    </div>
+
+</header>
+
+
+<main id="main">
+
+<!-- =====================================================
+     HOME
+====================================================== -->
+
+<section id="home">
+
+    <div class="hero">
+
+        <h1>Mobile Lab</h1>
+
+        <p>
+            Experiments that use your phone's
+            motion, microphone, camera, touch,
+            sound and haptics.
+        </p>
+
+    </div>
+
+
+    <div class="devicePanel">
+
+        <div class="deviceTitle">
+
+            <span>
+                DEVICE CAPABILITIES
+            </span>
+
+            <span
+                id="deviceType">
+                Detecting...
+            </span>
+
+        </div>
+
+        <div
+            class="deviceGrid"
+            id="deviceGrid">
+        </div>
+
+    </div>
+
+
+    <div class="sectionTitle">
+        Experiments
+    </div>
+
+
+    <div class="experiments">
+
+
+        <article
+            class="card"
+            id="snakeCard">
+
+            <span class="tag">
+                MOTION
+            </span>
+
+            <div class="cardEmoji">
+                🐍
+            </div>
+
+            <h2>
+                Sensor Snake
+            </h2>
+
+            <p>
+                Tilt your phone to control
+                the Snake. Touch and keyboard
+                are fallback controls.
+            </p>
+
+        </article>
+
+
+        <article
+            class="card"
+            id="soundCard">
+
+            <span class="tag">
+                MICROPHONE
+            </span>
+
+            <div class="cardEmoji">
+                👹
+            </div>
+
+            <h2>
+                Sound Monster
+            </h2>
+
+            <p>
+                Whisper to keep the monster
+                asleep. Make too much noise
+                and it wakes up.
+            </p>
+
+        </article>
+
+
+        <article
+            class="card"
+            id="freezeCard">
+
+            <span class="tag">
+                MOTION
+            </span>
+
+            <div class="cardEmoji">
+                🥷
+            </div>
+
+            <h2>
+                Don't Move
+            </h2>
+
+            <p>
+                Hold your phone perfectly
+                still. Movement wakes the
+                detector.
+            </p>
+
+        </article>
+
+
+        <article
+            class="card"
+            id="gravityCard">
+
+            <span class="tag">
+                PHYSICS
+            </span>
+
+            <div class="cardEmoji">
+                🌀
+            </div>
+
+            <h2>
+                Gravity Lab
+            </h2>
+
+            <p>
+                Tilt your phone and watch
+                particles fall under a
+                simulated gravity vector.
+            </p>
+
+        </article>
+
+
+        <article
+            class="card"
+            id="cameraCard">
+
+            <span class="tag">
+                CAMERA
+            </span>
+
+            <div class="cardEmoji">
+                📷
+            </div>
+
+            <h2>
+                Camera Lab
+            </h2>
+
+            <p>
+                Use the rear camera to find
+                virtual targets around you.
+            </p>
+
+        </article>
+
+    </div>
+
+
+    <div class="install">
+
+        <strong>📱 iPhone tip:</strong>
+
+        Open this page in Safari →
+        Share → Add to Home Screen.
+
+        The Home Screen version provides
+        the closest experience to a native
+        application.
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     SNAKE
+====================================================== -->
+
+<section
+    class="screen"
+    id="snakeScreen">
+
+    <div class="screenHeader">
+
+        <div class="screenTitle">
+            🐍 Sensor Snake
+        </div>
+
+        <div class="screenActions">
+
+            <button
+                class="btn"
+                id="snakeReset">
+                ↻ Reset
+            </button>
+
+            <button
+                class="btn primary"
+                id="snakePlay">
+                ▶ Play
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="labArea">
+
+        <div class="labCanvasWrap">
+
+            <canvas
+                id="snakeCanvas">
+            </canvas>
+
+            <div
+                class="hud">
+
+                Score:
+                <strong id="snakeScore">
+                    0
+                </strong>
+
+                &nbsp; |
+
+                Best:
+                <strong id="snakeBest">
+                    0
+                </strong>
+
+                <br>
+
+                Motion:
+                <strong id="snakeMotion">
+                    OFF
+                </strong>
+
+            </div>
+
+
+            <div
+                class="overlay"
+                id="snakeOverlay">
+
+                <div class="overlayBox">
+
+                    <h2
+                        id="snakeOverlayTitle">
+                        Ready
+                    </h2>
+
+                    <p
+                        id="snakeOverlayText">
+                        Press Play to start.
+                    </p>
+
+                    <button
+                        class="btn primary"
+                        id="snakeOverlayBtn">
+                        ▶ Play
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottomControls">
+
+        <button
+            class="btn"
+            id="snakeBack">
+            ← Lab
+        </button>
+
+        <button
+            class="btn blue"
+            id="snakeMotionBtn">
+            🌀 Enable Motion
+        </button>
+
+        <div class="dpad">
+
+            <button
+                id="dUp">
+                ▲
+            </button>
+
+            <button
+                id="dLeft">
+                ◀
+            </button>
+
+            <button
+                id="dDown">
+                ▼
+            </button>
+
+            <button
+                id="dRight">
+                ▶
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     SOUND MONSTER
+====================================================== -->
+
+<section
+    class="screen"
+    id="soundScreen">
+
+    <div class="screenHeader">
+
+        <div class="screenTitle">
+            👹 Sound Monster
+        </div>
+
+        <button
+            class="btn"
+            id="soundBack">
+            ← Lab
+        </button>
+
+    </div>
+
+
+    <div class="labArea">
+
+        <div class="labCanvasWrap">
+
+            <canvas
+                id="soundCanvas">
+            </canvas>
+
+            <div
+                class="hud">
+
+                Noise:
+                <strong id="soundLevel">
+                    0%
+                </strong>
+
+                <br>
+
+                Monster:
+                <strong id="monsterState">
+                    Sleeping
+                </strong>
+
+            </div>
+
+
+            <div class="soundMeter">
+
+                <div
+                    class="soundFill"
+                    id="soundFill">
+                </div>
+
+            </div>
+
+            <div
+                class="overlay"
+                id="soundOverlay">
+
+                <div class="overlayBox">
+
+                    <h2>
+                        😴 Sleeping
+                    </h2>
+
+                    <p>
+                        Press Play, then use
+                        your microphone.
+                    </p>
+
+                    <button
+                        class="btn primary"
+                        id="soundStart">
+                        🎤 Start
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottomControls">
+
+        <button
+            class="btn primary"
+            id="soundPlay">
+            ▶ Play
+        </button>
+
+        <button
+            class="btn"
+            id="soundReset">
+            ↻ Reset
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DON'T MOVE
+====================================================== -->
+
+<section
+    class="screen"
+    id="freezeScreen">
+
+    <div class="screenHeader">
+
+        <div class="screenTitle">
+            🥷 Don't Move
+        </div>
+
+        <button
+            class="btn"
+            id="freezeBack">
+            ← Lab
+        </button>
+
+    </div>
+
+
+    <div class="labArea">
+
+        <div class="labCanvasWrap">
+
+            <canvas
+                id="freezeCanvas">
+            </canvas>
+
+            <div
+                class="hud">
+
+                Movement:
+                <strong id="movementValue">
+                    0
+                </strong>
+
+                <br>
+
+                Status:
+                <strong id="freezeState">
+                    Ready
+                </strong>
+
+            </div>
+
+
+            <div
+                class="overlay show"
+                id="freezeOverlay">
+
+                <div class="overlayBox">
+
+                    <h2>
+                        🥷 Don't Move
+                    </h2>
+
+                    <p>
+                        The game will calibrate
+                        your phone, then you must
+                        stay still.
+                    </p>
+
+                    <button
+                        class="btn primary"
+                        id="freezeStart">
+                        ▶ Start
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     GRAVITY
+====================================================== -->
+
+<section
+    class="screen"
+    id="gravityScreen">
+
+    <div class="screenHeader">
+
+        <div class="screenTitle">
+            🌀 Gravity Lab
+        </div>
+
+        <button
+            class="btn"
+            id="gravityBack">
+            ← Lab
+        </button>
+
+    </div>
+
+
+    <div class="labArea">
+
+        <div class="labCanvasWrap">
+
+            <canvas
+                id="gravityCanvas">
+            </canvas>
+
+            <div class="hud">
+
+                Gravity X:
+                <strong id="gx">
+                    0
+                </strong>
+
+                <br>
+
+                Gravity Y:
+                <strong id="gy">
+                    1
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottomControls">
+
+        <button
+            class="btn primary"
+            id="gravityPlay">
+            ▶ Play
+        </button>
+
+        <button
+            class="btn"
+            id="gravityReset">
+            ↻ Reset
+        </button>
+
+        <button
+            class="btn blue"
+            id="gravityMotion">
+            🌀 Enable Motion
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CAMERA
+====================================================== -->
+
+<section
+    class="screen"
+    id="cameraScreen">
+
+    <div class="screenHeader">
+
+        <div class="screenTitle">
+            📷 Camera Lab
+        </div>
+
+        <button
+            class="btn"
+            id="cameraBack">
+            ← Lab
+        </button>
+
+    </div>
+
+
+    <div class="labArea">
+
+        <div class="labCanvasWrap">
+
+            <video
+                id="cameraVideo"
+                autoplay
+                muted
+                playsinline>
+            </video>
+
+
+            <div
+                class="cameraTarget"
+                id="cameraTarget">
+                👾
+            </div>
+
+
+            <div class="hud">
+
+                Targets:
+                <strong id="cameraScore">
+                    0
+                </strong>
+
+                <br>
+
+                Move the phone
+                to find them.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottomControls">
+
+        <button
+            class="btn primary"
+            id="cameraStart">
+            📷 Start Camera
+        </button>
+
+        <button
+            class="btn"
+            id="cameraStop">
+            ■ Stop
+        </button>
+
+    </div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<!-- =========================================================
+     PERMISSION
+========================================================= -->
+
+<div id="permission">
+
+    <div class="permissionCard">
+
+        <h2 id="permissionTitle">
+            Permission Required
+        </h2>
+
+        <p id="permissionText">
+            This experiment needs access
+            to a device feature.
+        </p>
+
+        <div class="permissionActions">
+
+            <button
+                class="btn primary"
+                id="permissionAllow">
+                Allow
+            </button>
+
+            <button
+                class="btn"
+                id="permissionCancel">
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="toast"></div>
+
+
+<script>
+
+/* =========================================================
+   MOBILE LAB ENGINE
+========================================================= */
+
+
+/* =========================================================
+   DEVICE
+========================================================= */
+
+const Device = {
+
+    ua:navigator.userAgent,
+
+    isIOS:
+        /iPad|iPhone|iPod/.test(
+            navigator.userAgent
+        ) ||
+        (
+            navigator.platform === "MacIntel" &&
+            navigator.maxTouchPoints > 1
+        ),
+
+    isAndroid:
+        /Android/i.test(
+            navigator.userAgent
+        ),
+
+    isMobile:
+        /Android|iPhone|iPad|iPod/i.test(
+            navigator.userAgent
+        ) ||
+        navigator.maxTouchPoints > 1,
+
+    touch:
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0,
+
+    motion:
+        "DeviceMotionEvent" in window,
+
+    orientation:
+        "DeviceOrientationEvent" in window,
+
+    media:
+        !!(
+            navigator.mediaDevices &&
+            navigator.mediaDevices.getUserMedia
+        ),
+
+    vibration:
+        "vibrate" in navigator,
+
+    fullscreen:
+        !!(
+            document.documentElement
+                .requestFullscreen
+        ),
+
+    browser() {
+
+        const ua =
+            navigator.userAgent;
+
+        if (/CriOS/i.test(ua))
+            return "Chrome iOS";
+
+        if (/FxiOS/i.test(ua))
+            return "Firefox iOS";
+
+        if (/EdgiOS/i.test(ua))
+            return "Edge iOS";
+
+        if (
+            /Safari/i.test(ua) &&
+            !/Chrome/i.test(ua)
+        )
+            return "Safari";
+
+        if (/Chrome/i.test(ua))
+            return "Chrome";
+
+        return "Browser";
+    }
+};
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const home =
+    document.getElementById("home");
+
+const homeBtn =
+    document.getElementById("homeBtn");
+
+const toast =
+    document.getElementById("toast");
+
+const deviceGrid =
+    document.getElementById("deviceGrid");
+
+const deviceType =
+    document.getElementById("deviceType");
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function showToast(message) {
+
+    toast.textContent =
+        message;
+
+    toast.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer =
+        setTimeout(
+            () =>
+                toast.classList.remove(
+                    "show"
+                ),
+            2400
+        );
+}
+
+
+/* =========================================================
+   CAPABILITIES
+========================================================= */
+
+function capability(
+    icon,
+    name,
+    status,
+    type
+) {
+
+    const div =
+        document.createElement("div");
+
+    div.className =
+        `cap ${type}`;
+
+    div.innerHTML = `
+
+        <div class="capTop">
+
+            <span class="capIcon">
+                ${icon}
+            </span>
+
+            <span class="capName">
+                ${name}
+            </span>
+
+        </div>
+
+        <div class="capStatus">
+            ${status}
+        </div>
+    `;
+
+    deviceGrid.appendChild(div);
+}
+
+
+function detectDevice() {
+
+    deviceGrid.innerHTML = "";
+
+    deviceType.textContent =
+        Device.isMobile
+        ? Device.isIOS
+            ? "iPhone / iPad"
+            : "Android"
+        : "Desktop";
+
+
+    capability(
+        "👆",
+        "Touch",
+        Device.touch
+        ? "Available"
+        : "Unavailable",
+        Device.touch
+        ? "ok"
+        : "no"
+    );
+
+
+    capability(
+        "🌀",
+        "Motion",
+        Device.motion
+        ? "Supported"
+        : "Unavailable",
+        Device.motion
+        ? "ok"
+        : "warn"
+    );
+
+
+    capability(
+        "🧭",
+        "Orientation",
+        Device.orientation
+        ? "Supported"
+        : "Unavailable",
+        Device.orientation
+        ? "ok"
+        : "warn"
+    );
+
+
+    capability(
+        "🎤",
+        "Microphone",
+        Device.media
+        ? "Available with permission"
+        : "Unavailable",
+        Device.media
+        ? "warn"
+        : "no"
+    );
+
+
+    capability(
+        "📷",
+        "Camera",
+        Device.media
+        ? "Available with permission"
+        : "Unavailable",
+        Device.media
+        ? "warn"
+        : "no"
+    );
+
+
+    capability(
+        "📳",
+        "Haptics",
+        Device.vibration
+        ? "Available"
+        : "Unavailable",
+        Device.vibration
+        ? "ok"
+        : "no"
+    );
+
+
+    capability(
+        "⛶",
+        "Fullscreen",
+        Device.fullscreen
+        ? "Supported"
+        : "Browser controlled",
+        Device.fullscreen
+        ? "ok"
+        : "warn"
+    );
+
+
+    capability(
+        "🌐",
+        "Browser",
+        Device.browser(),
+        "ok"
+    );
+}
+
+
+detectDevice();
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+document
+    .getElementById("fullscreenBtn")
+    .addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                if (
+                    document.fullscreenElement
+                ) {
+
+                    await document
+                        .exitFullscreen();
+
+                }
+                else if (
+                    document
+                        .documentElement
+                        .requestFullscreen
+                ) {
+
+                    await document
+                        .documentElement
+                        .requestFullscreen();
+
+                }
+                else {
+
+                    showToast(
+                        "Use Add to Home Screen on iPhone for app-like fullscreen."
+                    );
+
+                }
+
+            }
+            catch {
+
+                showToast(
+                    "Fullscreen is controlled by this browser."
+                );
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   SCREEN NAVIGATION
+========================================================= */
+
+const screens = [
+    "snakeScreen",
+    "soundScreen",
+    "freezeScreen",
+    "gravityScreen",
+    "cameraScreen"
+];
+
+
+function openScreen(id) {
+
+    home.style.display =
+        "none";
+
+    screens.forEach(
+        s => {
+
+            document
+                .getElementById(s)
+                .classList.remove(
+                    "active"
+                );
+
+        }
+    );
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+
+    homeBtn.style.display =
+        "block";
+}
+
+
+function returnHome() {
+
+    stopCamera();
+
+    stopMicrophone();
+
+    stopGravity();
+
+    stopFreeze();
+
+    snakeRunning = false;
+
+    screens.forEach(
+        s =>
+            document
+                .getElementById(s)
+                .classList.remove(
+                    "active"
+                )
+    );
+
+    home.style.display =
+        "block";
+
+    homeBtn.style.display =
+        "none";
+}
+
+
+homeBtn.addEventListener(
+    "click",
+    returnHome
+);
+
+
+/* =========================================================
+   PERMISSION HELPER
+========================================================= */
+
+function permissionRequest(
+    title,
+    text,
+    callback
+) {
+
+    const modal =
+        document.getElementById(
+            "permission"
+        );
+
+    document.getElementById(
+        "permissionTitle"
+    ).textContent = title;
+
+    document.getElementById(
+        "permissionText"
+    ).textContent = text;
+
+    modal.classList.add("show");
+
+
+    document.getElementById(
+        "permissionAllow"
+    ).onclick = async () => {
+
+        modal.classList.remove(
+            "show"
+        );
+
+        await callback();
+
+    };
+
+
+    document.getElementById(
+        "permissionCancel"
+    ).onclick = () => {
+
+        modal.classList.remove(
+            "show"
+        );
+
+    };
+}
+
+
+/* =========================================================
+   MOTION ENGINE
+========================================================= */
+
+let motionEnabled = false;
+
+let latestOrientation = {
+    alpha:0,
+    beta:0,
+    gamma:0
+};
+
+
+function orientationHandler(e) {
+
+    latestOrientation.alpha =
+        e.alpha || 0;
+
+    latestOrientation.beta =
+        e.beta || 0;
+
+    latestOrientation.gamma =
+        e.gamma || 0;
+
+    if (snakeRunning) {
+
+        updateSnakeGravity();
+
+    }
+
+    if (gravityRunning) {
+
+        updateGravityVector();
+
+    }
+
+    if (freezeRunning) {
+
+        updateFreezeMovement();
+
+    }
+}
+
+
+async function enableMotion() {
+
+    if (!Device.orientation) {
+
+        showToast(
+            "Orientation sensors are not available."
+        );
+
+        return false;
+    }
+
+
+    try {
+
+        if (
+            typeof DeviceOrientationEvent
+                .requestPermission ===
+            "function"
+        ) {
+
+            const result =
+                await DeviceOrientationEvent
+                    .requestPermission();
+
+            if (
+                result !== "granted"
+            ) {
+
+                showToast(
+                    "Motion permission was denied."
+                );
+
+                return false;
+            }
+        }
+
+
+        window.addEventListener(
+            "deviceorientation",
+            orientationHandler
+        );
+
+        motionEnabled = true;
+
+        showToast(
+            "Motion controls enabled."
+        );
+
+        return true;
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Motion could not be enabled."
+        );
+
+        return false;
+    }
+}
+
+
+/* =========================================================
+   SNAKE
+========================================================= */
+
+const snakeCanvas =
+    document.getElementById(
+        "snakeCanvas"
+    );
+
+const snakeCtx =
+    snakeCanvas.getContext("2d");
+
+
+let snake = [];
+
+let snakeFood;
+
+let snakeRunning = false;
+
+let snakeGameOver = false;
+
+let snakeScore = 0;
+
+let snakeBest =
+    Number(
+        localStorage.getItem(
+            "mobileLabSnakeBest"
+        ) || 0
+    );
+
+let snakeDirection = {
+    x:1,
+    y:0
+};
+
+let snakeGravity = {
+    x:1,
+    y:0
+};
+
+let snakeAccumulator = 0;
+
+let snakeLast = 0;
+
+let snakeSpeed = 130;
+
+
+document.getElementById(
+    "snakeBest"
+).textContent =
+    snakeBest;
+
+
+function resizeCanvas(canvas) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const dpr =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+    canvas.width =
+        rect.width * dpr;
+
+    canvas.height =
+        rect.height * dpr;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+}
+
+
+function initSnake() {
+
+    snake = [
+        {x:12,y:12},
+        {x:11,y:12},
+        {x:10,y:12}
+    ];
+
+    snakeDirection = {
+        x:1,
+        y:0
+    };
+
+    snakeGravity = {
+        x:1,
+        y:0
+    };
+
+    snakeScore = 0;
+
+    snakeSpeed = 130;
+
+    snakeGameOver = false;
+
+    snakeAccumulator = 0;
+
+    document.getElementById(
+        "snakeScore"
+    ).textContent = "0";
+
+    spawnSnakeFood();
+
+    drawSnake();
+
+    showSnakeOverlay(
+        "Ready",
+        "Press Play to start."
+    );
+}
+
+
+function spawnSnakeFood() {
+
+    do {
+
+        snakeFood = {
+            x:
+                Math.floor(
+                    Math.random() * 24
+                ),
+
+            y:
+                Math.floor(
+                    Math.random() * 24
+                )
+        };
+
+    }
+    while (
+        snake.some(
+            s =>
+                s.x === snakeFood.x &&
+                s.y === snakeFood.y
+        )
+    );
+}
+
+
+function setSnakeDirection(
+    x,
+    y
+) {
+
+    if (
+        x === -snakeDirection.x &&
+        y === -snakeDirection.y
+    ) {
+        return;
+    }
+
+    snakeDirection = {
+        x,
+        y
+    };
+}
+
+
+function updateSnakeGravity() {
+
+    const gamma =
+        latestOrientation.gamma;
+
+    const beta =
+        latestOrientation.beta;
+
+
+    if (
+        Math.abs(gamma) >
+        Math.abs(beta)
+    ) {
+
+        snakeGravity = {
+            x:
+                Math.max(
+                    -1,
+                    Math.min(
+                        1,
+                        gamma / 35
+                    )
+                ),
+            y:0
+        };
+
+    }
+    else {
+
+        snakeGravity = {
+            x:0,
+            y:
+                Math.max(
+                    -1,
+                    Math.min(
+                        1,
+                        beta / 35
+                    )
+                )
+        };
+
+    }
+
+
+    let x =
+        snakeGravity.x;
+
+    let y =
+        snakeGravity.y;
+
+
+    if (
+        Math.abs(x) >
+        Math.abs(y)
+    ) {
+
+        if (Math.abs(x) > .15) {
+
+            setSnakeDirection(
+                x > 0 ? 1 : -1,
+                0
+            );
+
+        }
+
+    }
+    else {
+
+        if (Math.abs(y) > .15) {
+
+            setSnakeDirection(
+                0,
+                y > 0 ? 1 : -1
+            );
+
+        }
+    }
+
+
+    document.getElementById(
+        "snakeMotion"
+    ).textContent =
+        motionEnabled
+        ? "ON"
+        : "OFF";
+}
+
+
+function snakeStep() {
+
+    const head = {
+        x:
+            snake[0].x +
+            snakeDirection.x,
+
+        y:
+            snake[0].y +
+            snakeDirection.y
+    };
+
+
+    if (head.x < 0)
+        head.x = 23;
+
+    if (head.x >= 24)
+        head.x = 0;
+
+    if (head.y < 0)
+        head.y = 23;
+
+    if (head.y >= 24)
+        head.y = 0;
+
+
+    if (
+        snake.some(
+            s =>
+                s.x === head.x &&
+                s.y === head.y
+        )
+    ) {
+
+        snakeGameOver = true;
+        snakeRunning = false;
+
+        showSnakeOverlay(
+            "Game Over",
+            `Score: ${snakeScore}`
+        );
+
+        return;
+    }
+
+
+    snake.unshift(head);
+
+
+    if (
+        head.x === snakeFood.x &&
+        head.y === snakeFood.y
+    ) {
+
+        snakeScore++;
+
+        document.getElementById(
+            "snakeScore"
+        ).textContent =
+            snakeScore;
+
+
+        if (
+            snakeScore >
+            snakeBest
+        ) {
+
+            snakeBest =
+                snakeScore;
+
+            localStorage.setItem(
+                "mobileLabSnakeBest",
+                snakeBest
+            );
+
+            document.getElementById(
+                "snakeBest"
+            ).textContent =
+                snakeBest;
+        }
+
+
+        snakeSpeed =
+            Math.max(
+                55,
+                130 -
+                snakeScore * 3
+            );
+
+
+        if (
+            Device.vibration
+        ) {
+
+            navigator.vibrate?.(
+                35
+            );
+        }
+
+
+        spawnSnakeFood();
+
+    }
+    else {
+
+        snake.pop();
+
+    }
+}
+
+
+function drawSnake() {
+
+    const rect =
+        snakeCanvas.getBoundingClientRect();
+
+    const width =
+        rect.width;
+
+    const height =
+        rect.height;
+
+    const cell =
+        width / 24;
+
+
+    snakeCtx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    const gradient =
+        snakeCtx.createRadialGradient(
+            width/2,
+            height/2,
+            0,
+            width/2,
+            height/2,
+            width
+        );
+
+    gradient.addColorStop(
+        0,
+        "#142338"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#05070c"
+    );
+
+    snakeCtx.fillStyle =
+        gradient;
+
+    snakeCtx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    snakeCtx.strokeStyle =
+        "rgba(255,255,255,.035)";
+
+    for (
+        let i=0;
+        i<=24;
+        i++
+    ) {
+
+        const p =
+            i * cell;
+
+        snakeCtx.beginPath();
+
+        snakeCtx.moveTo(
+            p,
+            0
+        );
+
+        snakeCtx.lineTo(
+            p,
+            height
+        );
+
+        snakeCtx.stroke();
+
+        snakeCtx.beginPath();
+
+        snakeCtx.moveTo(
+            0,
+            p
+        );
+
+        snakeCtx.lineTo(
+            width,
+            p
+        );
+
+        snakeCtx.stroke();
+    }
+
+
+    snakeCtx.fillStyle =
+        "#ff526b";
+
+    roundedRect(
+        snakeCtx,
+        snakeFood.x * cell + 4,
+        snakeFood.y * cell + 4,
+        cell - 8,
+        cell - 8,
+        7
+    );
+
+    snakeCtx.fill();
+
+
+    snake.forEach(
+        (part,index) => {
+
+            snakeCtx.fillStyle =
+                index === 0
+                ? "#65ef9a"
+                : "#28ba6b";
+
+            roundedRect(
+                snakeCtx,
+                part.x * cell + 3,
+                part.y * cell + 3,
+                cell - 6,
+                cell - 6,
+                6
+            );
+
+            snakeCtx.fill();
+
+
+            if (index === 0) {
+
+                snakeCtx.fillStyle =
+                    "#06110a";
+
+                snakeCtx.beginPath();
+
+                snakeCtx.arc(
+                    part.x * cell +
+                        cell*.35,
+                    part.y * cell +
+                        cell*.38,
+                    2,
+                    0,
+                    Math.PI*2
+                );
+
+                snakeCtx.fill();
+
+
+                snakeCtx.beginPath();
+
+                snakeCtx.arc(
+                    part.x * cell +
+                        cell*.65,
+                    part.y * cell +
+                        cell*.38,
+                    2,
+                    0,
+                    Math.PI*2
+                );
+
+                snakeCtx.fill();
+            }
+        }
+    );
+}
+
+
+function roundedRect(
+    ctx,
+    x,
+    y,
+    w,
+    h,
+    r
+) {
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+        x,
+        y,
+        w,
+        h,
+        r
+    );
+}
+
+
+function showSnakeOverlay(
+    title,
+    text
+) {
+
+    document.getElementById(
+        "snakeOverlayTitle"
+    ).textContent =
+        title;
+
+    document.getElementById(
+        "snakeOverlayText"
+    ).textContent =
+        text;
+
+    document.getElementById(
+        "snakeOverlay"
+    ).classList.add("show");
+
+    document.getElementById(
+        "snakeOverlayBtn"
+    ).textContent =
+        snakeGameOver
+        ? "↻ Play Again"
+        : "▶ Play";
+}
+
+
+function hideSnakeOverlay() {
+
+    document.getElementById(
+        "snakeOverlay"
+    ).classList.remove("show");
+}
+
+
+function toggleSnake() {
+
+    if (snakeGameOver) {
+
+        initSnake();
+
+        snakeGameOver = false;
+    }
+
+
+    snakeRunning =
+        !snakeRunning;
+
+
+    if (snakeRunning) {
+
+        hideSnakeOverlay();
+
+        document.getElementById(
+            "snakePlay"
+        ).textContent =
+            "❚❚ Pause";
+
+    }
+    else {
+
+        showSnakeOverlay(
+            "Paused",
+            "Press Play to continue."
+        );
+
+        document.getElementById(
+            "snakePlay"
+        ).textContent =
+            "▶ Play";
+    }
+}
+
+
+function snakeLoop(time) {
+
+    const delta =
+        time -
+        snakeLast;
+
+    snakeLast =
+        time;
+
+
+    if (snakeRunning) {
+
+        snakeAccumulator +=
+            delta;
+
+
+        while (
+            snakeAccumulator >=
+            snakeSpeed
+        ) {
+
+            snakeStep();
+
+            snakeAccumulator -=
+                snakeSpeed;
+
+        }
+    }
+
+
+    if (
+        document
+            .getElementById(
+                "snakeScreen"
+            )
+            .classList
+            .contains("active")
+    ) {
+
+        drawSnake();
+
+    }
+
+
+    requestAnimationFrame(
+        snakeLoop
+    );
+}
+
+
+/* =========================================================
+   SNAKE CONTROLS
+========================================================= */
+
+document
+    .getElementById("snakePlay")
+    .onclick =
+    toggleSnake;
+
+document
+    .getElementById("snakeOverlayBtn")
+    .onclick =
+    toggleSnake;
+
+
+document
+    .getElementById("snakeReset")
+    .onclick =
+    () => {
+
+        snakeRunning = false;
+
+        initSnake();
+
+        document.getElementById(
+            "snakePlay"
+        ).textContent =
+            "▶ Play";
+    };
+
+
+document
+    .getElementById("snakeMotionBtn")
+    .onclick =
+    () => {
+
+        permissionRequest(
+            "Motion Access",
+            "Allow motion/orientation access so the Snake can respond to the way you tilt your phone.",
+            enableMotion
+        );
+
+    };
+
+
+function bindDirection(
+    id,
+    x,
+    y
+) {
+
+    document
+        .getElementById(id)
+        ?.addEventListener(
+            "pointerdown",
+            e => {
+
+                e.preventDefault();
+
+                setSnakeDirection(
+                    x,
+                    y
+                );
+
+            }
+        );
+}
+
+
+bindDirection(
+    "dUp",
+    0,
+    -1
+);
+
+bindDirection(
+    "dDown",
+    0,
+    1
+);
+
+bindDirection(
+    "dLeft",
+    -1,
+    0
+);
+
+bindDirection(
+    "dRight",
+    1,
+    0
+);
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        if (
+            !document
+                .getElementById(
+                    "snakeScreen"
+                )
+                .classList
+                .contains("active")
+        )
+            return;
+
+
+        switch(
+            e.key.toLowerCase()
+        ) {
+
+            case "arrowup":
+            case "w":
+                setSnakeDirection(
+                    0,-1
+                );
+                break;
+
+            case "arrowdown":
+            case "s":
+                setSnakeDirection(
+                    0,1
+                );
+                break;
+
+            case "arrowleft":
+            case "a":
+                setSnakeDirection(
+                    -1,0
+                );
+                break;
+
+            case "arrowright":
+            case "d":
+                setSnakeDirection(
+                    1,0
+                );
+                break;
+
+            case " ":
+                toggleSnake();
+                break;
+        }
+    }
+);
+
+
+/* =========================================================
+   SOUND MONSTER
+========================================================= */
+
+const soundCanvas =
+    document.getElementById(
+        "soundCanvas"
+    );
+
+const soundCtx =
+    soundCanvas.getContext("2d");
+
+
+let audioContext = null;
+let analyser = null;
+let microphone = null;
+let audioData = null;
+
+let microphoneRunning = false;
+let soundRunning = false;
+
+let monsterLevel = 0;
+
+
+function drawMonster(level) {
+
+    const rect =
+        soundCanvas.getBoundingClientRect();
+
+    const w =
+        rect.width;
+
+    const h =
+        rect.height;
+
+
+    soundCtx.clearRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const g =
+        soundCtx.createRadialGradient(
+            w/2,
+            h/2,
+            20,
+            w/2,
+            h/2,
+            w
+        );
+
+    g.addColorStop(
+        0,
+        "#24192a"
+    );
+
+    g.addColorStop(
+        1,
+        "#05070c"
+    );
+
+    soundCtx.fillStyle =
+        g;
+
+    soundCtx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const intensity =
+        Math.min(
+            1,
+            level
+        );
+
+
+    const size =
+        Math.min(w,h) *
+        (
+            .25 +
+            intensity*.15
+        );
+
+
+    const cx =
+        w/2;
+
+    const cy =
+        h/2;
+
+
+    let face;
+
+    if (level < .08)
+        face = "😴";
+    else if (level < .25)
+        face = "😐";
+    else if (level < .5)
+        face = "👀";
+    else if (level < .75)
+        face = "😡";
+    else
+        face = "👹";
+
+
+    soundCtx.font =
+        `${size}px serif`;
+
+    soundCtx.textAlign =
+        "center";
+
+    soundCtx.textBaseline =
+        "middle";
+
+    soundCtx.fillText(
+        face,
+        cx,
+        cy
+    );
+
+
+    for (
+        let i=0;
+        i<18;
+        i++
+    ) {
+
+        const angle =
+            i *
+            Math.PI*2/18;
+
+        const radius =
+            size*.8 +
+            level*size*.6;
+
+        const x =
+            cx +
+            Math.cos(angle) *
+            radius;
+
+        const y =
+            cy +
+            Math.sin(angle) *
+            radius;
+
+
+        soundCtx.fillStyle =
+            `rgba(
+                255,
+                100,
+                120,
+                ${.1+level*.5}
+            )`;
+
+        soundCtx.beginPath();
+
+        soundCtx.arc(
+            x,
+            y,
+            3+level*5,
+            0,
+            Math.PI*2
+        );
+
+        soundCtx.fill();
+    }
+}
+
+
+async function startMicrophone() {
+
+    if (!Device.media) {
+
+        showToast(
+            "Microphone is unavailable."
+        );
+
+        return false;
+    }
+
+
+    try {
+
+        const stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio:true,
+                    video:false
+                });
+
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+
+        analyser =
+            audioContext
+                .createAnalyser();
+
+        analyser.fftSize =
+            512;
+
+
+        microphone =
+            audioContext
+                .createMediaStreamSource(
+                    stream
+                );
+
+
+        microphone.connect(
+            analyser
+        );
+
+
+        audioData =
+            new Uint8Array(
+                analyser.fftSize
+            );
+
+
+        microphoneRunning = true;
+
+        showToast(
+            "Microphone enabled."
+        );
+
+        return true;
+
+    }
+    catch(error) {
+
+        console.error(error);
+
+        showToast(
+            "Microphone permission was denied."
+        );
+
+        return false;
+    }
+}
+
+
+function stopMicrophone() {
+
+    if (microphone) {
+
+        try {
+            microphone.disconnect();
+        }
+        catch {}
+
+    }
+
+    if (audioContext) {
+
+        try {
+            audioContext.close();
+        }
+        catch {}
+
+    }
+
+    microphone = null;
+    analyser = null;
+    audioContext = null;
+
+    microphoneRunning = false;
+}
+
+
+function updateSound() {
+
+    if (
+        !microphoneRunning ||
+        !analyser
+    )
+        return;
+
+
+    analyser.getByteTimeDomainData(
+        audioData
+    );
+
+
+    let sum = 0;
+
+
+    for (
+        let i=0;
+        i<audioData.length;
+        i++
+    ) {
+
+        const value =
+            (
+                audioData[i] -
+                128
+            ) / 128;
+
+        sum +=
+            value * value;
+    }
+
+
+    const rms =
+        Math.sqrt(
+            sum /
+            audioData.length
+        );
+
+
+    /*
+       Compress the microphone
+       range so ordinary speech
+       becomes visible.
+    */
+
+    monsterLevel =
+        Math.min(
+            1,
+            rms * 5
+        );
+
+
+    document.getElementById(
+        "soundLevel"
+    ).textContent =
+        Math.round(
+            monsterLevel*100
+        ) + "%";
+
+
+    let state;
+
+    if (monsterLevel < .08)
+        state = "Sleeping 😴";
+    else if (monsterLevel < .25)
+        state = "Suspicious 😐";
+    else if (monsterLevel < .5)
+        state = "Awake 👀";
+    else if (monsterLevel < .75)
+        state = "Angry 😡";
+    else
+        state = "FURIOUS 👹";
+
+
+    document.getElementById(
+        "monsterState"
+    ).textContent =
+        state;
+
+
+    document.getElementById(
+        "soundFill"
+    ).style.width =
+        `${monsterLevel*100}%`;
+
+
+    drawMonster(
+        monsterLevel
+    );
+
+
+    if (
+        monsterLevel > .75 &&
+        Device.vibration
+    ) {
+
+        if (
+            Math.random() < .03
+        ) {
+
+            navigator.vibrate?.(
+                50
+            );
+
+        }
+    }
+}
+
+
+function soundLoop() {
+
+    if (
+        document
+            .getElementById(
+                "soundScreen"
+            )
+            .classList
+            .contains("active")
+    ) {
+
+        if (soundRunning)
+            updateSound();
+        else
+            drawMonster(0);
+
+    }
+
+    requestAnimationFrame(
+        soundLoop
+    );
+}
+
+
+document
+    .getElementById("soundPlay")
+    .onclick =
+    async () => {
+
+        if (!microphoneRunning) {
+
+            const ok =
+                await startMicrophone();
+
+            if (!ok)
+                return;
+        }
+
+
+        soundRunning =
+            !soundRunning;
+
+
+        document.getElementById(
+            "soundPlay"
+        ).textContent =
+            soundRunning
+            ? "❚❚ Pause"
+            : "▶ Play";
+    };
+
+
+document
+    .getElementById("soundStart")
+    .onclick =
+    async () => {
+
+        const ok =
+            await startMicrophone();
+
+        if (ok) {
+
+            soundRunning = true;
+
+            document.getElementById(
+                "soundOverlay"
+            ).classList.remove(
+                "show"
+            );
+
+            document.getElementById(
+                "soundPlay"
+            ).textContent =
+                "❚❚ Pause";
+        }
+    };
+
+
+document
+    .getElementById("soundReset")
+    .onclick =
+    () => {
+
+        monsterLevel = 0;
+
+        soundRunning = false;
+
+        document.getElementById(
+            "soundPlay"
+        ).textContent =
+            "▶ Play";
+
+        drawMonster(0);
+    };
+
+
+/* =========================================================
+   DON'T MOVE
+========================================================= */
+
+let freezeRunning = false;
+let freezeStart = 0;
+let freezeBaseline = null;
+let freezeScore = 0;
+let freezeLastMotion = 0;
+
+
+function captureFreezeBaseline() {
+
+    freezeBaseline = {
+
+        alpha:
+            latestOrientation.alpha,
+
+        beta:
+            latestOrientation.beta,
+
+        gamma:
+            latestOrientation.gamma
+
+    };
+}
+
+
+function updateFreezeMovement() {
+
+    if (
+        !freezeRunning ||
+        !freezeBaseline
+    )
+        return;
+
+
+    const da =
+        angleDifference(
+            latestOrientation.alpha,
+            freezeBaseline.alpha
+        );
+
+    const db =
+        latestOrientation.beta -
+        freezeBaseline.beta;
+
+    const dg =
+        latestOrientation.gamma -
+        freezeBaseline.gamma;
+
+
+    const movement =
+        Math.sqrt(
+            da*da +
+            db*db +
+            dg*dg
+        );
+
+
+    const normalized =
+        Math.min(
+            100,
+            movement * 4
+        );
+
+
+    document.getElementById(
+        "movementValue"
+    ).textContent =
+        normalized.toFixed(1);
+
+
+    let state;
+
+    if (normalized < 5)
+        state = "Perfect";
+    else if (normalized < 15)
+        state = "Careful";
+    else if (normalized < 30)
+        state = "Moving!";
+    else
+        state = "CAUGHT!";
+
+
+    document.getElementById(
+        "freezeState"
+    ).textContent =
+        state;
+
+
+    if (
+        normalized > 30 &&
+        Date.now() -
+        freezeLastMotion >
+        1000
+    ) {
+
+        freezeLastMotion =
+            Date.now();
+
+        freezeRunning = false;
+
+        showFreezeResult();
+
+        if (
+            Device.vibration
+        ) {
+
+            navigator.vibrate?.(
+                [80,40,80]
+            );
+        }
+    }
+}
+
+
+function angleDifference(a,b) {
+
+    let d =
+        a-b;
+
+    while(d>180)
+        d-=360;
+
+    while(d<-180)
+        d+=360;
+
+    return d;
+}
+
+
+function showFreezeResult() {
+
+    const elapsed =
+        (
+            Date.now() -
+            freezeStart
+        ) / 1000;
+
+
+    document.getElementById(
+        "freezeState"
+    ).textContent =
+        "Caught!";
+
+
+    document.getElementById(
+        "freezeOverlay"
+    ).classList.add(
+        "show"
+    );
+
+
+    document.querySelector(
+        "#freezeOverlay h2"
+    ).textContent =
+        "💥 Caught!";
+
+
+    document.querySelector(
+        "#freezeOverlay p"
+    ).textContent =
+        `You survived ${elapsed.toFixed(1)} seconds.`;
+}
+
+
+document
+    .getElementById("freezeStart")
+    .onclick =
+    async () => {
+
+        const ok =
+            await enableMotion();
+
+        if (!ok)
+            return;
+
+
+        setTimeout(
+            () => {
+
+                captureFreezeBaseline();
+
+                freezeStart =
+                    Date.now();
+
+                freezeLastMotion =
+                    Date.now();
+
+                freezeRunning = true;
+
+                document.getElementById(
+                    "freezeOverlay"
+                ).classList.remove(
+                    "show"
+                );
+
+                document.getElementById(
+                    "freezeState"
+                ).textContent =
+                    "GO!";
+
+            },
+            600
+        );
+    };
+
+
+/* =========================================================
+   GRAVITY LAB
+========================================================= */
+
+const gravityCanvas =
+    document.getElementById(
+        "gravityCanvas"
+    );
+
+const gravityCtx =
+    gravityCanvas.getContext("2d");
+
+
+let particles = [];
+
+let gravityRunning = false;
+
+let gravityVector = {
+    x:0,
+    y:1
+};
+
+
+function initGravity() {
+
+    particles = [];
+
+    for (
+        let i=0;
+        i<70;
+        i++
+    ) {
+
+        particles.push({
+
+            x:
+                Math.random(),
+
+            y:
+                Math.random(),
+
+            vx:0,
+
+            vy:0,
+
+            r:
+                2 +
+                Math.random()*4
+
+        });
+    }
+}
+
+
+function updateGravityVector() {
+
+    const beta =
+        latestOrientation.beta;
+
+    const gamma =
+        latestOrientation.gamma;
+
+
+    gravityVector.x =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                gamma/45
+            )
+        );
+
+
+    gravityVector.y =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                beta/45
+            )
+        );
+
+
+    document.getElementById(
+        "gx"
+    ).textContent =
+        gravityVector.x.toFixed(2);
+
+    document.getElementById(
+        "gy"
+    ).textContent =
+        gravityVector.y.toFixed(2);
+}
+
+
+function drawGravity() {
+
+    const rect =
+        gravityCanvas.getBoundingClientRect();
+
+    const w =
+        rect.width;
+
+    const h =
+        rect.height;
+
+
+    gravityCtx.clearRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const g =
+        gravityCtx.createRadialGradient(
+            w/2,
+            h/2,
+            0,
+            w/2,
+            h/2,
+            w
+        );
+
+    g.addColorStop(
+        0,
+        "#15243a"
+    );
+
+    g.addColorStop(
+        1,
+        "#05070c"
+    );
+
+    gravityCtx.fillStyle =
+        g;
+
+    gravityCtx.fillRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    particles.forEach(
+        p => {
+
+            gravityCtx.fillStyle =
+                "#65dfff";
+
+            gravityCtx.beginPath();
+
+            gravityCtx.arc(
+                p.x*w,
+                p.y*h,
+                p.r,
+                0,
+                Math.PI*2
+            );
+
+            gravityCtx.fill();
+
+        }
+    );
+}
+
+
+function updateGravity(dt) {
+
+    const gx =
+        gravityVector.x * 600;
+
+    const gy =
+        gravityVector.y * 600;
+
+
+    const rect =
+        gravityCanvas.getBoundingClientRect();
+
+    const w =
+        rect.width;
+
+    const h =
+        rect.height;
+
+
+    particles.forEach(
+        p => {
+
+            p.vx +=
+                gx * dt;
+
+            p.vy +=
+                gy * dt;
+
+
+            p.vx *= .995;
+            p.vy *= .995;
+
+
+            p.x +=
+                p.vx * dt / w;
+
+            p.y +=
+                p.vy * dt / h;
+
+
+            if (
+                p.x < 0
+            ) {
+
+                p.x = 0;
+
+                p.vx *= -.7;
+
+            }
+
+            if (
+                p.x > 1
+            ) {
+
+                p.x = 1;
+
+                p.vx *= -.7;
+
+            }
+
+            if (
+                p.y < 0
+            ) {
+
+                p.y = 0;
+
+                p.vy *= -.7;
+
+            }
+
+            if (
+                p.y > 1
+            ) {
+
+                p.y = 1;
+
+                p.vy *= -.7;
+
+            }
+
+        }
+    );
+}
+
+
+let gravityLast = 0;
+
+
+function gravityLoop(time) {
+
+    const dt =
+        Math.min(
+            .033,
+            (
+                time -
+                gravityLast
+            ) / 1000
+        );
+
+    gravityLast =
+        time;
+
+
+    if (
+        gravityRunning
+    ) {
+
+        updateGravity(
+            dt
+        );
+
+    }
+
+
+    if (
+        document
+            .getElementById(
+                "gravityScreen"
+            )
+            .classList
+            .contains("active")
+    ) {
+
+        drawGravity();
+
+    }
+
+
+    requestAnimationFrame(
+        gravityLoop
+    );
+}
+
+
+document
+    .getElementById("gravityPlay")
+    .onclick =
+    () => {
+
+        gravityRunning =
+            !gravityRunning;
+
+        document.getElementById(
+            "gravityPlay"
+        ).textContent =
+            gravityRunning
+            ? "❚❚ Pause"
+            : "▶ Play";
+    };
+
+
+document
+    .getElementById("gravityReset")
+    .onclick =
+    () => {
+
+        gravityRunning = false;
+
+        initGravity();
+
+        document.getElementById(
+            "gravityPlay"
+        ).textContent =
+            "▶ Play";
+    };
+
+
+document
+    .getElementById("gravityMotion")
+    .onclick =
+    () => {
+
+        permissionRequest(
+            "Motion Access",
+            "Gravity Lab uses your phone's orientation to change the simulated gravity vector.",
+            enableMotion
+        );
+    };
+
+
+function stopGravity() {
+
+    gravityRunning = false;
+
+}
+
+
+/* =========================================================
+   CAMERA LAB
+========================================================= */
+
+const cameraVideo =
+    document.getElementById(
+        "cameraVideo"
+    );
+
+let cameraStream = null;
+
+let cameraScore = 0;
+
+
+async function startCamera() {
+
+    if (!Device.media) {
+
+        showToast(
+            "Camera is unavailable."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        cameraStream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video:{
+                        facingMode:{
+                            ideal:
+                                "environment"
+                        }
+                    },
+
+                    audio:false
+
+                });
+
+
+        cameraVideo.srcObject =
+            cameraStream;
+
+
+        cameraScore = 0;
+
+        document.getElementById(
+            "cameraScore"
+        ).textContent =
+            "0";
+
+
+        showToast(
+            "Camera enabled."
+        );
+
+    }
+    catch(error) {
+
+        console.error(error);
+
+        showToast(
+            "Camera permission was denied."
+        );
+    }
+}
+
+
+function stopCamera() {
+
+    if (cameraStream) {
+
+        cameraStream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+        cameraStream = null;
+    }
+
+
+    cameraVideo.srcObject =
+        null;
+}
+
+
+document
+    .getElementById("cameraStart")
+    .onclick =
+    () => {
+
+        permissionRequest(
+            "Camera Access",
+            "Allow the rear camera so Camera Lab can place interactive targets over your environment.",
+            startCamera
+        );
+    };
+
+
+document
+    .getElementById("cameraStop")
+    .onclick =
+    stopCamera;
+
+
+/*
+   Move the virtual target using
+   the orientation sensor.
+*/
+
+function cameraMotionLoop() {
+
+    const target =
+        document.getElementById(
+            "cameraTarget"
+        );
+
+
+    if (
+        !document
+            .getElementById(
+                "cameraScreen"
+            )
+            .classList
+            .contains("active")
+    ) {
+
+        requestAnimationFrame(
+            cameraMotionLoop
+        );
+
+        return;
+    }
+
+
+    const x =
+        50 +
+        latestOrientation.gamma *
+        .65;
+
+    const y =
+        50 +
+        (
+            latestOrientation.beta -
+            45
+        ) * .55;
+
+
+    target.style.left =
+        `${Math.max(
+            5,
+            Math.min(
+                90,
+                x
+            )
+        )}%`;
+
+
+    target.style.top =
+        `${Math.max(
+            5,
+            Math.min(
+                90,
+                y
+            )
+        )}%`;
+
+
+    requestAnimationFrame(
+        cameraMotionLoop
+    );
+}
+
+
+/* =========================================================
+   STOP HELPERS
+========================================================= */
+
+function stopFreeze() {
+
+    freezeRunning = false;
+
+}
+
+
+function stopAllExperiments() {
+
+    snakeRunning = false;
+
+    soundRunning = false;
+
+    gravityRunning = false;
+
+    freezeRunning = false;
+
+    stopCamera();
+
+    stopMicrophone();
+
+}
+
+
+/* =========================================================
+   NAVIGATION BUTTONS
+========================================================= */
+
+document
+    .getElementById("snakeCard")
+    .onclick =
+    () => {
+
+        openScreen(
+            "snakeScreen"
+        );
+
+        resizeCanvas(
+            snakeCanvas
+        );
+
+        initSnake();
+
+    };
+
+
+document
+    .getElementById("soundCard")
+    .onclick =
+    () => {
+
+        openScreen(
+            "soundScreen"
+        );
+
+        resizeCanvas(
+            soundCanvas
+        );
+
+        drawMonster(0);
+
+    };
+
+
+document
+    .getElementById("freezeCard")
+    .onclick =
+    () => {
+
+        openScreen(
+            "freezeScreen"
+        );
+
+        document.getElementById(
+            "freezeOverlay"
+        ).classList.add(
+            "show"
+        );
+
+    };
+
+
+document
+    .getElementById("gravityCard")
+    .onclick =
+    () => {
+
+        openScreen(
+            "gravityScreen"
+        );
+
+        resizeCanvas(
+            gravityCanvas
+        );
+
+        initGravity();
+
+        drawGravity();
+
+    };
+
+
+document
+    .getElementById("cameraCard")
+    .onclick =
+    () => {
+
+        openScreen(
+            "cameraScreen"
+        );
+
+    };
+
+
+/* =========================================================
+   BACK BUTTONS
+========================================================= */
+
+[
+    "snakeBack",
+    "soundBack",
+    "freezeBack",
+    "gravityBack",
+    "cameraBack"
+].forEach(
+    id => {
+
+        document
+            .getElementById(id)
+            .onclick =
+            returnHome;
+
+    }
+);
+
+
+/* =========================================================
+   PAGE VISIBILITY
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (
+            document.hidden
+        ) {
+
+            stopAllExperiments();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        screens.forEach(
+            id => {
+
+                const screen =
+                    document.getElementById(
+                        id
+                    );
+
+                if (
+                    screen.classList
+                        .contains("active")
+                ) {
+
+                    const canvas =
+                        screen.querySelector(
+                            "canvas"
+                        );
+
+                    if (canvas)
+                        resizeCanvas(
+                            canvas
+                        );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+resizeCanvas(
+    snakeCanvas
+);
+
+resizeCanvas(
+    soundCanvas
+);
+
+resizeCanvas(
+    gravityCanvas
+);
+
+initSnake();
+
+initGravity();
+
+drawMonster(0);
+
+drawGravity();
+
+requestAnimationFrame(
+    snakeLoop
+);
+
+requestAnimationFrame(
+    soundLoop
+);
+
+requestAnimationFrame(
+    gravityLoop
+);
+
+requestAnimationFrame(
+    cameraMotionLoop
+);
+
+</script>
+
+</body>
+</html>
