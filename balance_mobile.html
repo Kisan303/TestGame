@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BALANCE — Mobile Motion Physics</title>
+<style>
+:root{--bg:#05070a;--fg:#f4f7f9;--muted:#8e99a3;--line:rgba(255,255,255,.14);--panel:rgba(8,11,15,.9)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+body{overscroll-behavior:none}
+#app,#game{position:fixed;inset:0;width:100%;height:100%}
+#game{display:block;background:#05070a}
+#hud{position:absolute;z-index:10;left:0;right:0;top:0;padding:max(12px,env(safe-area-inset-top)) 14px 10px;display:flex;justify-content:space-between;pointer-events:none;text-shadow:0 2px 14px #000}
+.hudLabel{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#9ba6af}.hudValue{font-size:17px;font-variant-numeric:tabular-nums}
+#balanceMeter{position:absolute;z-index:11;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(86vw,420px);opacity:0;pointer-events:none}
+#balanceLabel{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.15em;color:#a6b0b8;text-transform:uppercase}.bar{height:5px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;width:0;background:#eef3f6}
+#message{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;width:min(90vw,620px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none;text-shadow:0 4px 30px #000}
+#message .small{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#a5afb7}.big{font-size:clamp(28px,8vw,64px);font-weight:800;letter-spacing:.08em;margin-top:7px}.desc{font-size:13px;line-height:1.5;color:#c3cad0;margin-top:8px}
+#overlay{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.34);backdrop-filter:blur(8px)}
+.panel{width:min(94vw,620px);padding:26px 20px;background:linear-gradient(180deg,rgba(15,19,24,.96),rgba(5,8,11,.93));border:1px solid var(--line);box-shadow:0 35px 120px rgba(0,0,0,.55)}
+.center{text-align:center}.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#9ba5ae}h1{font-size:clamp(42px,11vw,78px);line-height:1;margin:10px 0 12px;letter-spacing:.18em}.subtitle{font-size:14px;line-height:1.65;color:#c8cfd5;margin:0}.note{font-size:11px;line-height:1.55;color:#7f8992;margin-top:13px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.btn{min-height:46px;padding:13px 17px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);color:#fff;font:inherit;font-size:10px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer}.btn.primary{background:#edf1f3;color:#080a0d;border-color:#edf1f3}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);margin-top:17px}.stat{padding:12px;background:rgba(255,255,255,.025)}.stat span{font-size:9px;color:#909ba4;letter-spacing:.15em;text-transform:uppercase}.stat b{display:block;margin-top:6px;font-size:18px;font-variant-numeric:tabular-nums}
+#status{margin-top:15px;padding:11px;border:1px solid var(--line);background:rgba(255,255,255,.025);font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c0c8ce;white-space:pre-wrap}
+#debug{position:absolute;z-index:40;right:8px;bottom:8px;padding:9px;background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.15);font:10px/1.45 ui-monospace,monospace;color:#dce2e6;white-space:pre;pointer-events:none}
+.hidden{display:none!important}
+@media(max-width:600px){.panel{padding:22px 17px}.actions .btn{width:100%}}
+</style>
+</head>
+<body>
+<div id="app">
+<canvas id="game"></canvas>
+<div id="hud" class="hidden"><div><div class="hudLabel">Level</div><div class="hudValue" id="hudLevel">1</div></div><div style="text-align:right"><div class="hudLabel">Time</div><div class="hudValue" id="hudTime">00:00.00</div></div></div>
+<div id="balanceMeter"><div id="balanceLabel"><span>BALANCE</span><span id="balanceValue">100%</span></div><div class="bar"><i id="balanceFill"></i></div></div>
+<div id="message"><div id="msgSmall" class="small"></div><div id="msgBig" class="big"></div><div id="msgDesc" class="desc"></div></div>
+
+<div id="overlay">
+<section id="startPanel" class="panel">
+<div class="eyebrow">Mobile motion physics</div>
+<h1>BALANCE</h1>
+<p class="subtitle">The platform is never still. It jiggles, shifts, tilts, and becomes smaller. Your job is to tilt the phone in the opposite direction and keep the ball alive.</p>
+<div class="actions"><button id="startMotion" class="btn primary">Start motion game</button><button id="testMode" class="btn">Test without sensors</button></div>
+<div id="status">Ready. This build has no external libraries and is designed for mobile HTTPS hosting.</div>
+<div class="note">On iPhone/iPad, motion permission is requested after your tap. Use a GitHub Pages HTTPS URL. Desktop mode is provided only to test the game logic; the intended experience is phone motion control.</div>
+</section>
+
+<section id="levelPanel" class="panel hidden center">
+<div class="eyebrow" id="levelEyebrow">LEVEL 1</div>
+<h2 id="levelTitle" style="margin:9px 0;font-size:34px;letter-spacing:.08em">CALM</h2>
+<p id="levelDesc" class="subtitle">Small platform movement. Learn to counter it.</p>
+<div class="stats"><div class="stat"><span>Goal</span><b id="levelGoal">20s</b></div><div class="stat"><span>Surface</span><b id="levelSurface">Large</b></div><div class="stat"><span>Jiggle</span><b id="levelJiggle">Low</b></div><div class="stat"><span>Shrink</span><b id="levelShrink">Slow</b></div></div>
+<div class="actions" style="justify-content:center"><button id="playLevel" class="btn primary">Play level</button><button id="backMenu" class="btn">Back</button></div>
+</section>
+
+<section id="resultPanel" class="panel hidden">
+<div class="eyebrow" id="resultEyebrow">LEVEL COMPLETE</div>
+<h2 id="resultTitle" style="margin:8px 0;font-size:34px;letter-spacing:.08em">STEADY</h2>
+<p id="resultDesc" class="subtitle">The platform tried to throw the ball. Your corrections won.</p>
+<div class="stats"><div class="stat"><span>Time</span><b id="rTime">00:00.00</b></div><div class="stat"><span>Score</span><b id="rScore">0</b></div><div class="stat"><span>Avg balance</span><b id="rBalance">0%</b></div><div class="stat"><span>Close calls</span><b id="rClose">0</b></div><div class="stat"><span>Max tilt</span><b id="rTilt">0°</b></div><div class="stat"><span>Best level</span><b id="rBest">1</b></div></div>
+<div class="actions"><button id="nextLevel" class="btn primary">Next level</button><button id="retryLevel" class="btn">Retry</button><button id="shareScore" class="btn">Share</button></div>
+</section>
+</div>
+<div id="debug" class="hidden"></div>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const DEBUG=new URLSearchParams(location.search).get("debug")==="1";
+if(DEBUG)$("debug").classList.remove("hidden");
+window.addEventListener("error",e=>{const msg=e&&e.error&&e.error.message?e.error.message:(e&&e.message)||"Unknown error";const st=document.getElementById("status");if(st)st.textContent="Game error\n"+msg;console.error("BALANCE:",e.error||e.message);});
+window.addEventListener("unhandledrejection",e=>{const msg=e.reason&&e.reason.message?e.reason.message:String(e.reason);const st=document.getElementById("status");if(st)st.textContent="Game error\n"+msg;console.error("BALANCE rejection:",e.reason);});
+const c=$("game"),ctx=c.getContext("2d");
+if(!ctx)throw new Error("Canvas 2D is unavailable.");
+function resize(){const d=Math.min(devicePixelRatio||1,1.5);c.width=Math.floor(innerWidth*d);c.height=Math.floor(innerHeight*d);c.style.width=innerWidth+"px";c.style.height=innerHeight+"px";ctx.setTransform(d,0,0,d,0,0)}
+addEventListener("resize",resize);resize();
+
+const ui={
+ hud:$("hud"),hudLevel:$("hudLevel"),hudTime:$("hudTime"),meter:$("balanceMeter"),fill:$("balanceFill"),balanceValue:$("balanceValue"),
+ overlay:$("overlay"),start:$("startPanel"),level:$("levelPanel"),result:$("resultPanel"),status:$("status"),
+ startMotion:$("startMotion"),testMode:$("testMode"),play:$("playLevel"),back:$("backMenu"),next:$("nextLevel"),retry:$("retryLevel"),share:$("shareScore"),
+ levelEye:$("levelEyebrow"),levelTitle:$("levelTitle"),levelDesc:$("levelDesc"),levelGoal:$("levelGoal"),levelSurface:$("levelSurface"),levelJiggle:$("levelJiggle"),levelShrink:$("levelShrink"),
+ resultEye:$("resultEyebrow"),resultTitle:$("resultTitle"),resultDesc:$("resultDesc"),rTime:$("rTime"),rScore:$("rScore"),rBalance:$("rBalance"),rClose:$("rClose"),rTilt:$("rTilt"),rBest:$("rBest"),
+ message:$("message"),ms:$("msgSmall"),mb:$("msgBig"),md:$("msgDesc"),debug:$("debug")
+};
+
+const LEVELS=[
+ {name:"CALM",desc:"The platform gently jiggles. Learn to counter its movement.",goal:20,sizeStart:9,sizeEnd:8.3,jiggle:.55,tilt:.7,friction:1.65,slide:.10},
+ {name:"RESTLESS",desc:"The platform starts pushing the ball in several directions.",goal:24,sizeStart:8.7,sizeEnd:7.6,jiggle:1.0,tilt:1.0,friction:1.42,slide:.16},
+ {name:"SHIFT",desc:"Movement gets quicker. The ball keeps more momentum.",goal:28,sizeStart:8.5,sizeEnd:7.1,jiggle:1.45,tilt:1.25,friction:1.05,slide:.23},
+ {name:"SLIPPERY",desc:"The surface is slick. Stop the drift before you chase it.",goal:32,sizeStart:8.2,sizeEnd:6.7,jiggle:1.8,tilt:1.45,friction:.52,slide:.31},
+ {name:"UNSTABLE",desc:"The platform combines roll, pitch, and lateral shifts.",goal:35,sizeStart:7.9,sizeEnd:6.2,jiggle:2.15,tilt:1.8,friction:.72,slide:.38},
+ {name:"NARROW",desc:"Less surface. Smaller mistakes become dangerous.",goal:38,sizeStart:7.4,sizeEnd:5.8,jiggle:2.55,tilt:2.05,friction:.76,slide:.46},
+ {name:"VIOLENT",desc:"Fast oscillations test whether you can anticipate the platform.",goal:42,sizeStart:7.0,sizeEnd:5.4,jiggle:3.0,tilt:2.35,friction:.69,slide:.56},
+ {name:"PRECISION",desc:"The safe surface is shrinking while the platform keeps moving.",goal:46,sizeStart:6.6,sizeEnd:4.9,jiggle:3.35,tilt:2.7,friction:.64,slide:.62},
+ {name:"CHAOS",desc:"Multiple motion frequencies combine. Stay ahead of the ball.",goal:50,sizeStart:6.2,sizeEnd:4.45,jiggle:3.7,tilt:3.0,friction:.59,slide:.70},
+ {name:"EDGE",desc:"The platform is tiny and unstable. Every correction matters.",goal:55,sizeStart:5.8,sizeEnd:4.0,jiggle:4.1,tilt:3.4,friction:.55,slide:.78}
+];
+
+const saveKey="balance_motion_v3";let saved={bestLevel:1,bestScore:0,attempts:0,levelBest:{}};try{saved=Object.assign(saved,JSON.parse(localStorage.getItem(saveKey)||"{}"))}catch{}
+function save(){try{localStorage.setItem(saveKey,JSON.stringify(saved))}catch{}}
+function fmt(s){const m=Math.floor(s/60),x=s%60;return String(m).padStart(2,"0")+":"+x.toFixed(2).padStart(5,"0")}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+let audioCtx=null,audioMaster=null;
+function ensureAudio(){if(audioCtx)return;try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();audioMaster=audioCtx.createGain();audioMaster.gain.value=.08;audioMaster.connect(audioCtx.destination)}catch{}}
+function tone(freq=220,dur=.08,gain=.035,type="sine"){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime;o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(audioMaster);o.start(t);o.stop(t+dur+.02)}catch{}}
+
+// Motion state. The game deliberately uses both device orientation and motion data.
+const sensor={mode:"none",permission:false,beta:0,gamma:0,alpha:0,beta0:0,gamma0:0,ax:0,ay:0,az:0,rx:0,ry:0,tiltX:0,tiltY:0,fX:0,fY:0,tX:0,tY:0,down:false,fresh:false};
+const CFG={maxTilt:28,dead:1.1,smoothing:.16,gyroPredict:.010};
+function onOrientation(e){if(e.beta==null||e.gamma==null)return;sensor.beta=e.beta;sensor.gamma=e.gamma;sensor.alpha=e.alpha||0;sensor.fresh=true;if(sensor.permission)deriveTilt()}
+function onMotion(e){const a=e.accelerationIncludingGravity;if(a){sensor.ax=a.x||0;sensor.ay=a.y||0;sensor.az=a.z||0}if(e.rotationRate){sensor.rx=e.rotationRate.beta||0;sensor.ry=e.rotationRate.gamma||0}if(sensor.permission)deriveTilt()}
+function deriveTilt(){
+ let x=sensor.gamma-sensor.gamma0,y=sensor.beta-sensor.beta0;
+ const g=Math.hypot(sensor.ax,sensor.ay,sensor.az);
+ if(g>.5){const gx=Math.atan2(sensor.ax,Math.hypot(sensor.ay,sensor.az))*180/Math.PI;const gy=Math.atan2(-sensor.ay,Math.hypot(sensor.ax,sensor.az))*180/Math.PI;x=x*.74+(gx-sensor.gamma0)*.26;y=y*.74+(gy-sensor.beta0)*.26}
+ x=clamp(x,-45,45);y=clamp(y,-45,45);
+ x+=clamp(sensor.ry,-180,180)*CFG.gyroPredict;y+=clamp(sensor.rx,-180,180)*CFG.gyroPredict;
+ sensor.fX+=(x-sensor.fX)*CFG.smoothing;sensor.fY+=(y-sensor.fY)*CFG.smoothing;sensor.tiltX=sensor.fX;sensor.tiltY=sensor.fY;
+}
+async function requestMotion(){
+ if(!window.isSecureContext&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))throw new Error("Motion sensors require an HTTPS page.");
+ const waits=[];
+ if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function")waits.push(DeviceOrientationEvent.requestPermission());
+ if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function")waits.push(DeviceMotionEvent.requestPermission());
+ const rs=await Promise.all(waits);if(rs.some(v=>v!=="granted"))throw new Error("Motion permission was denied.");
+ addEventListener("deviceorientation",onOrientation,true);addEventListener("devicemotion",onMotion,true);sensor.permission=true;sensor.mode="motion";
+}
+async function calibrate(){
+ ui.status.textContent="CALIBRATING\nHold the phone flat and steady.";
+ sensor.fresh=false;
+ const a=[];const start=performance.now();
+ while(performance.now()-start<1600){
+   if(sensor.fresh)a.push({b:sensor.beta,g:sensor.gamma});
+   await sleep(20);
+ }
+ if(a.length<25)throw new Error("No reliable motion samples were received. Make sure motion access is allowed and the page is running on HTTPS.");
+ const variance=a.reduce((sum,v)=>sum+(v.b-sensor.beta)**2+(v.g-sensor.gamma)**2,0)/a.length;
+ if(!Number.isFinite(variance))throw new Error("Sensor calibration returned invalid data.");
+ sensor.beta0=a.reduce((s,v)=>s+v.b,0)/a.length;
+ sensor.gamma0=a.reduce((s,v)=>s+v.g,0)/a.length;
+ sensor.fX=0;sensor.fY=0;sensor.tiltX=0;sensor.tiltY=0;
+ ui.status.textContent="CALIBRATED\nTilt gently to counter the platform.";
+}
+
+// Game state. The platform automatically moves; user tilt counters its acceleration.
+const game={state:"MENU",level:0,active:false,start:0,last:0,acc:0,elapsed:0,platformAngle:0,platformX:0,platformY:0,platformVX:0,platformVY:0,phase:0,score:0,balanceTime:0,balanceAccum:0,close:0,maxTilt:0,shrink:0};
+const ball={x:0,y:0,vx:0,vy:0,r:.32,spin:0};
+let msgTimer=0;
+
+function currentSurface(){const L=LEVELS[game.level];const p=clamp(game.elapsed/L.goal,0,1);return L.sizeStart+(L.sizeEnd-L.sizeStart)*p}
+function world(x,z){const c=Math.cos(game.platformAngle),s=Math.sin(game.platformAngle);return{x:x*c-z*s+game.platformX,z:x*s+z*c+game.platformY}}
+function project(x,y,z){const cameraY=7.2,cameraZ=11.8;const ry=y-cameraY,rz=z-cameraZ;const depth=-rz+ry*.15;const k=720/Math.max(3.8,depth);return{x:innerWidth/2+x*k,y:innerHeight*.52-ry*k,k}}
+function localProject(x,z,y=0){const p=world(x,z);return project(p.x,y,p.z)}
+function showMessage(a,b,c,d=1200){ui.ms.textContent=a||"";ui.mb.textContent=b||"";ui.md.textContent=c||"";ui.message.style.opacity="1";clearTimeout(msgTimer);msgTimer=setTimeout(()=>ui.message.style.opacity="0",d)}
+function panel(p){[ui.start,ui.level,ui.result].forEach(x=>x.classList.add("hidden"));if(p)p.classList.remove("hidden");ui.overlay.classList.toggle("hidden",!p)}
+function levelInfo(){const L=LEVELS[game.level];ui.levelEye.textContent="LEVEL "+(game.level+1);ui.levelTitle.textContent=L.name;ui.levelDesc.textContent=L.desc;ui.levelGoal.textContent=L.goal+"s";ui.levelSurface.textContent=L.sizeStart.toFixed(1)+" → "+L.sizeEnd.toFixed(1);ui.levelJiggle.textContent=L.jiggle<1?"Low":L.jiggle<2?"Medium":L.jiggle<3?"High":"Severe";ui.levelShrink.textContent=L.sizeStart-L.sizeEnd>.9?"Fast":"Gradual"}
+
+// Physics: a fixed-step solver at 120 Hz. Platform movement generates inertial acceleration; player tilt counters it.
+const PHYS={dt:1/120,g:9.81,maxSpeed:7.5,edgeBounce:.18};
+function fixed(dt){
+ const L=LEVELS[game.level],t=game.elapsed,surf=currentSurface();
+ const targetA=Math.sin(game.phase*2.01)*L.tilt*.018+Math.sin(game.phase*.83)*L.tilt*.009;
+ const targetVX=Math.sin(game.phase*1.17)*L.jiggle+Math.sin(game.phase*2.57)*L.jiggle*.35;
+ const targetVY=Math.cos(game.phase*1.41)*L.jiggle*.82+Math.sin(game.phase*3.03)*L.jiggle*.18;
+ game.platformVX+=(targetVX-game.platformVX)*Math.min(1,dt*(1.6+L.slide));game.platformVY+=(targetVY-game.platformVY)*Math.min(1,dt*(1.7+L.slide));
+ game.platformX+=game.platformVX*dt;game.platformY+=game.platformVY*dt;
+ game.platformAngle+=(targetA-game.platformAngle)*Math.min(1,dt*(3+L.slide*2));
+ game.phase+=dt*(1+game.level*.09);
+
+ let tx=sensor.mode==="test"?sensor.tX:sensor.tiltX/CFG.maxTilt,ty=sensor.mode==="test"?sensor.tY:sensor.tiltY/CFG.maxTilt;
+ const m=Math.hypot(tx,ty);if(m>1){tx/=m;ty/=m}
+ tx=Math.sign(tx)*Math.max(0,Math.abs(tx)-CFG.dead/CFG.maxTilt);ty=Math.sign(ty)*Math.max(0,Math.abs(ty)-CFG.dead/CFG.maxTilt);
+ const userAx=tx*9.81;const userAy=-ty*9.81;
+ // Inertial/platform acceleration. This is what makes the platform itself try to throw the ball.
+ const platformAx=Math.sin(game.phase*1.17)*L.jiggle*L.slide*.95+Math.cos(game.phase*2.57)*L.jiggle*.38;
+ const platformAy=Math.cos(game.phase*1.41)*L.jiggle*L.slide*.8+Math.sin(game.phase*3.03)*L.jiggle*.22;
+ let ax=userAx-platformAx,ay=userAy-platformAy;
+ // Rotating platform produces tangential inertial force.
+ const rx=ball.x,ry=ball.y;const omega=(targetA-game.platformAngle)*4.0;ax+=omega*ry*.55;ay-=omega*rx*.55;
+ ball.vx+=ax*dt;ball.vy+=ay*dt;
+ // Surface friction / momentum.
+ const damp=Math.exp(-L.friction*dt);ball.vx*=damp;ball.vy*=damp;
+ if(Math.hypot(tx,ty)<.045&&Math.hypot(ball.vx,ball.vy)<1.4){const brake=Math.max(0,1-dt*2.2);ball.vx*=brake;ball.vy*=brake}
+ const sp=Math.hypot(ball.vx,ball.vy);if(sp>PHYS.maxSpeed){const q=PHYS.maxSpeed/sp;ball.vx*=q;ball.vy*=q}
+ ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+
+ // Continuously shrinking square boundary with rounded-corner treatment.
+ const lim=surf*.5-ball.r*.9;const p=4.4;const nx=Math.abs(ball.x)/Math.max(.001,lim),ny=Math.abs(ball.y)/Math.max(.001,lim);const edge=Math.pow(Math.pow(nx,p)+Math.pow(ny,p),1/p);
+ const balance=clamp(1-edge,0,1);game.balanceAccum+=balance*dt;game.balanceTime+=dt;game.score+=(4+balance*14)*dt;
+ if(edge>.79)game.close++;if(edge>1){const q=1/edge*.985;ball.x*=q;ball.y*=q;const len=Math.hypot(ball.x,ball.y)||1;const ux=ball.x/len,uy=ball.y/len;const vn=ball.vx*ux+ball.vy*uy;if(vn>0){ball.vx-=1.15*vn*ux;ball.vy-=1.15*vn*uy}ball.vx*=.72;ball.vy*=.72}
+ ball.spin+=(ball.vx-ball.vy)*dt/ball.r;game.maxTilt=Math.max(game.maxTilt,Math.hypot(sensor.tiltX,sensor.tiltY));
+ if(Math.abs(ball.x)>surf*.5+1.2||Math.abs(ball.y)>surf*.5+1.2){fail("EDGE");return}
+}
+
+function draw(){
+ const g=ctx;g.clearRect(0,0,innerWidth,innerHeight);
+ const bg=g.createLinearGradient(0,0,0,innerHeight);bg.addColorStop(0,"#16212b");bg.addColorStop(.45,"#0b1015");bg.addColorStop(1,"#040608");g.fillStyle=bg;g.fillRect(0,0,innerWidth,innerHeight);
+ const r=g.createRadialGradient(innerWidth*.5,innerHeight*.3,20,innerWidth*.5,innerHeight*.52,Math.max(innerWidth,innerHeight)*.8);r.addColorStop(0,"rgba(111,143,164,.11)");r.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=r;g.fillRect(0,0,innerWidth,innerHeight);
+ if(game.state==="MENU")return;
+ const surf=currentSurface();const half=surf/2;
+ const corners=[world(-half,-half),world(half,-half),world(half,half),world(-half,half)].map(v=>project(v.x,0,v.z));
+ // platform thickness
+ g.save();g.beginPath();g.moveTo(corners[0].x,corners[0].y+28);for(let i=1;i<4;i++)g.lineTo(corners[i].x,corners[i].y+28);g.closePath();g.fillStyle="#11171d";g.fill();
+ for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(b.x,b.y+28);g.lineTo(a.x,a.y+28);g.closePath();g.fillStyle=i%2?"#172027":"#1d272e";g.fill()}
+ g.beginPath();g.moveTo(corners[0].x,corners[0].y);for(let i=1;i<4;i++)g.lineTo(corners[i].x,corners[i].y);g.closePath();const pg=g.createLinearGradient(0,corners[0].y,0,innerHeight);pg.addColorStop(0,"#43515c");pg.addColorStop(1,"#252e35");g.fillStyle=pg;g.fill();g.strokeStyle="rgba(225,233,238,.38)";g.lineWidth=1;g.stroke();
+ // surface center rings show the shrinking play area
+ g.strokeStyle="rgba(255,255,255,.06)";for(let i=1;i<4;i++){const s=surf*i/4;const cc=[project(...Object.values(world(-s/2,-s/2))),project(...Object.values(world(s/2,-s/2))),project(...Object.values(world(s/2,s/2))),project(...Object.values(world(-s/2,s/2)))];g.beginPath();g.moveTo(cc[0].x,cc[0].y);for(let j=1;j<4;j++)g.lineTo(cc[j].x,cc[j].y);g.closePath();g.stroke()}
+ g.restore();
+ // center target
+ const cp=localProject(0,0,.02),cr=18*cp.k/720;g.strokeStyle="rgba(240,246,249,.20)";g.beginPath();g.arc(cp.x,cp.y,Math.max(5,cr),0,Math.PI*2);g.stroke();
+ // ball shadow + ball
+ const bp=localProject(ball.x,ball.y,.6),sp=localProject(ball.x,ball.y,.03),rad=Math.max(10,ball.r*bp.k);g.fillStyle="rgba(0,0,0,.34)";g.beginPath();g.ellipse(sp.x,sp.y,rad*1.55,rad*.52,0,0,Math.PI*2);g.fill();const ballGrad=g.createRadialGradient(bp.x-rad*.35,bp.y-rad*.42,rad*.05,bp.x,bp.y,rad);ballGrad.addColorStop(0,"#fff");ballGrad.addColorStop(.34,"#edf0f2");ballGrad.addColorStop(.76,"#a1abb2");ballGrad.addColorStop(1,"#4c565d");g.fillStyle=ballGrad;g.beginPath();g.arc(bp.x,bp.y,rad,0,Math.PI*2);g.fill();g.strokeStyle="rgba(255,255,255,.35)";g.stroke();g.fillStyle="rgba(255,255,255,.55)";g.beginPath();g.arc(bp.x-rad*.28,bp.y-rad*.33,rad*.13,0,Math.PI*2);g.fill();g.strokeStyle="rgba(30,38,43,.3)";g.lineWidth=Math.max(1,rad*.04);g.beginPath();g.arc(bp.x,bp.y,rad*.6,ball.spin*.35,ball.spin*.35+1.25);g.stroke();
+}
+
+function updateHUD(){if(!game.active)return;ui.hudLevel.textContent=game.level+1;ui.hudTime.textContent=fmt(game.elapsed);const L=LEVELS[game.level],surf=currentSurface(),edge=Math.hypot(ball.x,ball.y)/(surf*.72);const bal=clamp(1-edge,0,1);ui.fill.style.width=Math.round(bal*100)+"%";ui.balanceValue.textContent=Math.round(bal*100)+"%"}
+function showLevel(){levelInfo();panel(ui.level)}
+function startLevel(){game.active=true;game.state="PLAY";game.start=performance.now();game.last=game.start;game.acc=0;game.elapsed=0;game.phase=0;game.platformX=0;game.platformY=0;game.platformVX=0;game.platformVY=0;game.platformAngle=0;game.score=0;game.balanceTime=0;game.balanceAccum=0;game.close=0;game.maxTilt=0;ball.x=0;ball.y=0;ball.vx=0;ball.vy=0;ball.spin=0;ui.hud.classList.remove("hidden");ui.meter.style.opacity="1";panel(null);showMessage("LEVEL "+(game.level+1),LEVELS[game.level].name,LEVELS[game.level].desc,1200);tone(220,.08,.035)}
+function finishCommon(success,why){game.active=false;const L=LEVELS[game.level],t=game.elapsed,avg=game.balanceTime?game.balanceAccum/game.balanceTime:0;game.score=Math.round(game.score);saved.attempts++;saved.bestLevel=Math.max(saved.bestLevel||1,game.level+1);saved.bestScore=Math.max(saved.bestScore||0,game.score);saved.levelBest[game.level+1]=Math.max(saved.levelBest[game.level+1]||0,t);save();ui.resultEye.textContent=success?"LEVEL "+(game.level+1)+" COMPLETE":"LEVEL "+(game.level+1)+" FAILED — "+why;ui.resultTitle.textContent=success?(game.level===9?"YOU HELD IT":"STEADY"):"ONE MORE TRY";ui.resultDesc.textContent=success?"The platform tried to throw the ball. Your counter-tilt kept it alive.":"The platform moved first. You have to anticipate its motion instead of reacting late.";ui.rTime.textContent=fmt(t);ui.rScore.textContent=game.score;ui.rBalance.textContent=Math.round(avg*100)+"%";ui.rClose.textContent=game.close;ui.rTilt.textContent=game.maxTilt.toFixed(1)+"°";ui.rBest.textContent=saved.bestLevel;ui.next.classList.toggle("hidden",!success);ui.next.textContent=game.level===9?"Restart at level 1":"Next level";ui.hud.classList.add("hidden");ui.meter.style.opacity="0";panel(ui.result);success?tone(380,.1,.04):tone(60,.22,.07,"sawtooth")}
+function complete(){if(!game.active)return;game.state="COMPLETE";finishCommon(true,"")}
+function fail(reason){if(!game.active)return;game.state="FAIL";finishCommon(false,reason)}
+
+ui.startMotion.onclick=async()=>{try{ensureAudio();if(audioCtx&&audioCtx.state==="suspended")await audioCtx.resume();ui.status.textContent="REQUESTING MOTION ACCESS…";await requestMotion();await calibrate();showLevel()}catch(e){ui.status.textContent=(e&&e.message?e.message:String(e))+"\n\nUse Test Without Sensors to verify the game, then deploy on HTTPS for motion control."}};
+ui.testMode.onclick=()=>{ensureAudio();sensor.mode="test";sensor.permission=true;sensor.fresh=true;sensor.tX=0;sensor.tY=0;ui.status.textContent="TEST MODE\nDrag on the screen to tilt the virtual phone.";showLevel()};
+ui.play.onclick=()=>{ensureAudio();if(game.level>=LEVELS.length){game.level=0}startLevel()};ui.back.onclick=()=>{game.active=false;game.state="MENU";panel(ui.start);ui.hud.classList.add("hidden");ui.meter.style.opacity="0"};ui.retry.onclick=()=>startLevel();ui.next.onclick=()=>{if(game.level>=LEVELS.length-1){game.level=0;showLevel()}else{game.level++;showLevel()}};
+ui.share.onclick=async()=>{const txt="I reached level "+(game.level+1)+" in BALANCE with "+Math.round(game.score)+" points. Can you beat me?";try{if(navigator.share)await navigator.share({title:"BALANCE",text:txt,url:location.href});else{await navigator.clipboard.writeText(txt+" "+location.href);ui.share.textContent="Copied";setTimeout(()=>ui.share.textContent="Share",900)}}catch{}};
+addEventListener("pointerdown",e=>{if(sensor.mode!=="test")return;sensor.down=true;setTest(e)}, {passive:true});addEventListener("pointermove",e=>{if(sensor.mode!=="test"||!sensor.down)return;setTest(e)},{passive:true});addEventListener("pointerup",()=>{sensor.down=false;sensor.tX*=.18;sensor.tY*=.18},{passive:true});
+function setTest(e){sensor.tX=clamp((e.clientX/innerWidth-.5)*2,-1,1);sensor.tY=clamp((e.clientY/innerHeight-.5)*2,-1,1)}
+
+let last=performance.now();function loop(now){const d=Math.min(.05,(now-last)/1000);last=now;if(game.active){game.elapsed=(now-game.start)/1000;game.acc=(game.acc||0)+d;let n=0;while(game.acc>=PHYS.dt&&n<8){fixed(PHYS.dt);game.acc-=PHYS.dt;n++}if(game.elapsed>=LEVELS[game.level].goal)complete();updateHUD()}draw();if(DEBUG){ui.debug.textContent="STATE  "+game.state+"\nLEVEL  "+(game.level+1)+"\nMODE   "+sensor.mode+"\nTILT   "+sensor.tiltX.toFixed(2)+" / "+sensor.tiltY.toFixed(2)+"\nGYRO   "+sensor.rx.toFixed(1)+" / "+sensor.ry.toFixed(1)+"\nBALL   "+ball.x.toFixed(2)+" / "+ball.y.toFixed(2)+"\nVEL    "+Math.hypot(ball.vx,ball.vy).toFixed(2)+"\nSURF   "+currentSurface().toFixed(2)+"\nANGLE  "+(game.platformAngle*180/Math.PI).toFixed(2)+"°"}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);levelInfo();
+window.__BALANCE_BOOT_OK__=true;window.__BALANCE_VERSION__="mobile-v3";
+})();
+</script>
+</body></html>
