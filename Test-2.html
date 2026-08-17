@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>BLIP RUSH — Tilt. Collect. Stay Quiet.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --bg-deep:#0b0221;
+  --bg-mid:#1a0b3d;
+  --grid:#3a1a6b;
+  --magenta:#ff2fd6;
+  --cyan:#2ef2ff;
+  --yellow:#ffe646;
+  --lime:#5dff8f;
+  --orange:#ff8c2e;
+  --red:#ff3b5c;
+  --white:#f4f0ff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --pixel-font: 'Press Start 2P', 'Courier New', monospace;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+  background:var(--bg-deep); color:var(--white);
+  font-family:var(--pixel-font);
+  user-select:none; -webkit-user-select:none; touch-action:none;
+}
+#gameCanvas{position:fixed; inset:0; width:100%; height:100%; display:block; image-rendering:pixelated;}
+.hidden{display:none !important;}
+
+/* CRT scanline + vignette overlay */
+#crt{
+  position:fixed; inset:0; z-index:30; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 2px, transparent 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%);
+  mix-blend-mode:multiply;
+}
+#flashWhite{
+  position:fixed; inset:0; z-index:31; pointer-events:none; background:#fff; opacity:0; transition:opacity .06s;
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+.screen{
+  position:fixed; inset:0; z-index:40;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  background:
+    radial-gradient(ellipse at 50% 20%, var(--bg-mid) 0%, var(--bg-deep) 70%);
+  padding: calc(var(--safe-top) + 18px) calc(var(--safe-right) + 18px) calc(var(--safe-bottom) + 18px) calc(var(--safe-left) + 18px);
+  text-align:center;
+  overflow-y:auto;
+}
+.arcade-title{
+  font-size:clamp(22px,7vw,40px);
+  color:var(--yellow);
+  text-shadow:3px 3px 0 var(--magenta), 6px 6px 0 rgba(0,0,0,0.5);
+  letter-spacing:2px;
+  line-height:1.4;
+  margin:0 0 6px;
+  animation:titlePulse 2.2s ease-in-out infinite;
+}
+@keyframes titlePulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.035);} }
+.arcade-sub{
+  font-size:clamp(9px,2.6vw,12px); color:var(--cyan); letter-spacing:2px; margin-bottom:22px;
+  text-shadow:0 0 8px rgba(46,242,255,0.6);
+}
+.rules-list{
+  list-style:none; padding:0; margin:0 0 26px; display:flex; flex-direction:column; gap:12px;
+  font-size:clamp(9px,2.4vw,11px); color:var(--white); max-width:360px;
+}
+.rules-list li{
+  display:flex; align-items:center; gap:10px; text-align:left; line-height:1.6;
+  border:2px solid var(--grid); padding:10px 12px; background:rgba(26,11,61,0.6);
+}
+.rules-list .ico{ font-size:16px; flex-shrink:0; width:22px; text-align:center; }
+.arcade-btn{
+  font-family:var(--pixel-font);
+  font-size:clamp(11px,3vw,14px);
+  color:var(--bg-deep);
+  background:var(--yellow);
+  border:none; border-bottom:5px solid #b38a00;
+  padding:16px 26px; margin:7px 0;
+  cursor:pointer; letter-spacing:2px;
+  box-shadow:0 0 0 2px var(--bg-deep), 0 0 18px rgba(255,230,70,0.35);
+  transition:transform .08s;
+  width:min(300px, 84vw);
+}
+.arcade-btn:active{ transform:translateY(3px); border-bottom-width:2px; }
+.arcade-btn.secondary{
+  background:transparent; color:var(--cyan); border:2px solid var(--cyan); border-bottom:5px solid var(--cyan);
+  box-shadow:none;
+}
+.arcade-btn.secondary:active{ border-bottom-width:2px; }
+.arcade-btn.magenta{ background:var(--magenta); color:var(--white); border-bottom-color:#8a1174; box-shadow:0 0 0 2px var(--bg-deep), 0 0 18px rgba(255,47,214,0.35);}
+.arcade-btn:disabled{ opacity:0.35; cursor:default; }
+
+.small-note{ font-size:9px; color:#9a8ecf; line-height:1.8; max-width:320px; margin-top:14px; letter-spacing:1px;}
+.status-tag{ font-size:9px; margin-left:6px; }
+.status-tag.on{ color:var(--lime); }
+.status-tag.off{ color:#9a8ecf; }
+
+.perm-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border:2px solid var(--grid); padding:12px; margin-bottom:12px; width:min(340px,86vw);
+  font-size:9px; text-align:left; line-height:1.6;
+}
+.perm-row .perm-label{ color:var(--white); }
+.perm-row button{
+  font-family:var(--pixel-font); font-size:8px; padding:8px 10px; background:var(--cyan); color:var(--bg-deep);
+  border:none; border-bottom:3px solid #0a7d8c; cursor:pointer; white-space:nowrap;
+}
+
+/* Loading */
+#loadBarTrack{ width:min(280px,80vw); height:16px; border:3px solid var(--white); margin-top:10px; padding:2px;}
+#loadBarFill{ height:100%; width:0%; background:repeating-linear-gradient(90deg, var(--magenta) 0 8px, var(--cyan) 8px 16px); transition:width .2s; }
+
+/* Game Over */
+.go-score-row{ display:flex; gap:26px; margin:18px 0 22px; }
+.go-score-box{ text-align:center; }
+.go-score-box .label{ font-size:8px; color:var(--cyan); letter-spacing:1px; margin-bottom:8px; }
+.go-score-box .value{ font-size:clamp(20px,6vw,30px); color:var(--yellow); text-shadow:2px 2px 0 var(--magenta); }
+.go-score-box .value.best{ color:var(--lime); text-shadow:2px 2px 0 #0a7d3a; }
+#newBestTag{ font-size:9px; color:var(--lime); letter-spacing:2px; margin-bottom:10px; animation:titlePulse 0.9s infinite; }
+.leaderboard{ list-style:none; padding:0; margin:16px 0 0; font-size:9px; color:#c9bdf0; text-align:left; width:min(260px,80vw); }
+.leaderboard li{ display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed var(--grid); }
+.leaderboard li.you{ color:var(--yellow); }
+
+/* ============================================================
+   HUD
+   ============================================================ */
+#hud{ position:fixed; inset:0; z-index:20; pointer-events:none; }
+.hud-top{
+  position:absolute; top:calc(var(--safe-top) + 12px); left:calc(var(--safe-left) + 12px); right:calc(var(--safe-right) + 12px);
+  display:flex; justify-content:space-between; align-items:flex-start; font-size:10px;
+}
+.hud-block{ background:rgba(11,2,33,0.55); border:2px solid var(--grid); padding:8px 10px; }
+.hud-score .value{ color:var(--yellow); font-size:16px; text-shadow:2px 2px 0 var(--magenta); }
+.hud-lives{ display:flex; gap:5px; margin-top:4px; }
+.heart{ width:12px; height:12px; background:var(--red); clip-path:polygon(50% 15%,61% 0,80% 0,100% 20%,100% 40%,50% 100%,0 40%,0 20%,20% 0,39% 0); }
+.heart.lost{ background:#3a1a6b; }
+
+.hud-mult{ color:var(--lime); font-size:11px; text-shadow:0 0 6px rgba(93,255,143,0.7); }
+
+.noise-wrap{ position:absolute; top:calc(var(--safe-top) + 12px); left:50%; transform:translateX(-50%); width:min(220px,52vw); text-align:center;}
+.noise-label{ font-size:8px; color:var(--cyan); letter-spacing:2px; margin-bottom:6px; }
+.noise-track{ height:12px; border:2px solid var(--white); padding:1px; }
+.noise-fill{ height:100%; width:4%; background:var(--lime); transition:width .12s, background .2s; }
+
+.blast-wrap{
+  position:absolute; bottom:calc(var(--safe-bottom) + 18px); right:calc(var(--safe-right) + 18px);
+  width:74px; height:74px; border-radius:50%; pointer-events:auto;
+  border:3px solid var(--magenta); background:rgba(26,11,61,0.7);
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  font-size:7px; color:var(--magenta); letter-spacing:1px; text-align:center;
+}
+.blast-wrap.ready{ box-shadow:0 0 18px rgba(255,47,214,0.7); color:var(--white); background:rgba(255,47,214,0.25);}
+.blast-wrap .icon{ font-size:20px; margin-bottom:2px; }
+
+#comboPopup{
+  position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(0.6);
+  font-size:14px; color:var(--yellow); text-shadow:2px 2px 0 var(--magenta);
+  opacity:0; transition:opacity .2s, transform .2s;
+}
+#comboPopup.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+#toastMsg{
+  position:absolute; bottom:16%; left:50%; transform:translateX(-50%);
+  font-size:10px; color:var(--white); background:rgba(11,2,33,0.75); border:2px solid var(--cyan);
+  padding:8px 14px; opacity:0; transition:opacity .25s; text-align:center; max-width:80vw;
+}
+#toastMsg.show{ opacity:1; }
+
+/* Mobile joystick fallback */
+#joyZone{
+  position:absolute; left:calc(var(--safe-left) + 16px); bottom:calc(var(--safe-bottom) + 16px);
+  width:110px; height:110px; pointer-events:auto; display:none;
+}
+body.show-joy #joyZone{ display:block; }
+#joyBase{ position:absolute; inset:0; border:2px solid rgba(46,242,255,0.5); border-radius:50%; background:rgba(11,2,33,0.35);}
+#joyStick{ position:absolute; width:44px; height:44px; border-radius:50%; background:rgba(46,242,255,0.35); border:2px solid var(--cyan); top:50%; left:50%; transform:translate(-50%,-50%); }
+
+#pauseBtn{
+  position:absolute; top:calc(var(--safe-top) + 12px); right:calc(var(--safe-right) + 12px);
+  pointer-events:auto; width:34px; height:34px; border:2px solid var(--grid); background:rgba(11,2,33,0.55);
+  color:var(--white); font-size:12px; display:flex; align-items:center; justify-content:center;
+}
+
+@media (max-width:480px){
+  .hud-block{ padding:6px 8px; }
+  .hud-score .value{ font-size:13px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+<div id="crt"></div>
+<div id="flashWhite"></div>
+
+<!-- ============================================================ LOADING ============================================================ -->
+<div id="loadingScreen" class="screen">
+  <h1 class="arcade-title">BLIP<br>RUSH</h1>
+  <div class="arcade-sub">LOADING ARCADE...</div>
+  <div id="loadBarTrack"><div id="loadBarFill"></div></div>
+</div>
+
+<!-- ============================================================ TITLE ============================================================ -->
+<div id="titleScreen" class="screen hidden">
+  <h1 class="arcade-title">BLIP<br>RUSH</h1>
+  <div class="arcade-sub">TILT. COLLECT. STAY QUIET.</div>
+  <ul class="rules-list">
+    <li><span class="ico">🕹️</span><span><b>TILT YOUR PHONE</b> to roll your Blip around the arena and grab glowing orbs.</span></li>
+    <li><span class="ico">🔊</span><span><b>STAY QUIET</b> — the Snoops hunt faster the louder it gets around you. Silence keeps them lazy.</span></li>
+    <li><span class="ico">📳</span><span><b>SHAKE YOUR PHONE</b> to unleash a Pulse Blast that stuns every Snoop nearby.</span></li>
+    <li><span class="ico">⭐</span><span>Grab the rare <b>white flash orb</b> to freeze the whole arena for a few seconds.</span></li>
+  </ul>
+  <button class="arcade-btn" id="btnPlay">PLAY</button>
+  <button class="arcade-btn secondary" id="btnHow">HOW SCORING WORKS</button>
+  <div class="small-note" id="bestScoreNote"></div>
+</div>
+
+<!-- ============================================================ SCORING INFO ============================================================ -->
+<div id="howScreen" class="screen hidden">
+  <div class="arcade-sub" style="margin-bottom:18px;">SCORING</div>
+  <ul class="rules-list">
+    <li><span class="ico">💠</span><span>Each orb = <b>+10</b>, multiplied by your current Quiet Streak.</span></li>
+    <li><span class="ico">🔥</span><span>Streak climbs <b>+1x</b> every 5 seconds you stay under the noise line.</span></li>
+    <li><span class="ico">💥</span><span>Loud noise or a Snoop hit <b>resets your streak</b> to 1x — high risk, high reward.</span></li>
+    <li><span class="ico">❤️</span><span>3 hearts. Lose them all and it's game over — but you can always tap to retry instantly.</span></li>
+  </ul>
+  <button class="arcade-btn secondary" id="btnHowBack">BACK</button>
+</div>
+
+<!-- ============================================================ PERMISSIONS ============================================================ -->
+<div id="permScreen" class="screen hidden">
+  <div class="arcade-sub" style="margin-bottom:18px;">SENSOR SETUP</div>
+  <div class="perm-row">
+    <div class="perm-label">MOTION<br><span style="color:#9a8ecf;">Tilt to move, shake to blast</span></div>
+    <button id="btnEnableMotion">ENABLE</button>
+  </div>
+  <div class="perm-row">
+    <div class="perm-label">MICROPHONE<br><span style="color:#9a8ecf;">Volume only — never recorded or sent anywhere</span></div>
+    <button id="btnEnableMic">ENABLE</button>
+  </div>
+  <button class="arcade-btn magenta" id="btnStartRun">START RUN</button>
+  <div class="small-note">Skip either one — Blip Rush still plays fine with touch controls and a built-in noise timer instead.</div>
+</div>
+
+<!-- ============================================================ PAUSE ============================================================ -->
+<div id="pauseScreen" class="screen hidden">
+  <div class="arcade-sub" style="margin-bottom:18px;">PAUSED</div>
+  <button class="arcade-btn" id="btnResume">RESUME</button>
+  <button class="arcade-btn secondary" id="btnRecalibrate">RECALIBRATE TILT</button>
+  <button class="arcade-btn secondary" id="btnQuit">QUIT TO TITLE</button>
+</div>
+
+<!-- ============================================================ GAME OVER ============================================================ -->
+<div id="gameOverScreen" class="screen hidden">
+  <div class="arcade-sub" style="color:var(--red);">GAME OVER</div>
+  <div id="newBestTag" class="hidden">★ NEW BEST ★</div>
+  <div class="go-score-row">
+    <div class="go-score-box"><div class="label">SCORE</div><div class="value" id="goScore">0</div></div>
+    <div class="go-score-box"><div class="label">BEST</div><div class="value best" id="goBest">0</div></div>
+  </div>
+  <button class="arcade-btn" id="btnRetry">TAP TO PLAY AGAIN</button>
+  <button class="arcade-btn secondary" id="btnGoTitle">TITLE SCREEN</button>
+  <ol class="leaderboard" id="leaderboardList"></ol>
+</div>
+
+<!-- ============================================================ HUD ============================================================ -->
+<div id="hud" class="hidden">
+  <div class="hud-top">
+    <div class="hud-block hud-score">
+      <div style="font-size:8px;color:var(--cyan);">SCORE</div>
+      <div class="value" id="hudScore">0</div>
+      <div class="hud-mult" id="hudMult">x1</div>
+    </div>
+    <div class="hud-block">
+      <div style="font-size:8px;color:var(--cyan);">HEARTS</div>
+      <div class="hud-lives" id="hudLives">
+        <div class="heart"></div><div class="heart"></div><div class="heart"></div>
+      </div>
+    </div>
+  </div>
+  <div class="noise-wrap">
+    <div class="noise-label">NOISE</div>
+    <div class="noise-track"><div class="noise-fill" id="noiseFill"></div></div>
+  </div>
+  <div id="comboPopup">STREAK x2!</div>
+  <div id="toastMsg"></div>
+  <div id="joyZone"><div id="joyBase"></div><div id="joyStick"></div></div>
+  <div class="blast-wrap" id="blastBtn"><div class="icon">💥</div><div>BLAST</div></div>
+  <div id="pauseBtn">II</div>
+</div>
+
+<script>
+/* ================================================================================
+   BLIP RUSH — retro pixel-arcade sensor game
+   Single file. Canvas 2D. No external game deps (font CDN only).
+   Modules: CONFIG / STATE / AUDIO / SENSORS / INPUT / ENTITIES / WORLD /
+            DIFFICULTY / SCORING / RENDER / UI / SAVE / GAME LOOP
+   ================================================================================ */
+(function(){
+"use strict";
+
+/* ============================================================ CONFIG ============================================================ */
+const CONFIG = {
+  SAVE_KEY: "blip_rush_scores_v1",
+  PLAYER_RADIUS: 13,
+  PLAYER_MAX_SPEED: 320,
+  PLAYER_ACCEL: 900,
+  PLAYER_FRICTION: 4.2,
+  ORB_RADIUS: 8,
+  ORB_TARGET_COUNT: 6,
+  FLASH_ORB_CHANCE: 0.12,
+  ENEMY_RADIUS: 14,
+  ENEMY_BASE_SPEED: 55,
+  ENEMY_MAX_SPEED: 175,
+  ENEMY_SPAWN_BASE: 4.2,   // seconds between spawns at start
+  ENEMY_SPAWN_MIN: 1.1,
+  MAX_ENEMIES: 14,
+  NOISE_DECAY: 14,        // per second when silent
+  NOISE_MIC_GAIN: 230,
+  NOISE_FALLBACK_WAVE_SPEED: 0.09,
+  STREAK_TICK_SECONDS: 5,
+  STREAK_RESET_NOISE: 62,
+  BLAST_COOLDOWN: 8,
+  BLAST_RADIUS: 190,
+  HIT_INVINCIBLE_TIME: 1.4,
+  LIVES_START: 3,
+};
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (isTouchDevice && Math.min(window.innerWidth, window.innerHeight) < 820);
+
+/* ============================================================ DOM ============================================================ */
+const $ = (id)=>document.getElementById(id);
+const canvas = $("gameCanvas");
+const ctx = canvas.getContext("2d");
+let W=0, H=0, DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  canvas.style.width = W+"px"; canvas.style.height = H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+
+/* ============================================================ SAVE MANAGER ============================================================ */
+const SaveManager = {
+  getScores(){
+    try{ return JSON.parse(localStorage.getItem(CONFIG.SAVE_KEY)) || []; }catch(e){ return []; }
+  },
+  addScore(score){
+    const scores = this.getScores();
+    scores.push(score);
+    scores.sort((a,b)=>b-a);
+    const top = scores.slice(0,5);
+    try{ localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(top)); }catch(e){}
+    return top;
+  },
+  best(){
+    const s = this.getScores();
+    return s.length ? s[0] : 0;
+  }
+};
+
+/* ============================================================ AUDIO MANAGER — procedural chiptune ============================================================ */
+class AudioManager {
+  constructor(){
+    this.ctx = null; this.ready = false;
+    this.master = null;
+    this.micStream = null; this.analyser = null; this.micData = null;
+    this.micEnabled = false; this.micLevel = 0;
+    this._musicTimer = null; this._musicStep = 0;
+    this._musicOn = false;
+  }
+  init(){
+    if(this.ready) return;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.5;
+      this.master.connect(this.ctx.destination);
+      this.ready = true;
+    }catch(e){ console.warn("Audio unavailable", e); }
+  }
+  resume(){ if(this.ctx && this.ctx.state==="suspended") this.ctx.resume(); }
+
+  _tone(freq, dur, type="square", gain=0.14, delay=0){
+    if(!this.ready) return;
+    const t = this.ctx.currentTime + delay;
+    const o = this.ctx.createOscillator();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t+dur+0.02);
+  }
+
+  playCollect(pitchStep=0){
+    const base = 520 + pitchStep*40;
+    this._tone(base, 0.09, "square", 0.12);
+    this._tone(base*1.5, 0.09, "square", 0.06, 0.03);
+  }
+  playFlashOrb(){
+    [660,880,1100,1320].forEach((f,i)=> this._tone(f,0.16,"triangle",0.14,i*0.06));
+  }
+  playHit(){
+    this._tone(160,0.22,"sawtooth",0.18);
+    this._tone(90,0.28,"sawtooth",0.14,0.05);
+  }
+  playBlast(){
+    this._tone(80,0.4,"sawtooth",0.2);
+    this._tone(50,0.5,"square",0.14,0.05);
+  }
+  playStreak(){
+    this._tone(880,0.08,"square",0.1);
+    this._tone(1108,0.1,"square",0.1,0.07);
+    this._tone(1318,0.14,"square",0.12,0.14);
+  }
+  playGameOver(){
+    [440,392,349,294].forEach((f,i)=> this._tone(f,0.28,"triangle",0.16,i*0.16));
+  }
+  playStreakReset(){
+    this._tone(220,0.18,"sawtooth",0.12);
+  }
+
+  startMusic(){
+    if(!this.ready || this._musicOn) return;
+    this._musicOn = true;
+    const scale = [261.6,293.7,329.6,392.0,440.0,523.3];
+    const pattern = [0,2,4,2,1,3,4,3];
+    const step = ()=>{
+      if(!this._musicOn) return;
+      const note = scale[pattern[this._musicStep % pattern.length]];
+      this._tone(note/2, 0.16, "triangle", 0.045);
+      this._musicStep++;
+      this._musicTimer = setTimeout(step, 260);
+    };
+    step();
+  }
+  stopMusic(){ this._musicOn = false; clearTimeout(this._musicTimer); }
+
+  async enableMic(){
+    if(this.micEnabled) return true;
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+      this.micStream = stream;
+      this.init();
+      const source = this.ctx.createMediaStreamSource(stream);
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 512;
+      this.micData = new Uint8Array(this.analyser.frequencyBinCount);
+      source.connect(this.analyser); // never connected to destination — local analysis only
+      this.micEnabled = true;
+      return true;
+    }catch(e){
+      console.warn("Mic unavailable", e);
+      this.micEnabled = false;
+      return false;
+    }
+  }
+  updateMic(){
+    if(!this.micEnabled || !this.analyser) return 0;
+    this.analyser.getByteTimeDomainData(this.micData);
+    let sum=0;
+    for(let i=0;i<this.micData.length;i++){ const v=(this.micData[i]-128)/128; sum+=v*v; }
+    const rms = Math.sqrt(sum/this.micData.length);
+    this.micLevel += (rms - this.micLevel)*0.2;
+    return this.micLevel;
+  }
+}
+const Audio_ = new AudioManager();
+
+/* ============================================================ SENSOR MANAGER ============================================================ */
+class SensorManager {
+  constructor(){
+    this.orientationActive = false;
+    this.motionActive = false;
+    this.calib = {beta:0, gamma:0};
+    this.raw = {beta:0, gamma:0};
+    this.smoothed = {beta:0, gamma:0};
+    this.lastAccel = {x:0,y:0,z:0};
+    this._lastShakeTime = 0;
+    this._onOrient = this._onOrient.bind(this);
+    this._onMotion = this._onMotion.bind(this);
+  }
+  needsPerm(){ return typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function"; }
+  async requestOrientation(){
+    try{
+      if(this.needsPerm()){
+        const res = await DeviceOrientationEvent.requestPermission();
+        if(res !== "granted") return false;
+      }
+      window.addEventListener('deviceorientation', this._onOrient, true);
+      this.orientationActive = true;
+      return true;
+    }catch(e){ return false; }
+  }
+  async requestMotion(){
+    try{
+      if(typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function"){
+        const res = await DeviceMotionEvent.requestPermission();
+        if(res !== "granted") return false;
+      }
+      window.addEventListener('devicemotion', this._onMotion, true);
+      this.motionActive = true;
+      return true;
+    }catch(e){ return false; }
+  }
+  calibrate(){ this.calib.beta = this.raw.beta; this.calib.gamma = this.raw.gamma; }
+  _onOrient(e){
+    if(e.beta===null||e.gamma===null) return;
+    this.raw.beta = e.beta; this.raw.gamma = e.gamma;
+  }
+  _onMotion(e){
+    const a = e.accelerationIncludingGravity || e.acceleration;
+    if(!a || a.x===null) return;
+    const dx=(a.x||0)-this.lastAccel.x, dy=(a.y||0)-this.lastAccel.y, dz=(a.z||0)-this.lastAccel.z;
+    const jerk = Math.sqrt(dx*dx+dy*dy+dz*dz);
+    this.lastAccel = {x:a.x||0,y:a.y||0,z:a.z||0};
+    const now = performance.now();
+    if(jerk > 16 && now - this._lastShakeTime > 500){
+      this._lastShakeTime = now;
+      GameEvents.onShake();
+    }
+  }
+  getTilt(){
+    if(!this.orientationActive) return null;
+    const dead = 1.5;
+    let db = this.raw.beta - this.calib.beta;
+    let dg = this.raw.gamma - this.calib.gamma;
+    if(Math.abs(db)<dead) db=0;
+    if(Math.abs(dg)<dead) dg=0;
+    this.smoothed.beta += (db - this.smoothed.beta)*0.18;
+    this.smoothed.gamma += (dg - this.smoothed.gamma)*0.18;
+    const max = 28;
+    const nx = Math.max(-1, Math.min(1, this.smoothed.gamma/max));
+    const ny = Math.max(-1, Math.min(1, this.smoothed.beta/max));
+    return {x:nx, y:ny};
+  }
+}
+const Sensors = new SensorManager();
+
+/* ============================================================ INPUT MANAGER ============================================================ */
+class InputManager {
+  constructor(){
+    this.keys = {};
+    this.joy = {active:false, x:0, y:0, id:null};
+    window.addEventListener('keydown',(e)=>{ this.keys[e.code]=true; if(e.code==="Space") GameEvents.onShake(); if(e.code==="Escape") Game.togglePause(); });
+    window.addEventListener('keyup',(e)=>{ this.keys[e.code]=false; });
+    if(IS_MOBILE) this._initTouch();
+    $("blastBtn").addEventListener('click', ()=> GameEvents.onShake());
+  }
+  _initTouch(){
+    document.body.classList.add('show-joy');
+    const zone = $("joyZone"); const stick = $("joyStick");
+    zone.addEventListener('touchstart',(e)=>{
+      const t=e.changedTouches[0];
+      this.joy.active=true; this.joy.id=t.identifier;
+      this._ox=t.clientX; this._oy=t.clientY;
+      e.preventDefault();
+    },{passive:false});
+    zone.addEventListener('touchmove',(e)=>{
+      for(const t of e.changedTouches){
+        if(t.identifier===this.joy.id){
+          let dx=t.clientX-this._ox, dy=t.clientY-this._oy;
+          const max=40; const dist=Math.min(Math.hypot(dx,dy),max);
+          const ang=Math.atan2(dy,dx);
+          dx=Math.cos(ang)*dist; dy=Math.sin(ang)*dist;
+          this.joy.x=dx/max; this.joy.y=dy/max;
+          stick.style.transform=`translate(${dx-22}px, ${dy-22}px)`;
+        }
+      }
+      e.preventDefault();
+    },{passive:false});
+    const end=(e)=>{
+      for(const t of e.changedTouches){
+        if(t.identifier===this.joy.id){ this.joy.active=false; this.joy.x=0; this.joy.y=0; stick.style.transform="translate(-50%,-50%)"; }
+      }
+    };
+    zone.addEventListener('touchend',end);
+    zone.addEventListener('touchcancel',end);
+  }
+  getVector(){
+    let x=0,y=0;
+    if(this.keys["KeyD"]||this.keys["ArrowRight"]) x+=1;
+    if(this.keys["KeyA"]||this.keys["ArrowLeft"]) x-=1;
+    if(this.keys["KeyS"]||this.keys["ArrowDown"]) y+=1;
+    if(this.keys["KeyW"]||this.keys["ArrowUp"]) y-=1;
+    const tilt = Sensors.getTilt();
+    if(tilt){ x+=tilt.x; y+=tilt.y; }
+    if(this.joy.active){ x+=this.joy.x; y+=this.joy.y; }
+    const len = Math.hypot(x,y);
+    if(len>1){ x/=len; y/=len; }
+    return {x,y};
+  }
+}
+let Input;
+
+/* ============================================================ STATE ============================================================ */
+const STATE = {
+  phase:"loading", // loading,title,how,perm,playing,paused,gameover
+  running:false,
+  score:0,
+  streak:1,
+  streakTimer:0,
+  noise:4,
+  lives:CONFIG.LIVES_START,
+  blastCooldown:0,
+  survivalTime:0,
+  paused:false,
+};
+
+const GameEvents = {
+  onShake(){
+    if(STATE.phase!=="playing" || STATE.blastCooldown>0) return;
+    World.triggerBlast();
+  }
+};
+
+/* ============================================================ ENTITIES ============================================================ */
+function rand(a,b){ return a+Math.random()*(b-a); }
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+class Player {
+  constructor(){ this.x=W/2; this.y=H/2; this.vx=0; this.vy=0; this.invT=0; this.wobble=0; }
+  reset(){ this.x=W/2; this.y=H/2; this.vx=0; this.vy=0; this.invT=0; }
+  update(dt, vec){
+    this.vx += vec.x * CONFIG.PLAYER_ACCEL * dt;
+    this.vy += vec.y * CONFIG.PLAYER_ACCEL * dt;
+    const speed = Math.hypot(this.vx,this.vy);
+    if(speed > CONFIG.PLAYER_MAX_SPEED){
+      this.vx = this.vx/speed*CONFIG.PLAYER_MAX_SPEED;
+      this.vy = this.vy/speed*CONFIG.PLAYER_MAX_SPEED;
+    }
+    this.vx -= this.vx*Math.min(1,CONFIG.PLAYER_FRICTION*dt);
+    this.vy -= this.vy*Math.min(1,CONFIG.PLAYER_FRICTION*dt);
+    this.x += this.vx*dt; this.y += this.vy*dt;
+    const r=CONFIG.PLAYER_RADIUS;
+    if(this.x<r){this.x=r; this.vx*=-0.4;} if(this.x>W-r){this.x=W-r; this.vx*=-0.4;}
+    if(this.y<r+70){this.y=r+70; this.vy*=-0.4;} if(this.y>H-r-90){this.y=H-r-90; this.vy*=-0.4;}
+    if(this.invT>0) this.invT -= dt;
+    this.wobble += dt*(4+speed*0.02);
+  }
+}
+
+class Orb {
+  constructor(x,y,flash){ this.x=x; this.y=y; this.flash=!!flash; this.phase=Math.random()*10; this.dead=false; }
+}
+class Enemy {
+  constructor(x,y){
+    this.x=x; this.y=y;
+    const ang = rand(0,Math.PI*2);
+    this.vx=Math.cos(ang)*CONFIG.ENEMY_BASE_SPEED; this.vy=Math.sin(ang)*CONFIG.ENEMY_BASE_SPEED;
+    this.wanderT = rand(0,3);
+    this.stunT = 0;
+    this.phase = Math.random()*10;
+  }
+  update(dt, target, aggression){
+    this.phase += dt*6;
+    if(this.stunT>0){ this.stunT-=dt; this.vx*=0.9; this.vy*=0.9; this.x+=this.vx*dt; this.y+=this.vy*dt; return; }
+    const speed = CONFIG.ENEMY_BASE_SPEED + (CONFIG.ENEMY_MAX_SPEED-CONFIG.ENEMY_BASE_SPEED)*aggression;
+    this.wanderT -= dt;
+    if(this.wanderT<=0){
+      this.wanderT = rand(1.2,2.6);
+      const ang = rand(0,Math.PI*2);
+      this._wanderVX = Math.cos(ang); this._wanderVY = Math.sin(ang);
+    }
+    const dx = target.x-this.x, dy = target.y-this.y;
+    const d = Math.hypot(dx,dy)||1;
+    const homeX = dx/d, homeY = dy/d;
+    const wx = this._wanderVX||0, wy = this._wanderVY||0;
+    const dirX = wx*(1-aggression) + homeX*aggression;
+    const dirY = wy*(1-aggression) + homeY*aggression;
+    const dl = Math.hypot(dirX,dirY)||1;
+    this.vx = dirX/dl*speed; this.vy = dirY/dl*speed;
+    this.x += this.vx*dt; this.y += this.vy*dt;
+    const r=CONFIG.ENEMY_RADIUS;
+    if(this.x<r) this.x=r; if(this.x>W-r) this.x=W-r;
+    if(this.y<70+r) this.y=70+r; if(this.y>H-90-r) this.y=H-90-r;
+  }
+}
+class Particle {
+  constructor(x,y,color,speed=140,life=0.5){
+    this.x=x; this.y=y; const a=rand(0,Math.PI*2);
+    this.vx=Math.cos(a)*rand(speed*0.3,speed); this.vy=Math.sin(a)*rand(speed*0.3,speed);
+    this.life=life; this.maxLife=life; this.color=color; this.size=rand(2,5);
+  }
+  update(dt){ this.x+=this.vx*dt; this.y+=this.vy*dt; this.vx*=0.94; this.vy*=0.94; this.life-=dt; }
+}
+
+/* ============================================================ WORLD ============================================================ */
+const World = {
+  player:null, orbs:[], enemies:[], particles:[],
+  spawnTimer:0, difficultyTime:0, blastFlashT:0, freezeAllT:0, shakeCam:0,
+
+  init(){
+    this.player = new Player();
+    this.orbs = []; this.enemies = []; this.particles = [];
+    this.spawnTimer = 1.4; this.difficultyTime = 0;
+    this.blastFlashT = 0; this.freezeAllT = 0; this.shakeCam=0;
+    for(let i=0;i<CONFIG.ORB_TARGET_COUNT;i++) this.spawnOrb();
+  },
+
+  spawnOrb(){
+    const pad = 40;
+    const x = rand(pad, W-pad), y = rand(70+pad, H-90-pad);
+    const flash = Math.random() < CONFIG.FLASH_ORB_CHANCE;
+    this.orbs.push(new Orb(x,y,flash));
+  },
+
+  spawnEnemy(){
+    if(this.enemies.length >= CONFIG.MAX_ENEMIES) return;
+    // spawn near edges, away from player
+    let x,y,tries=0;
+    do{
+      const edge = Math.floor(rand(0,4));
+      if(edge===0){ x=rand(0,W); y=80; }
+      else if(edge===1){ x=rand(0,W); y=H-95; }
+      else if(edge===2){ x=20; y=rand(80,H-95); }
+      else { x=W-20; y=rand(80,H-95); }
+      tries++;
+    }while(dist({x,y}, this.player)<160 && tries<10);
+    this.enemies.push(new Enemy(x,y));
+  },
+
+  triggerBlast(){
+    STATE.blastCooldown = CONFIG.BLAST_COOLDOWN;
+    Audio_.playBlast();
+    this.blastFlashT = 0.35;
+    this.shakeCam = 0.4;
+    STATE.noise = 0;
+    this.enemies.forEach(en=>{
+      const d = dist(en, this.player);
+      if(d < CONFIG.BLAST_RADIUS){
+        en.stunT = 2.4;
+        const ang = Math.atan2(en.y-this.player.y, en.x-this.player.x);
+        en.vx = Math.cos(ang)*300; en.vy = Math.sin(ang)*300;
+      }
+    });
+    for(let i=0;i<18;i++) this.particles.push(new Particle(this.player.x, this.player.y, "#ff2fd6", 260, 0.5));
+    UI.toast("PULSE BLAST!");
+  },
+
+  triggerFlashOrb(){
+    Audio_.playFlashOrb();
+    this.blastFlashT = 0.5;
+    this.freezeAllT = 3.2;
+    this.enemies.forEach(en=> en.stunT = Math.max(en.stunT, 3.2));
+    UI.toast("FLASH FREEZE!");
+    document.getElementById('flashWhite').style.opacity = 0.85;
+    setTimeout(()=>{ document.getElementById('flashWhite').style.opacity = 0; }, 220);
+  },
+
+  update(dt){
+    this.difficultyTime += dt;
+    STATE.survivalTime += dt;
+
+    // --- input & player ---
+    const vec = Input.getVector();
+    this.player.update(dt, vec);
+
+    // --- noise meter ---
+    let noiseInput;
+    if(Audio_.micEnabled){
+      noiseInput = Math.min(1, Audio_.updateMic()*CONFIG.NOISE_MIC_GAIN/100);
+    } else {
+      // fallback: gentle oscillating tension so the game stays fair & fun without mic access
+      this._fallbackPhase = (this._fallbackPhase||0) + dt*CONFIG.NOISE_FALLBACK_WAVE_SPEED;
+      noiseInput = (Math.sin(this._fallbackPhase*Math.PI*2)*0.5+0.5) * 0.55;
+    }
+    const targetNoise = noiseInput*100;
+    if(targetNoise > STATE.noise) STATE.noise += (targetNoise-STATE.noise)*Math.min(1,dt*10);
+    else STATE.noise = Math.max(0, STATE.noise - CONFIG.NOISE_DECAY*dt);
+
+    // --- streak ---
+    if(STATE.noise > CONFIG.STREAK_RESET_NOISE){
+      if(STATE.streak > 1){ STATE.streak = 1; STATE.streakTimer = 0; Audio_.playStreakReset(); UI.toast("STREAK LOST — TOO LOUD!"); }
+    } else {
+      STATE.streakTimer += dt;
+      if(STATE.streakTimer >= CONFIG.STREAK_TICK_SECONDS){
+        STATE.streakTimer = 0;
+        STATE.streak += 1;
+        Audio_.playStreak();
+        UI.showCombo("STREAK x"+STATE.streak+"!");
+      }
+    }
+
+    // --- blast cooldown ---
+    if(STATE.blastCooldown>0) STATE.blastCooldown = Math.max(0, STATE.blastCooldown-dt);
+    if(this.blastFlashT>0) this.blastFlashT -= dt;
+    if(this.freezeAllT>0) this.freezeAllT -= dt;
+    if(this.shakeCam>0) this.shakeCam = Math.max(0,this.shakeCam-dt*1.6);
+
+    // --- aggression from noise + difficulty ramp ---
+    const noiseAggr = STATE.noise/100;
+    const rampAggr = Math.min(1, this.difficultyTime/90);
+    const aggression = this.freezeAllT>0 ? 0 : Math.min(1, noiseAggr*0.75 + rampAggr*0.35);
+
+    // --- spawn enemies ---
+    const spawnInterval = Math.max(CONFIG.ENEMY_SPAWN_MIN, CONFIG.ENEMY_SPAWN_BASE - rampAggr*2.6 - noiseAggr*1.2);
+    this.spawnTimer -= dt;
+    if(this.spawnTimer<=0){ this.spawnTimer = spawnInterval; this.spawnEnemy(); }
+
+    // --- update enemies ---
+    this.enemies.forEach(en=> en.update(dt, this.player, aggression));
+
+    // --- orb collisions ---
+    for(let i=this.orbs.length-1;i>=0;i--){
+      const o = this.orbs[i];
+      if(dist(o,this.player) < CONFIG.ORB_RADIUS+CONFIG.PLAYER_RADIUS){
+        if(o.flash){ this.triggerFlashOrb(); STATE.score += 40*STATE.streak; }
+        else{ Audio_.playCollect(STATE.streak); STATE.score += 10*STATE.streak; }
+        for(let p=0;p<10;p++) this.particles.push(new Particle(o.x,o.y, o.flash?"#ffffff":"#2ef2ff", 160, 0.4));
+        this.orbs.splice(i,1);
+        this.spawnOrb();
+      }
+    }
+
+    // --- enemy collisions ---
+    if(this.player.invT<=0){
+      for(const en of this.enemies){
+        if(en.stunT>0) continue;
+        if(dist(en,this.player) < CONFIG.ENEMY_RADIUS+CONFIG.PLAYER_RADIUS){
+          this.onPlayerHit(en);
+          break;
+        }
+      }
+    }
+
+    // --- particles ---
+    for(let i=this.particles.length-1;i>=0;i--){
+      this.particles[i].update(dt);
+      if(this.particles[i].life<=0) this.particles.splice(i,1);
+    }
+  },
+
+  onPlayerHit(en){
+    STATE.lives -= 1;
+    this.player.invT = CONFIG.HIT_INVINCIBLE_TIME;
+    Audio_.playHit();
+    this.shakeCam = 0.5;
+    STATE.streak = 1; STATE.streakTimer = 0;
+    const ang = Math.atan2(this.player.y-en.y, this.player.x-en.x);
+    this.player.vx = Math.cos(ang)*260; this.player.vy = Math.sin(ang)*260;
+    for(let i=0;i<14;i++) this.particles.push(new Particle(this.player.x,this.player.y,"#ff3b5c",200,0.5));
+    UI.pulseHearts();
+    if(STATE.lives<=0){ Game.endRun(); }
+  }
+};
+
+/* ============================================================ RENDER ============================================================ */
+function drawPixelCircleGlow(x,y,r,color,glow=18){
+  ctx.save();
+  ctx.shadowColor = color; ctx.shadowBlur = glow;
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawBackground(t){
+  ctx.fillStyle = "#0b0221";
+  ctx.fillRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle = "rgba(58,26,107,0.55)";
+  ctx.lineWidth = 1;
+  const grid = 34;
+  const offset = (t*14)%grid;
+  for(let x=-grid; x<W+grid; x+=grid){
+    ctx.beginPath(); ctx.moveTo(x+offset,0); ctx.lineTo(x+offset,H); ctx.stroke();
+  }
+  for(let y=-grid; y<H+grid; y+=grid){
+    ctx.beginPath(); ctx.moveTo(0,y+offset); ctx.lineTo(W,y+offset); ctx.stroke();
+  }
+  // arena border
+  ctx.strokeStyle = "#ff2fd6"; ctx.lineWidth = 3;
+  ctx.shadowColor = "#ff2fd6"; ctx.shadowBlur = 14;
+  ctx.strokeRect(6,72,W-12,H-72-92);
+  ctx.shadowBlur = 0;
+}
+function drawOrb(o,t){
+  const bob = Math.sin(t*3+o.phase)*3;
+  if(o.flash){
+    const pulse = 1+Math.sin(t*8)*0.15;
+    drawPixelCircleGlow(o.x,o.y+bob,CONFIG.ORB_RADIUS*pulse,"#ffffff",26);
+  } else {
+    const hue = (t*60+o.phase*40)%360;
+    const color = `hsl(${hue},95%,65%)`;
+    drawPixelCircleGlow(o.x,o.y+bob,CONFIG.ORB_RADIUS,color,14);
+  }
+}
+function drawEnemy(en,t){
+  const wob = Math.sin(en.phase)*2;
+  const color = en.stunT>0 ? "#5dff8f" : "#ff8c2e";
+  ctx.save();
+  ctx.shadowColor = color; ctx.shadowBlur = en.stunT>0?10:16;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(en.x, en.y-CONFIG.ENEMY_RADIUS+wob);
+  ctx.quadraticCurveTo(en.x+CONFIG.ENEMY_RADIUS, en.y-CONFIG.ENEMY_RADIUS*0.4, en.x+CONFIG.ENEMY_RADIUS, en.y+CONFIG.ENEMY_RADIUS*0.5);
+  ctx.quadraticCurveTo(en.x+CONFIG.ENEMY_RADIUS*0.5, en.y+CONFIG.ENEMY_RADIUS, en.x, en.y+CONFIG.ENEMY_RADIUS*0.7);
+  ctx.quadraticCurveTo(en.x-CONFIG.ENEMY_RADIUS*0.5, en.y+CONFIG.ENEMY_RADIUS, en.x-CONFIG.ENEMY_RADIUS, en.y+CONFIG.ENEMY_RADIUS*0.5);
+  ctx.quadraticCurveTo(en.x-CONFIG.ENEMY_RADIUS, en.y-CONFIG.ENEMY_RADIUS*0.4, en.x, en.y-CONFIG.ENEMY_RADIUS+wob);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#0b0221";
+  ctx.fillRect(en.x-6,en.y-3,4,4);
+  ctx.fillRect(en.x+2,en.y-3,4,4);
+  ctx.restore();
+}
+function drawPlayer(p,t){
+  const blinking = p.invT>0 && Math.floor(t*14)%2===0;
+  if(blinking) return;
+  ctx.save();
+  const squash = 1+Math.sin(p.wobble)*0.06;
+  ctx.translate(p.x,p.y);
+  ctx.scale(squash, 1/squash);
+  ctx.shadowColor = "#ffe646"; ctx.shadowBlur = 20;
+  ctx.fillStyle = "#ffe646";
+  ctx.beginPath(); ctx.arc(0,0,CONFIG.PLAYER_RADIUS,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#0b0221";
+  const dir = Math.atan2(p.vy,p.vx);
+  const ex = Math.cos(dir)*4, ey = Math.sin(dir)*4;
+  ctx.fillRect(ex-2,ey-6,4,4); ctx.fillRect(ex-2,ey+2,4,4);
+  ctx.restore();
+}
+function drawParticles(){
+  World.particles.forEach(pt=>{
+    const a = Math.max(0, pt.life/pt.maxLife);
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x-pt.size/2, pt.y-pt.size/2, pt.size, pt.size);
+    ctx.restore();
+  });
+}
+function render(t){
+  ctx.save();
+  if(World.shakeCam>0){
+    const s = World.shakeCam*10;
+    ctx.translate(rand(-s,s), rand(-s,s));
+  }
+  drawBackground(t);
+  World.orbs.forEach(o=>drawOrb(o,t));
+  World.enemies.forEach(en=>drawEnemy(en,t));
+  drawParticles();
+  if(World.player) drawPlayer(World.player,t);
+  if(World.blastFlashT>0){
+    ctx.fillStyle = `rgba(255,47,214,${Math.min(0.4,World.blastFlashT)})`;
+    ctx.fillRect(0,0,W,H);
+  }
+  ctx.restore();
+}
+
+/* ============================================================ UI ============================================================ */
+const UI = {
+  toast(msg){
+    const el = $("toastMsg");
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(()=> el.classList.remove('show'), 1800);
+  },
+  showCombo(msg){
+    const el = $("comboPopup");
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(this._comboT);
+    this._comboT = setTimeout(()=> el.classList.remove('show'), 900);
+  },
+  pulseHearts(){
+    const hearts = document.querySelectorAll('.heart');
+    hearts.forEach((h,i)=>{ h.classList.toggle('lost', i>=STATE.lives); });
+  },
+  updateHUD(){
+    $("hudScore").textContent = Math.floor(STATE.score);
+    $("hudMult").textContent = "x"+STATE.streak;
+    $("noiseFill").style.width = Math.min(100,STATE.noise)+"%";
+    const nf = $("noiseFill");
+    nf.style.background = STATE.noise>62 ? "var(--red)" : STATE.noise>32 ? "var(--orange)" : "var(--lime)";
+    const blast = $("blastBtn");
+    blast.classList.toggle('ready', STATE.blastCooldown<=0);
+    blast.querySelector('div:last-child').textContent = STATE.blastCooldown<=0 ? "BLAST" : Math.ceil(STATE.blastCooldown)+"s";
+  }
+};
+
+/* ============================================================ GAME ORCHESTRATION ============================================================ */
+const Game = {
+  init(){
+    resize();
+    Input = new InputManager();
+    this._loadingSequence();
+  },
+  _loadingSequence(){
+    let p=0;
+    const fill = $("loadBarFill");
+    const iv = setInterval(()=>{
+      p += rand(8,18);
+      fill.style.width = Math.min(100,p)+"%";
+      if(p>=100){
+        clearInterval(iv);
+        setTimeout(()=> this.toTitle(), 300);
+      }
+    }, 120);
+  },
+  toTitle(){
+    STATE.phase = "title";
+    $("loadingScreen").classList.add('hidden');
+    $("titleScreen").classList.remove('hidden');
+    const best = SaveManager.best();
+    $("bestScoreNote").textContent = best>0 ? "BEST SCORE: "+best : "NO RUNS YET — GOOD LUCK!";
+  },
+  toHow(){ $("titleScreen").classList.add('hidden'); $("howScreen").classList.remove('hidden'); },
+  fromHow(){ $("howScreen").classList.add('hidden'); $("titleScreen").classList.remove('hidden'); },
+  toPermissions(){
+    STATE.phase = "perm";
+    $("titleScreen").classList.add('hidden');
+    $("permScreen").classList.remove('hidden');
+  },
+  startRun(){
+    STATE.phase = "playing";
+    STATE.score=0; STATE.streak=1; STATE.streakTimer=0; STATE.noise=4;
+    STATE.lives=CONFIG.LIVES_START; STATE.blastCooldown=0; STATE.survivalTime=0;
+    $("permScreen").classList.add('hidden');
+    $("hud").classList.remove('hidden');
+    UI.pulseHearts();
+    World.init();
+    Audio_.init(); Audio_.resume(); Audio_.startMusic();
+    this._lastT = performance.now();
+    this._running = true;
+    requestAnimationFrame(this._loop.bind(this));
+  },
+  togglePause(){
+    if(STATE.phase==="playing"){
+      STATE.phase="paused";
+      $("pauseScreen").classList.remove('hidden');
+    } else if(STATE.phase==="paused"){
+      STATE.phase="playing";
+      $("pauseScreen").classList.add('hidden');
+      this._lastT = performance.now();
+    }
+  },
+  endRun(){
+    STATE.phase = "gameover";
+    Audio_.stopMusic();
+    Audio_.playGameOver();
+    $("hud").classList.add('hidden');
+    const finalScore = Math.floor(STATE.score);
+    const prevBest = SaveManager.best();
+    const top = SaveManager.addScore(finalScore);
+    $("goScore").textContent = finalScore;
+    $("goBest").textContent = Math.max(prevBest, finalScore);
+    $("newBestTag").classList.toggle('hidden', finalScore <= prevBest);
+    const list = $("leaderboardList");
+    list.innerHTML = "";
+    top.forEach((s,i)=>{
+      const li = document.createElement('li');
+      li.textContent = "";
+      const rank = document.createElement('span'); rank.textContent = (i+1)+".";
+      const val = document.createElement('span'); val.textContent = s;
+      li.appendChild(rank); li.appendChild(val);
+      if(s===finalScore) li.classList.add('you');
+      list.appendChild(li);
+    });
+    $("gameOverScreen").classList.remove('hidden');
+  },
+  quitToTitle(){
+    STATE.phase = "title";
+    $("pauseScreen").classList.add('hidden');
+    $("gameOverScreen").classList.add('hidden');
+    $("hud").classList.add('hidden');
+    Audio_.stopMusic();
+    this.toTitle();
+  },
+  _loop(now){
+    if(!this._running) return;
+    requestAnimationFrame(this._loop.bind(this));
+    const dt = Math.min(0.05, (now-this._lastT)/1000);
+    this._lastT = now;
+    const t = now/1000;
+    if(STATE.phase==="playing"){
+      World.update(dt);
+      UI.updateHUD();
+    }
+    render(t);
+  }
+};
+
+/* ============================================================ EVENT WIRING ============================================================ */
+function wire(){
+  $("btnPlay").addEventListener('click', ()=> Game.toPermissions());
+  $("btnHow").addEventListener('click', ()=> Game.toHow());
+  $("btnHowBack").addEventListener('click', ()=> Game.fromHow());
+
+  $("btnEnableMotion").addEventListener('click', async (e)=>{
+    const ok1 = await Sensors.requestOrientation();
+    const ok2 = await Sensors.requestMotion();
+    Sensors.calibrate();
+    e.target.textContent = (ok1||ok2) ? "ENABLED" : "UNAVAILABLE";
+    e.target.disabled = true;
+  });
+  $("btnEnableMic").addEventListener('click', async (e)=>{
+    Audio_.init();
+    const ok = await Audio_.enableMic();
+    e.target.textContent = ok ? "ENABLED" : "UNAVAILABLE";
+    e.target.disabled = true;
+  });
+  $("btnStartRun").addEventListener('click', ()=> Game.startRun());
+
+  $("btnResume").addEventListener('click', ()=> Game.togglePause());
+  $("btnRecalibrate").addEventListener('click', ()=>{ Sensors.calibrate(); Game.togglePause(); });
+  $("btnQuit").addEventListener('click', ()=> Game.quitToTitle());
+
+  $("btnRetry").addEventListener('click', ()=>{
+    $("gameOverScreen").classList.add('hidden');
+    Game.startRun();
+  });
+  $("btnGoTitle").addEventListener('click', ()=>{
+    $("gameOverScreen").classList.add('hidden');
+    Game.quitToTitle();
+  });
+
+  $("pauseBtn").addEventListener('click', ()=> Game.togglePause());
+
+  window.addEventListener('blur', ()=>{ if(STATE.phase==="playing") Game.togglePause(); });
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden && STATE.phase==="playing") Game.togglePause(); });
+}
+
+/* ============================================================ BOOT ============================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  wire();
+  Game.init();
+});
+
+})();
+</script>
+</body>
+</html>
