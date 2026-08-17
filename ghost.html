@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DON'T BLINK</title>
+    <!-- Three.js for rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #000;
+            --text: #fff;
+            --accent: #d00000;
+            --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        
+        body, html {
+            width: 100%; height: 100%;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            overflow: hidden;
+            background: #000;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Layer 1: Camera */
+        #camera-feed {
+            position: absolute;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror */
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            filter: grayscale(0.5) contrast(1.2);
+        }
+
+        /* Layer 2: WebGL / Ghost */
+        #three-canvas {
+            position: absolute;
+            width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Layer 3: VFX (Vignette, Noise) */
+        #vfx-layer {
+            position: absolute;
+            width: 100%; height: 100%;
+            z-index: 3;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 100%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,1);
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        .glitch-flash {
+            animation: glitch 0.2s linear infinite;
+        }
+
+        @keyframes glitch {
+            0% { background-color: rgba(255, 255, 255, 0.05); }
+            50% { background-color: rgba(200, 0, 0, 0.1); }
+            100% { background-color: transparent; }
+        }
+
+        /* Layer 4: UI */
+        #ui-layer {
+            position: absolute;
+            width: 100%; height: 100%;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: rgba(0,0,0,0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        h1 { font-size: 3rem; letter-spacing: 0.2em; font-weight: 300; margin-bottom: 1rem; }
+        h2 { font-size: 1.5rem; letter-spacing: 0.1em; font-weight: 300; margin-bottom: 2rem; color: #ccc; }
+        p { font-size: 1rem; max-width: 600px; margin-bottom: 1.5rem; line-height: 1.5; color: #aaa; }
+        
+        button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        button:hover { background: rgba(255,255,255,0.1); border-color: var(--text); }
+
+        /* Subtitles & HUD */
+        #hud {
+            position: absolute;
+            top: 2rem;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2rem;
+            font-family: monospace;
+            color: rgba(255,255,255,0.5);
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        #subtitle-container {
+            position: absolute;
+            bottom: 15%;
+            width: 100%;
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+        #subtitle {
+            font-size: 1.2rem;
+            font-style: italic;
+            letter-spacing: 0.05em;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Scream Meter */
+        #scream-ui { margin-top: 2rem; display: none; width: 100%; max-width: 400px; }
+        .meter-bg { width: 100%; height: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); position: relative; }
+        #meter-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s; }
+
+        /* Debug UI */
+        #debug {
+            position: absolute; top: 10px; left: 10px; font-family: monospace; font-size: 10px;
+            color: #0f0; background: rgba(0,0,0,0.8); padding: 10px; z-index: 999; display: none; text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="three-canvas"></canvas>
+    <div id="vfx-layer"></div>
+    
+    <div id="hud" style="display:none;">
+        <div id="timer">00:00.00</div>
+    </div>
+
+    <div id="subtitle-container"><div id="subtitle"></div></div>
+
+    <div id="ui-layer">
+        <!-- Start Screen -->
+        <div id="screen-start" class="screen active">
+            <h1>DON'T BLINK</h1>
+            <p>Your camera is processed locally. No video is uploaded or recorded.</p>
+            <button id="btn-start">Start</button>
+        </div>
+
+        <!-- Calibration Screen -->
+        <div id="screen-calibrate" class="screen">
+            <h2>CALIBRATING</h2>
+            <p id="calib-msg">Look directly at the camera. Keep your eyes open.</p>
+            <h1 id="calib-countdown">3</h1>
+        </div>
+
+        <!-- Warning / Gameplay Screen (Empty overlay) -->
+        <div id="screen-playing" class="screen" style="background: transparent;">
+            <!-- UI hidden during play mostly -->
+        </div>
+
+        <!-- Scream Phase Screen -->
+        <div id="screen-scream" class="screen">
+            <h1>IT'S HERE.</h1>
+            <p>Scream to push it back.</p>
+            <button id="btn-enable-mic">Enable Microphone</button>
+            <div id="scream-ui">
+                <div class="meter-bg"><div id="meter-fill"></div></div>
+                <p style="margin-top: 10px; font-family: monospace;" id="scream-power">POWER: 0%</p>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="screen-gameover" class="screen">
+            <h1>YOU LET IT THROUGH</h1>
+            <p id="result-stats">SURVIVED: 00:00<br>BLINKS: 0</p>
+            <button id="btn-retry" style="margin-bottom: 1rem;">Play Again</button>
+            <button id="btn-share">Challenge a Friend</button>
+        </div>
+        
+        <!-- Victory Screen -->
+        <div id="screen-victory" class="screen">
+            <h1>YOU SURVIVED</h1>
+            <h2>FOR NOW.</h2>
+            <p id="victory-stats"></p>
+            <button id="btn-retry-vic">Play Again</button>
+        </div>
+    </div>
+
+    <div id="debug"></div>
+</div>
+
+<script>
+/**
+ * DON'T BLINK - Core Application
+ * Architecture:
+ * 1. App (State Machine)
+ * 2. FaceTracker (MediaPipe Vision)
+ * 3. AudioDirector (Web Audio API)
+ * 4. GhostDirector (Three.js)
+ * 5. CinematicDirector (Timing & Subtitles)
+ */
+
+// --- CONFIG & CONSTANTS ---
+const GAME_STATE = {
+    INIT: 0,
+    CALIBRATING: 1,
+    PLAYING: 2,
+    CINEMATIC: 3, // Pauses blink processing
+    SCREAM_PHASE: 4,
+    GAME_OVER: 5
+};
+
+const BLINK_CONFIG = {
+    openThreshold: 0.35,  // Below this blendshape value = open (MediaPipe blink metric goes UP when closed)
+    closeThreshold: 0.65, // Above this = closed
+    minDuration: 80,      // ms minimum closure to count as blink
+    cooldown: 2000        // ms before another blink can trigger a reaction
+};
+
+// --- SINGLETON MANAGERS ---
+const DOM = {
+    screens: document.querySelectorAll('.screen'),
+    video: document.getElementById('camera-feed'),
+    vfx: document.getElementById('vfx-layer'),
+    hud: document.getElementById('hud'),
+    timer: document.getElementById('timer'),
+    subtitle: document.getElementById('subtitle'),
+    debug: document.getElementById('debug')
+};
+
+function showScreen(id) {
+    DOM.screens.forEach(s => s.classList.remove('active'));
+    if(id) document.getElementById(id).classList.add('active');
+}
+
+// --- AUDIO DIRECTOR ---
+class AudioDirector {
+    constructor() {
+        this.ctx = null;
+        this.micStream = null;
+        this.analyser = null;
+        this.nodes = {};
+        this.isMicActive = false;
+        this.masterGain = null;
+    }
+
+    async init() {
+        if(!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.connect(this.ctx.destination);
+            
+            // Synthesize heartbeat
+            this.nodes.heartbeat = this.ctx.createOscillator();
+            this.nodes.heartbeatGain = this.ctx.createGain();
+            this.nodes.heartbeat.type = 'sine';
+            this.nodes.heartbeat.frequency.value = 40; // Low sub thump
+            this.nodes.heartbeat.connect(this.nodes.heartbeatGain);
+            this.nodes.heartbeatGain.connect(this.masterGain);
+            this.nodes.heartbeatGain.gain.value = 0;
+            this.nodes.heartbeat.start();
+
+            // Synthesize dark drone (noise + filter)
+            this.nodes.droneGain = this.ctx.createGain();
+            this.nodes.droneGain.gain.value = 0;
+            const bufferSize = this.ctx.sampleRate * 2; // 2 seconds
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            this.nodes.noise = this.ctx.createBufferSource();
+            this.nodes.noise.buffer = buffer;
+            this.nodes.noise.loop = true;
+            this.nodes.droneFilter = this.ctx.createBiquadFilter();
+            this.nodes.droneFilter.type = 'lowpass';
+            this.nodes.droneFilter.frequency.value = 100;
+            this.nodes.noise.connect(this.nodes.droneFilter);
+            this.nodes.droneFilter.connect(this.nodes.droneGain);
+            this.nodes.droneGain.connect(this.masterGain);
+            this.nodes.noise.start();
+        }
+        if (this.ctx.state === 'suspended') await this.ctx.resume();
+    }
+
+    setTension(distancePercent) {
+        // distancePercent 0 (far) to 1 (at player)
+        if(!this.ctx) return;
+        
+        // Heartbeat intensity & speed
+        const hbFreq = 40 + (distancePercent * 20); // 40Hz to 60Hz
+        this.nodes.heartbeat.frequency.setTargetAtTime(hbFreq, this.ctx.currentTime, 0.5);
+        
+        // Pulse logic handled in game loop, just set base volume
+        this.nodes.droneGain.gain.setTargetAtTime(distancePercent * 0.3, this.ctx.currentTime, 1.0);
+        this.nodes.droneFilter.frequency.setTargetAtTime(100 + (distancePercent * 400), this.ctx.currentTime, 1.0);
+    }
+
+    pulseHeartbeat() {
+        if(!this.ctx) return;
+        const t = this.ctx.currentTime;
+        this.nodes.heartbeatGain.gain.setValueAtTime(0, t);
+        this.nodes.heartbeatGain.gain.linearRampToValueAtTime(0.8, t + 0.1);
+        this.nodes.heartbeatGain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+    }
+
+    playStinger() {
+        if(!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.5);
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.5);
+    }
+
+    async requestMic() {
+        if (this.isMicActive) return;
+        try {
+            this.micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }});
+            const source = this.ctx.createMediaStreamSource(this.micStream);
+            this.analyser = this.ctx.createAnalyser();
+            this.analyser.fftSize = 512;
+            source.connect(this.analyser);
+            this.isMicActive = true;
+        } catch (e) {
+            console.error("Mic access denied", e);
+        }
+    }
+
+    getScreamLoudness() {
+        if (!this.analyser) return 0;
+        const data = new Float32Array(this.analyser.fftSize);
+        this.analyser.getFloatTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+        const rms = Math.sqrt(sum / data.length);
+        return Math.min(1.0, rms * 5); // Scale up a bit so normal scream hits 1.0
+    }
+}
+
+// --- GHOST DIRECTOR (Three.js) ---
+class GhostDirector {
+    constructor() {
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true, antialias: false });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        this.ghostDistance = 100; // 100 = far, 0 = at face
+        
+        // Procedural Ghost: A dark swarming humanoid shape
+        this.particleCount = window.innerWidth < 600 ? 2000 : 5000;
+        this.geometry = new THREE.BufferGeometry();
+        const pos = new Float32Array(this.particleCount * 3);
+        const sizes = new Float32Array(this.particleCount);
+        
+        for(let i=0; i<this.particleCount; i++) {
+            // Rough humanoid distribution
+            const theta = Math.random() * Math.PI * 2;
+            const y = (Math.random() - 0.2) * 5; // Height
+            let r = Math.random() * 1.5;
+            if (y > 2) r *= 0.5; // Head narrower
+            pos[i*3] = Math.cos(theta) * r;
+            pos[i*3+1] = y;
+            pos[i*3+2] = Math.sin(theta) * r;
+            sizes[i] = Math.random();
+        }
+        
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        this.geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 },
+                threat: { value: 0 } // 0 to 1
+            },
+            vertexShader: `
+                uniform float time;
+                uniform float threat;
+                attribute float size;
+                varying float vAlpha;
+                void main() {
+                    vec3 p = position;
+                    // Breathing & shifting
+                    p.x += sin(time * 2.0 + p.y) * 0.1 * (1.0 + threat * 3.0);
+                    p.y += cos(time * 1.5 + p.x) * 0.1;
+                    
+                    vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+                    gl_PointSize = size * (20.0 + threat * 30.0) * (10.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                    vAlpha = 0.2 + threat * 0.8;
+                }
+            `,
+            fragmentShader: `
+                varying float vAlpha;
+                void main() {
+                    // Soft circle
+                    float dist = length(gl_PointCoord - vec2(0.5));
+                    if(dist > 0.5) discard;
+                    gl_FragColor = vec4(0.02, 0.0, 0.05, vAlpha * (1.0 - dist*2.0));
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+
+        this.particles = new THREE.Points(this.geometry, material);
+        this.scene.add(this.particles);
+
+        // Eyes
+        const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+        this.leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+        this.rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+        this.leftEye.position.set(-0.4, 2.5, 0.5);
+        this.rightEye.position.set(0.4, 2.5, 0.5);
+        this.scene.add(this.leftEye);
+        this.scene.add(this.rightEye);
+
+        this.particles.position.z = -this.ghostDistance;
+        this.leftEye.position.z = -this.ghostDistance + 0.5;
+        this.rightEye.position.z = -this.ghostDistance + 0.5;
+        this.camera.position.z = 0;
+
+        window.addEventListener('resize', () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
+
+    setTargetDistance(target, instant = false) {
+        this.targetDistance = target;
+        if(instant) this.updateDistance(target);
+    }
+
+    updateDistance(d) {
+        this.ghostDistance = d;
+        const z = -Math.max(2, this.ghostDistance); // Never clip behind camera
+        this.particles.position.z = z;
+        this.leftEye.position.z = z + 0.5;
+        this.rightEye.position.z = z + 0.5;
+        
+        const threat = 1.0 - Math.min(1.0, this.ghostDistance / 100);
+        this.particles.material.uniforms.threat.value = threat;
+        
+        // Eyes fade in as it gets closer (distance < 40)
+        let eyeOp = 0;
+        if(this.ghostDistance < 40) eyeOp = (40 - this.ghostDistance) / 40;
+        this.leftEye.material.opacity = eyeOp * 0.8;
+        this.rightEye.material.opacity = eyeOp * 0.8;
+    }
+
+    render(time) {
+        if(this.targetDistance !== undefined && this.ghostDistance !== this.targetDistance) {
+            // Smoothly move ghost
+            this.updateDistance(this.ghostDistance + (this.targetDistance - this.ghostDistance) * 0.05);
+        }
+        
+        this.particles.material.uniforms.time.value = time;
+        this.renderer.render(this.scene, this.camera);
+    }
+}
+
+// --- FACE TRACKER ---
+class FaceTracker {
+    constructor() {
+        this.landmarker = null;
+        this.lastVideoTime = -1;
+        this.state = {
+            blink: false,
+            confidence: 0,
+            leftClosed: false,
+            rightClosed: false
+        };
+        // Temporal state
+        this.closeStartTime = 0;
+    }
+
+    async init() {
+        try {
+            // Dynamically import the vision module to avoid global scope issues
+            const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3");
+            const { FaceLandmarker, FilesetResolver } = vision;
+            
+            const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            
+            this.landmarker = await FaceLandmarker.createFromOptions(fileset, {
+                baseOptions: {
+                    modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+                    delegate: "GPU"
+                },
+                outputFaceBlendshapes: true,
+                runningMode: "VIDEO",
+                numFaces: 1
+            });
+            console.log("Face tracking initialized successfully.");
+        } catch (e) {
+            console.error("Failed to initialize FaceTracker:", e);
+            document.getElementById('calib-msg').innerText = "ERROR: Failed to load face tracking. Check console.";
+        }
+    }
+
+    processFrame(video, timeMs) {
+        if (!this.landmarker) return null;
+        if (video.currentTime === this.lastVideoTime) return this.state;
+        this.lastVideoTime = video.currentTime;
+
+        const results = this.landmarker.detectForVideo(video, timeMs);
+        
+        if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+            const shapes = results.faceBlendshapes[0].categories;
+            
+            let eyeL = 0, eyeR = 0;
+            for(let i=0; i<shapes.length; i++) {
+                if(shapes[i].categoryName === 'eyeBlinkLeft') eyeL = shapes[i].score;
+                if(shapes[i].categoryName === 'eyeBlinkRight') eyeR = shapes[i].score;
+            }
+
+            this.state.confidence = 1.0;
+            
+            // Hysteresis logic
+            const lClose = eyeL > BLINK_CONFIG.closeThreshold;
+            const rClose = eyeR > BLINK_CONFIG.closeThreshold;
+            const lOpen = eyeL < BLINK_CONFIG.openThreshold;
+            const rOpen = eyeR < BLINK_CONFIG.openThreshold;
+
+            if (lClose && rClose) {
+                if(this.closeStartTime === 0) this.closeStartTime = timeMs;
+            } else if (lOpen && rOpen) {
+                if (this.closeStartTime > 0) {
+                    const dur = timeMs - this.closeStartTime;
+                    if (dur > BLINK_CONFIG.minDuration) {
+                        this.state.blink = true; // Trigger!
+                    }
+                    this.closeStartTime = 0;
+                }
+            }
+            
+            if(window.location.search.includes('debug')) {
+                DOM.debug.innerHTML = `L: ${eyeL.toFixed(2)} R: ${eyeR.toFixed(2)}<br>Dur: ${this.closeStartTime > 0 ? timeMs-this.closeStartTime : 0}<br>Dist: ${window.app.ghost.ghostDistance.toFixed(1)}`;
+            }
+        } else {
+            this.state.confidence = 0;
+            this.closeStartTime = 0;
+            if(window.location.search.includes('debug')) DOM.debug.innerHTML = "NO FACE";
+        }
+        return this.state;
+    }
+}
+
+// --- MAIN APPLICATION LOGIC ---
+class GameApp {
+    constructor() {
+        this.state = GAME_STATE.INIT;
+        this.audio = new AudioDirector();
+        this.ghost = new GhostDirector();
+        this.tracker = new FaceTracker();
+        
+        this.startTime = 0;
+        this.blinks = 0;
+        this.lastBlinkTime = 0;
+        
+        this.screamRound = 1;
+        this.requiredScreamLevel = 0.3;
+        
+        this.storyPhase = 0;
+        this.storyLines = [
+            { d: 80, t: "Why did you bring me?" },
+            { d: 60, t: "I told you not to." },
+            { d: 40, t: "I don't want to hurt you." },
+            { d: 20, t: "But you keep closing your eyes." }
+        ];
+
+        this.heartbeatTimer = 0;
+        this.bindEvents();
+        
+        if(window.location.search.includes('debug')) DOM.debug.style.display = 'block';
+    }
+
+    bindEvents() {
+        document.getElementById('btn-start').addEventListener('click', () => this.startCalibration());
+        document.getElementById('btn-enable-mic').addEventListener('click', () => this.enableMic());
+        document.getElementById('btn-retry').addEventListener('click', () => location.reload());
+        document.getElementById('btn-retry-vic').addEventListener('click', () => location.reload());
+        
+        document.getElementById('btn-share').addEventListener('click', () => {
+            const txt = `I survived DON'T BLINK for ${DOM.timer.innerText}. Can you beat me?`;
+            if(navigator.share) navigator.share({ title: "DON'T BLINK", text: txt, url: window.location.href });
+            else alert(txt + " (Copied to clipboard!)");
+        });
+    }
+
+    async startCalibration() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, 
+                audio: false 
+            });
+            DOM.video.srcObject = stream;
+            
+            showScreen('screen-calibrate');
+            await this.audio.init();
+            
+            const startTracker = async () => {
+                document.getElementById('calib-msg').innerText = "Loading face tracking models... please wait.";
+                
+                await this.tracker.init();
+                
+                // If tracking failed to initialize, stop the countdown sequence
+                if (!this.tracker.landmarker) return; 
+
+                document.getElementById('calib-msg').innerText = "Look directly at the camera. Keep your eyes open.";
+                
+                // Start Countdown
+                let cd = 3;
+                document.getElementById('calib-countdown').innerText = cd;
+                const i = setInterval(() => {
+                    cd--;
+                    document.getElementById('calib-countdown').innerText = cd > 0 ? cd : "DON'T BLINK";
+                    if(cd < 0) {
+                        clearInterval(i);
+                        this.startGameplay();
+                    }
+                }, 1000);
+            };
+
+            // Safely handle video load
+            if (DOM.video.readyState >= 2) {
+                startTracker();
+            } else {
+                DOM.video.onloadeddata = startTracker;
+            }
+            
+            // Ensure video plays
+            DOM.video.play().catch(e => console.warn("Video playback prevented:", e));
+
+        } catch (e) {
+            console.error(e);
+            alert("CAMERA ACCESS REQUIRED. Please grant permissions and reload.");
+        }
+    }
+
+    startGameplay() {
+        this.state = GAME_STATE.PLAYING;
+        showScreen('screen-playing');
+        DOM.hud.style.display = 'flex';
+        DOM.video.style.opacity = 1;
+        DOM.vfx.style.opacity = 1;
+        
+        this.ghost.setTargetDistance(100, true);
+        this.startTime = performance.now();
+        
+        // Initial dialogue
+        setTimeout(() => this.showSubtitle("Please...", 2000), 1000);
+        setTimeout(() => this.showSubtitle("...don't bring me here.", 3000), 4000);
+        
+        requestAnimationFrame((t) => this.loop(t));
+    }
+
+    showSubtitle(text, duration = 3000) {
+        DOM.subtitle.innerText = text;
+        DOM.subtitle.style.opacity = 1;
+        setTimeout(() => { DOM.subtitle.style.opacity = 0; }, duration);
+    }
+
+    formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+        const s = (totalSec % 60).toString().padStart(2, '0');
+        const cs = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+        return `${m}:${s}.${cs}`;
+    }
+
+    triggerCinematic() {
+        this.state = GAME_STATE.CINEMATIC;
+        this.blinks++;
+        
+        // Audio Stinger
+        this.audio.playStinger();
+        
+        // VFX Glitch
+        DOM.vfx.classList.add('glitch-flash');
+        setTimeout(() => DOM.vfx.classList.remove('glitch-flash'), 200);
+
+        // Move Ghost
+        let jump = 20;
+        if(this.blinks > 3) jump = 25;
+        
+        const newDist = Math.max(0, this.ghost.ghostDistance - jump);
+        this.ghost.setTargetDistance(newDist);
+        
+        // Dialogue Check
+        if(this.storyPhase < this.storyLines.length && newDist <= this.storyLines[this.storyPhase].d) {
+            setTimeout(() => this.showSubtitle(this.storyLines[this.storyPhase].t, 2500), 500);
+            this.storyPhase++;
+        }
+
+        if(newDist <= 0) {
+            setTimeout(() => this.startScreamPhase(), 1500);
+        } else {
+            setTimeout(() => {
+                this.state = GAME_STATE.PLAYING;
+            }, BLINK_CONFIG.cooldown);
+        }
+    }
+
+    startScreamPhase() {
+        this.state = GAME_STATE.SCREAM_PHASE;
+        showScreen('screen-scream');
+        DOM.hud.style.display = 'none';
+        document.getElementById('btn-enable-mic').style.display = 'block';
+        document.getElementById('scream-ui').style.display = 'none';
+        this.showSubtitle("SCREAM TO PUSH IT BACK.", 5000);
+    }
+
+    async enableMic() {
+        await this.audio.requestMic();
+        document.getElementById('btn-enable-mic').style.display = 'none';
+        document.getElementById('scream-ui').style.display = 'block';
+    }
+
+    endGame(won) {
+        this.state = GAME_STATE.GAME_OVER;
+        const timeStr = this.formatTime(performance.now() - this.startTime);
+        
+        if(won) {
+            showScreen('screen-victory');
+            document.getElementById('victory-stats').innerHTML = `TIME: ${timeStr}<br>BLINKS: ${this.blinks}`;
+        } else {
+            showScreen('screen-gameover');
+            document.getElementById('result-stats').innerHTML = `SURVIVED: ${timeStr}<br>BLINKS: ${this.blinks}`;
+            DOM.video.style.opacity = 0; // Cut to black
+        }
+    }
+
+    loop(time) {
+        if(this.state === GAME_STATE.GAME_OVER) {
+            this.ghost.render(time/1000);
+            requestAnimationFrame((t) => this.loop(t));
+            return;
+        }
+
+        // Update timer
+        if(this.state === GAME_STATE.PLAYING || this.state === GAME_STATE.CINEMATIC) {
+            DOM.timer.innerText = this.formatTime(time - this.startTime);
+        }
+
+        // Face tracking
+        if((this.state === GAME_STATE.PLAYING || this.state === GAME_STATE.CINEMATIC) && DOM.video.readyState === 4) {
+            const fState = this.tracker.processFrame(DOM.video, time);
+            
+            // Check Blink trigger (only while playing, respect cooldown)
+            if(fState && fState.blink && this.state === GAME_STATE.PLAYING) {
+                fState.blink = false; // consume
+                this.triggerCinematic();
+            }
+        }
+
+        // Audio Tension & Heartbeat
+        const distPer = 1.0 - (this.ghost.ghostDistance / 100);
+        this.audio.setTension(distPer);
+        
+        if (time - this.heartbeatTimer > (1000 - (distPer * 600))) {
+            this.audio.pulseHeartbeat();
+            this.heartbeatTimer = time;
+            // Screen shake / pulse effect on heartbeat if close
+            if(this.ghost.ghostDistance < 40) {
+                const s = 1 + (distPer * 0.05);
+                DOM.video.style.transform = `scaleX(-1) scale(${s})`;
+                setTimeout(() => DOM.video.style.transform = `scaleX(-1) scale(1)`, 100);
+            }
+        }
+
+        // Scream Phase logic
+        if(this.state === GAME_STATE.SCREAM_PHASE && this.audio.isMicActive) {
+            const rms = this.audio.getScreamLoudness();
+            document.getElementById('meter-fill').style.width = (rms * 100) + '%';
+            document.getElementById('scream-power').innerText = `POWER: ${Math.floor(rms*100)}%`;
+            
+            if(rms > this.requiredScreamLevel) {
+                // Success! Push back
+                this.audio.playStinger();
+                if(this.screamRound >= 3) {
+                    this.endGame(true); // Won!
+                } else {
+                    this.screamRound++;
+                    this.requiredScreamLevel += 0.2; // Harder next time
+                    this.ghost.setTargetDistance(100 - (this.screamRound * 20)); // Don't push as far back
+                    
+                    this.state = GAME_STATE.PLAYING;
+                    showScreen('screen-playing');
+                    DOM.hud.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        this.showSubtitle(this.screamRound === 2 ? "That won't save you twice." : "Louder.", 3000);
+                    }, 1000);
+                }
+            } else if (this.audio.isMicActive && rms > 0.1) {
+                // Screaming but not loud enough? Add visual shake
+                DOM.vfx.style.backgroundColor = `rgba(150, 0, 0, ${rms * 0.5})`;
+            } else {
+                DOM.vfx.style.backgroundColor = `transparent`;
+            }
+        }
+
+        this.ghost.render(time/1000);
+        requestAnimationFrame((t) => this.loop(t));
+    }
+}
+
+// Initialize Application
+window.onload = () => {
+    window.app = new GameApp();
+};
+</script>
+</body>
+</html>
