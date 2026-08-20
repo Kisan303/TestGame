@@ -959,10 +959,6 @@ button.danger {
 
 <div class="app">
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
     <header class="header">
 
         <div class="brand">
@@ -995,10 +991,6 @@ button.danger {
     </header>
 
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
-
     <main class="layout">
 
 
@@ -1007,9 +999,6 @@ button.danger {
         ================================================== -->
 
         <section class="panel">
-
-
-            <!-- HUD -->
 
             <div class="hud">
 
@@ -1098,12 +1087,7 @@ button.danger {
             </div>
 
 
-            <!-- BOARD + REFERENCE -->
-
             <div class="board-area">
-
-
-                <!-- BOARD -->
 
                 <div class="board-frame">
 
@@ -1115,8 +1099,6 @@ button.danger {
 
                 </div>
 
-
-                <!-- REFERENCE -->
 
                 <aside>
 
@@ -1148,8 +1130,6 @@ button.danger {
 
             </div>
 
-
-            <!-- CONTROLS -->
 
             <div class="controls">
 
@@ -1183,15 +1163,11 @@ button.danger {
         </section>
 
 
-
         <!-- =================================================
              SIDEBAR
         ================================================== -->
 
         <aside class="panel">
-
-
-            <!-- LEADERBOARD -->
 
             <div class="leaderboard-header">
 
@@ -1224,7 +1200,9 @@ button.danger {
             </div>
 
 
-            <!-- PHOTO -->
+            <!-- =================================================
+                 CUSTOM PHOTO
+            ================================================== -->
 
             <div class="side-box">
 
@@ -1258,8 +1236,6 @@ button.danger {
             </div>
 
 
-            <!-- DIFFICULTY -->
-
             <div class="side-box">
 
                 <strong>
@@ -1267,16 +1243,13 @@ button.danger {
                 </strong>
 
                 <p>
-                    Every level becomes substantially
-                    harder. The scramble depth doubles
-                    as you progress, while each level
-                    introduces a different illustration.
+                    Every level becomes harder. The
+                    shuffle depth doubles as the player
+                    progresses through the journey.
                 </p>
 
             </div>
 
-
-            <!-- CONTROLS -->
 
             <div class="side-box">
 
@@ -1297,7 +1270,6 @@ button.danger {
     </main>
 
 </div>
-
 
 
 <!-- =========================================================
@@ -1342,7 +1314,6 @@ button.danger {
 </div>
 
 
-
 <!-- =========================================================
      TOAST
 ========================================================= -->
@@ -1352,7 +1323,6 @@ button.danger {
     class="toast"
 >
 </div>
-
 
 
 <script>
@@ -1370,14 +1340,14 @@ const EMPTY_TILE = 8;
 const TOTAL_LEVELS = 12;
 
 const LEADERBOARD_KEY =
-    "wooden_photo_slider_leaderboard_v2";
+    "wooden_photo_slider_leaderboard_v3";
 
 const PLAYER_NAME_KEY =
-    "wooden_photo_slider_player_v2";
+    "wooden_photo_slider_player_v3";
 
 
 /* =========================================================
-   12 LEVELS
+   LEVEL DATA
 ========================================================= */
 
 const LEVEL_DATA = [
@@ -1473,13 +1443,19 @@ const game = {
 
     imageURL: null,
 
+    /*
+        TRUE = uploaded photo
+        FALSE = built-in level images
+    */
+    customImage: false,
+
     shuffleMoves: 12
 
 };
 
 
 /* =========================================================
-   DOM
+   DOM REFERENCES
 ========================================================= */
 
 const boardElement =
@@ -1710,14 +1686,10 @@ function victorySound() {
    NEIGHBORS
 ========================================================= */
 
-function getNeighbors(
-    index
-) {
+function getNeighbors(index) {
 
     const row =
-        Math.floor(
-            index / SIZE
-        );
+        Math.floor(index / SIZE);
 
     const col =
         index % SIZE;
@@ -1762,62 +1734,31 @@ function getNeighbors(
 
 
 /* =========================================================
-   DOUBLED DIFFICULTY
+   DIFFICULTY
 ========================================================= */
 
-/*
-   Level 1:
-   12 shuffle moves
+function getShuffleMoves(level) {
 
-   Level 2:
-   24
+    /*
+        12
+        24
+        48
+        96
+        192
+        384
+        500...
+    */
 
-   Level 3:
-   48
-
-   Level 4:
-   96
-
-   Level 5:
-   192
-
-   Afterwards the shuffle depth is capped.
-
-   Because a 3×3 sliding puzzle has only
-   a finite state space, simply making the
-   number enormous doesn't infinitely increase
-   difficulty. We therefore also make sure
-   the resulting board isn't accidentally too
-   close to solved.
-*/
-
-function getShuffleMoves(
-    level
-) {
-
-    const base = 12;
-
-    const doubled =
-        base *
+    return Math.min(
+        500,
+        12 *
         Math.pow(
             2,
             level - 1
-        );
-
-
-    return Math.min(
-        doubled,
-        500
+        )
     );
 }
 
-
-/*
-   Keep the board meaningfully scrambled.
-
-   We calculate the number of misplaced
-   tiles and reject weak scrambles.
-*/
 
 function countMisplacedTiles(
     board
@@ -1856,15 +1797,11 @@ function generateSolvablePuzzle(
 
     let bestBoard = null;
 
-    let bestEmpty = EMPTY_TILE;
+    let bestEmpty =
+        EMPTY_TILE;
 
     let bestScore = -1;
 
-
-    /*
-        Generate several legal scrambles
-        and keep the most mixed one.
-    */
 
     const attempts =
         Math.min(
@@ -1894,7 +1831,6 @@ function generateSolvablePuzzle(
         let empty =
             EMPTY_TILE;
 
-
         let previous =
             -1;
 
@@ -1914,13 +1850,6 @@ function generateSolvablePuzzle(
                         previous
                 );
 
-
-            /*
-                At random intervals we choose
-                from all legal neighbors. This
-                prevents predictable back-and-forth
-                movement.
-            */
 
             if (
                 Math.random() < 0.15
@@ -1983,10 +1912,6 @@ function generateSolvablePuzzle(
     }
 
 
-    /*
-        Absolute fallback.
-    */
-
     if (!bestBoard) {
 
         bestBoard = [
@@ -1998,10 +1923,6 @@ function generateSolvablePuzzle(
         bestEmpty = 8;
     }
 
-
-    /*
-        Ensure the puzzle isn't accidentally solved.
-    */
 
     if (
         bestBoard.every(
@@ -2042,7 +1963,7 @@ function generateSolvablePuzzle(
 
 
 /* =========================================================
-   SOLVED
+   SOLVED CHECK
 ========================================================= */
 
 function isSolved() {
@@ -2067,19 +1988,19 @@ function isSolved() {
 
 
 /* =========================================================
-   MOVEMENT
+   MOVE
 ========================================================= */
 
-function canMove(
-    position
-) {
+function canMove(position) {
 
     if (!game.running) {
+
         return false;
     }
 
 
     if (game.paused) {
+
         return false;
     }
 
@@ -2092,9 +2013,7 @@ function canMove(
 }
 
 
-function moveTile(
-    position
-) {
+function moveTile(position) {
 
     if (
         !canMove(
@@ -2145,9 +2064,8 @@ function moveTile(
 
 
     /*
-        The exact moment the last move
-        solves the puzzle:
-        stop timer immediately.
+        The exact move that solves
+        the puzzle stops the timer.
     */
 
     if (isSolved()) {
@@ -2161,21 +2079,15 @@ function moveTile(
    LEVEL IMAGE GENERATOR
 ========================================================= */
 
-/*
-   Every level gets a completely different
-   calming illustration.
-
-   All images are embedded as SVG data URLs,
-   so the entire game still remains one HTML file.
-*/
-
 function createLevelImage(
     level
 ) {
 
     const scenes = [
 
-        /* 1 - Meadow */
+        /* =====================================================
+           LEVEL 1 — MORNING MEADOW
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#dfe8d0"/>
@@ -2208,7 +2120,9 @@ function createLevelImage(
         `,
 
 
-        /* 2 - Lake */
+        /* =====================================================
+           LEVEL 2 — QUIET LAKE
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#c6dadd"/>
@@ -2245,7 +2159,9 @@ function createLevelImage(
         `,
 
 
-        /* 3 - Lavender */
+        /* =====================================================
+           LEVEL 3 — LAVENDER VALLEY
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#ddd5e4"/>
@@ -2265,9 +2181,11 @@ function createLevelImage(
             fill="#66506e"/>
 
         <path
-            d="M570 1200
-                     C500 1040 500 900 570 800
-                     C650 690 720 620 820 530"
+            d="
+                M570 1200
+                C500 1040 500 900 570 800
+                C650 690 720 620 820 530
+            "
             fill="none"
             stroke="#d6bd8f"
             stroke-width="130"
@@ -2283,7 +2201,9 @@ function createLevelImage(
         `,
 
 
-        /* 4 - Pine Forest */
+        /* =====================================================
+           LEVEL 4 — PINE FOREST
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#b7c8c1"/>
@@ -2327,7 +2247,9 @@ function createLevelImage(
         `,
 
 
-        /* 5 - Autumn */
+        /* =====================================================
+           LEVEL 5 — AUTUMN VALLEY
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#ead7c0"/>
@@ -2365,7 +2287,9 @@ function createLevelImage(
         `,
 
 
-        /* 6 - Moon Lake */
+        /* =====================================================
+           LEVEL 6 — MOONLIT LAKE
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#50657a"/>
@@ -2410,7 +2334,9 @@ function createLevelImage(
         `,
 
 
-        /* 7 - Cabin */
+        /* =====================================================
+           LEVEL 7 — FOREST CABIN
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#aebda7"/>
@@ -2463,7 +2389,9 @@ function createLevelImage(
         `,
 
 
-        /* 8 - Coast */
+        /* =====================================================
+           LEVEL 8 — COASTAL MORNING
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#c2dddd"/>
@@ -2504,7 +2432,9 @@ function createLevelImage(
         `,
 
 
-        /* 9 - Mountain Mist */
+        /* =====================================================
+           LEVEL 9 — MOUNTAIN MIST
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#c9d4d8"/>
@@ -2516,15 +2446,16 @@ function createLevelImage(
             fill="#ded8bd"/>
 
         <path
-            d="M0 780
-                     L220 430
-                     L410 700
-                     L660 300
-                     L940 700
-                     L1090 470
-                     L1200 650
-                     V1200
-                     H0Z"
+            d="
+                M0 780
+                L220 430
+                L410 700
+                L660 300
+                L940 700
+                L1090 470
+                L1200 650
+                V1200
+                H0Z"
             fill="#637783"/>
 
         <path
@@ -2556,7 +2487,9 @@ function createLevelImage(
         `,
 
 
-        /* 10 - Japanese Garden */
+        /* =====================================================
+           LEVEL 10 — JAPANESE GARDEN
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#d9d1dc"/>
@@ -2609,25 +2542,28 @@ function createLevelImage(
         `,
 
 
-        /* 11 - Northern Lights */
+        /* =====================================================
+           LEVEL 11 — NORTHERN LIGHTS
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#142435"/>
 
         <path
-            d="M70 430
-                     C260 180 420 620 600 350
-                     C770 100 860 550 1100 230"
+            d="
+                M70 430
+                C260 180 420 620 600 350
+                C770 100 860 550 1100 230"
             fill="none"
             stroke="#74b89b"
             stroke-width="100"
-            opacity=".48"
-            filter="blur(8px)"/>
+            opacity=".48"/>
 
         <path
-            d="M20 520
-                     C250 230 430 680 620 390
-                     C800 120 900 560 1190 260"
+            d="
+                M20 520
+                C250 230 430 680 620 390
+                C800 120 900 560 1190 260"
             fill="none"
             stroke="#8dbf9a"
             stroke-width="54"
@@ -2657,7 +2593,9 @@ function createLevelImage(
         `,
 
 
-        /* 12 - Enchanted Valley */
+        /* =====================================================
+           LEVEL 12 — ENCHANTED VALLEY
+        ===================================================== */
 
         `
         <rect width="1200" height="1200" fill="#384d49"/>
@@ -2670,40 +2608,44 @@ function createLevelImage(
             opacity=".88"/>
 
         <path
-            d="M0 680
-                     Q250 480 470 680
-                     T900 620
-                     T1200 680
-                     V1200
-                     H0Z"
+            d="
+                M0 680
+                Q250 480 470 680
+                T900 620
+                T1200 680
+                V1200
+                H0Z"
             fill="#58715e"/>
 
         <path
-            d="M0 850
-                     Q280 700 560 840
-                     T1200 800
-                     V1200
-                     H0Z"
+            d="
+                M0 850
+                Q280 700 560 840
+                T1200 800
+                V1200
+                H0Z"
             fill="#3b5a4b"/>
 
         <path
-            d="M0 1020
-                     Q300 870 600 1000
-                     T1200 950
-                     V1200
-                     H0Z"
+            d="
+                M0 1020
+                Q300 870 600 1000
+                T1200 950
+                V1200
+                H0Z"
             fill="#29473a"/>
 
         <path
-            d="M520 1200
-                     C570 1050 640 940 710 820
-                     C790 680 870 610 950 510"
+            d="
+                M520 1200
+                C570 1050 640 940 710 820
+                C790 680 870 610 950 510"
             fill="none"
             stroke="#b89e70"
             stroke-width="90"
             stroke-linecap="round"/>
 
-        <g fill="#8fb28f" opacity=".85">
+        <g fill="#8fb28f">
             <circle cx="150" cy="700" r="20"/>
             <circle cx="260" cy="640" r="17"/>
             <circle cx="1010" cy="690" r="22"/>
@@ -2798,7 +2740,7 @@ function createLevelImage(
 
 
 /* =========================================================
-   LEVEL IMAGE
+   BUILT-IN LEVEL IMAGE
 ========================================================= */
 
 function loadLevelImage(
@@ -2817,7 +2759,7 @@ function loadLevelImage(
 
 
 /* =========================================================
-   SHUFFLE / LEVEL
+   START LEVEL
 ========================================================= */
 
 function startLevel(
@@ -2856,9 +2798,26 @@ function startLevel(
         true;
 
 
-    loadLevelImage(
-        game.level
-    );
+    /*
+        IMPORTANT FIX:
+
+        Built-in image:
+            load the image for this level.
+
+        Custom photo:
+            DO NOT replace it.
+
+        This is what fixes the upload problem.
+    */
+
+    if (
+        !game.customImage
+    ) {
+
+        loadLevelImage(
+            game.level
+        );
+    }
 
 
     const levelInfo =
@@ -2911,9 +2870,27 @@ function startLevel(
         `Level ${game.level}: ${levelInfo.name}`;
 
 
-    missionText.textContent =
-        `Arrange the illustration by sliding the wooden pieces. ` +
-        `This level uses ${game.shuffleMoves} shuffle moves.`;
+    /*
+        Change the wording when
+        the player is using their
+        own photo.
+    */
+
+    if (
+        game.customImage
+    ) {
+
+        missionText.textContent =
+            `Your photo is being used for this level. ` +
+            `Slide the pieces into the original arrangement.`;
+
+    } else {
+
+        missionText.textContent =
+            `Arrange the illustration by sliding the ` +
+            `wooden pieces. This level uses ` +
+            `${game.shuffleMoves} shuffle moves.`;
+    }
 
 
     leaderboardSubtitle.textContent =
@@ -3041,7 +3018,6 @@ function renderBoard() {
             boardElement.appendChild(
                 tile
             );
-
         }
     );
 }
@@ -3189,13 +3165,13 @@ function togglePause() {
 
 
 /* =========================================================
-   COMPLETE LEVEL
+   LEVEL COMPLETE
 ========================================================= */
 
 function completeLevel() {
 
     /*
-        Freeze the timer immediately.
+        Stop timer immediately.
     */
 
     game.elapsed =
@@ -3238,6 +3214,9 @@ function completeLevel() {
         moves:
             game.moves,
 
+        customImage:
+            game.customImage,
+
         date:
             Date.now()
     };
@@ -3251,23 +3230,11 @@ function completeLevel() {
     renderLeaderboard();
 
 
-    /*
-        Small victory sound.
-    */
-
     victorySound();
 
 
-    /*
-        Celebration.
-    */
-
     createConfetti();
 
-
-    /*
-        Final level.
-    */
 
     if (
         game.level ===
@@ -3279,15 +3246,15 @@ function completeLevel() {
 
 
         winMessage.textContent =
-            `Final level time: ` +
+            `Final solve time: ` +
             `${formatTime(score.time)} • ` +
             `${score.moves} moves`;
+
 
         document.getElementById(
             "nextLevelButton"
         ).textContent =
             "Play Again";
-
 
     } else {
 
@@ -3298,7 +3265,9 @@ function completeLevel() {
         winMessage.textContent =
             `Time: ${formatTime(score.time)} • ` +
             `Moves: ${score.moves} • ` +
-            `${LEVEL_DATA[game.level - 1].difficulty}`;
+            `${LEVEL_DATA[
+                game.level - 1
+            ].difficulty}`;
 
 
         document.getElementById(
@@ -3620,7 +3589,7 @@ function createConfetti() {
             `${
                 (
                     Math.random() -
-                    0.5
+                    .5
                 ) * 90
             }vw`
         );
@@ -3631,7 +3600,7 @@ function createConfetti() {
             `${
                 (
                     Math.random() +
-                    0.5
+                    .5
                 ) * 90
             }vh`
         );
@@ -3652,7 +3621,7 @@ function createConfetti() {
 
 
 /* =========================================================
-   WIN MODAL
+   MODAL
 ========================================================= */
 
 function closeWinModal() {
@@ -3710,6 +3679,11 @@ function setCustomImage(
     url
 ) {
 
+    /*
+        Revoke the previous uploaded image
+        if there was one.
+    */
+
     if (
         game.imageURL &&
         game.imageURL.startsWith(
@@ -3723,27 +3697,55 @@ function setCustomImage(
                 game.imageURL
             );
 
-        } catch {}
+        } catch (error) {
+
+            console.warn(
+                "Could not revoke old image URL:",
+                error
+            );
+        }
     }
+
+
+    /*
+        IMPORTANT:
+
+        Enable custom mode BEFORE
+        calling startLevel().
+
+        Otherwise startLevel() would
+        load the built-in image.
+    */
+
+    game.customImage =
+        true;
 
 
     game.imageURL =
         url;
 
 
+    /*
+        Show the uploaded image
+        as the reference image.
+    */
+
     referenceImage.src =
-        url;
+        game.imageURL;
 
 
     /*
-        Important:
-        Custom photo starts a new Level 1,
-        but does NOT interfere with the
-        normal 12 built-in level progression.
+        Start Level 1 with the
+        uploaded image.
     */
 
     startLevel(
         1
+    );
+
+
+    showToast(
+        "Your photo is now the puzzle!"
     );
 }
 
@@ -3761,7 +3763,7 @@ document
         event => {
 
             const file =
-                event.target.files[0];
+                event.target.files?.[0];
 
 
             if (!file) {
@@ -3769,20 +3771,33 @@ document
             }
 
 
+            /*
+                Validate image.
+            */
+
             if (
+                !file.type ||
                 !file.type.startsWith(
                     "image/"
                 )
             ) {
 
                 showToast(
-                    "Please choose an image."
+                    "Please choose a valid image."
                 );
+
+
+                event.target.value =
+                    "";
 
 
                 return;
             }
 
+
+            /*
+                Create a local browser URL.
+            */
 
             const imageURL =
                 URL.createObjectURL(
@@ -3790,15 +3805,19 @@ document
                 );
 
 
+            /*
+                Enable custom mode.
+            */
+
             setCustomImage(
                 imageURL
             );
 
 
-            showToast(
-                "Custom photo loaded."
-            );
-
+            /*
+                Allow selecting the same
+                file again later.
+            */
 
             event.target.value =
                 "";
@@ -3807,7 +3826,7 @@ document
 
 
 /* =========================================================
-   SAMPLE
+   SAMPLE BUTTON
 ========================================================= */
 
 document
@@ -3821,13 +3840,27 @@ document
             initAudio();
 
 
+            /*
+                Switch back to the
+                built-in image system.
+            */
+
+            game.customImage =
+                false;
+
+
+            /*
+                Level 1 now gets its
+                normal built-in image.
+            */
+
             startLevel(
                 1
             );
 
 
             showToast(
-                "Level 1 illustration restored."
+                "Built-in Level 1 restored."
             );
         }
     );
@@ -3914,7 +3947,7 @@ document
 
 
 /* =========================================================
-   RESET LEVEL
+   RESTART LEVEL
 ========================================================= */
 
 document
@@ -3971,7 +4004,7 @@ document
 
                 /*
                     After Level 12,
-                    start a fresh run.
+                    start a fresh journey.
                 */
 
                 startLevel(
@@ -4031,7 +4064,7 @@ document
 
 
 /* =========================================================
-   KEYBOARD
+   KEYBOARD CONTROLS
 ========================================================= */
 
 document.addEventListener(
@@ -4039,7 +4072,8 @@ document.addEventListener(
     event => {
 
         /*
-            Space / P = pause
+            Space / P
+            = Pause
         */
 
         if (
@@ -4148,7 +4182,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   AUDIO INITIALIZATION
+   INITIALIZE AUDIO ON FIRST INTERACTION
 ========================================================= */
 
 document.addEventListener(
@@ -4165,7 +4199,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   INITIAL START
+   START GAME
 ========================================================= */
 
 startLevel(
