@@ -1,369 +1,1560 @@
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>My Game World</title>
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Kaison's Game World</title>
 
 <style>
-    * {
-        box-sizing: border-box;
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
+
+    background:
+        #050505;
+
+    color: #ffffff;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    overflow-x: hidden;
+
+}
+
+
+/* =========================================================
+   PIXEL BACKGROUND
+========================================================= */
+
+body::before {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+    opacity: 0.07;
+
+    background-image:
+
+        linear-gradient(
+            #ffffff 1px,
+            transparent 1px
+        ),
+
+        linear-gradient(
+            90deg,
+            #ffffff 1px,
+            transparent 1px
+        );
+
+    background-size:
+        24px 24px;
+
+}
+
+
+/* =========================================================
+   CRT SCANLINES
+========================================================= */
+
+body::after {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 9999;
+
+    background:
+
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.025) 0px,
+            rgba(255,255,255,0.025) 1px,
+            transparent 1px,
+            transparent 4px
+        );
+
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.container {
+
+    position: relative;
+
+    z-index: 2;
+
+    width:
+        min(1200px, 92%);
+
+    margin:
+        auto;
+
+    padding:
+        55px 0 100px;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+
+    text-align:
+        center;
+
+    margin-bottom:
+        65px;
+
+}
+
+.logo {
+
+    font-size:
+        72px;
+
+    margin-bottom:
+        20px;
+
+    animation:
+        floating 2s ease-in-out infinite;
+
+    filter:
+
+        drop-shadow(
+            5px 5px 0 #ff00cc
+        )
+
+        drop-shadow(
+            -5px -5px 0 #00ffff
+        );
+
+}
+
+@keyframes floating {
+
+    0%,
+    100% {
+
+        transform:
+            translateY(0);
+
     }
 
-    html, body {
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        background: #080808;
-        color: #fff;
-        font-family: "Courier New", monospace;
+    50% {
+
+        transform:
+            translateY(-10px);
+
     }
 
-    body {
-        overflow-x: hidden;
-        background:
-            radial-gradient(circle at 50% 20%, #202020 0%, #090909 45%, #000 100%);
-    }
+}
 
-    /* Pixel grid */
 
-    body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.08;
+h1 {
 
-        background-image:
-            linear-gradient(#fff 1px, transparent 1px),
-            linear-gradient(90deg, #fff 1px, transparent 1px);
+    margin:
+        0;
 
-        background-size: 24px 24px;
-    }
+    font-size:
+        clamp(
+            32px,
+            7vw,
+            75px
+        );
+
+    letter-spacing:
+        5px;
+
+    line-height:
+        1.3;
+
+    text-shadow:
+
+        5px 5px 0 #ff00cc,
+
+        -5px -5px 0 #00ffff;
+
+}
+
+
+.subtitle {
+
+    margin-top:
+        25px;
+
+    color:
+        #888;
+
+    font-size:
+        12px;
+
+    letter-spacing:
+        3px;
+
+    line-height:
+        2;
+
+}
+
+
+.game-count {
+
+    display:
+        inline-block;
+
+    margin-top:
+        25px;
+
+    padding:
+        11px 18px;
+
+    border:
+        2px solid #00ff88;
+
+    color:
+        #00ff88;
+
+    background:
+        #00150d;
+
+    font-size:
+        11px;
+
+}
+
+
+/* =========================================================
+   GAME GRID
+========================================================= */
+
+#games {
+
+    display:
+        grid;
+
+    grid-template-columns:
+
+        repeat(
+            auto-fit,
+            minmax(
+                260px,
+                1fr
+            )
+        );
+
+    gap:
+        30px;
+
+}
+
+
+/* =========================================================
+   GAME CARD
+========================================================= */
+
+.game-card {
+
+    position:
+        relative;
+
+    min-height:
+        285px;
+
+    padding:
+        30px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            #191919,
+            #080808
+        );
+
+    border:
+        3px solid #333;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+
+    overflow:
+        hidden;
+
+}
+
+
+.game-card::before {
+
+    content:
+        "";
+
+    position:
+        absolute;
+
+    width:
+        120px;
+
+    height:
+        120px;
+
+    right:
+        -45px;
+
+    top:
+        -45px;
+
+    background:
+        #00ffff;
+
+    opacity:
+        0.04;
+
+    transform:
+        rotate(45deg);
+
+}
+
+
+.game-card:hover {
+
+    transform:
+        translate(
+            -6px,
+            -6px
+        );
+
+    border-color:
+        #00ffff;
+
+    box-shadow:
+
+        8px 8px 0 #ff00cc,
+
+        -4px -4px 0 #00ffff;
+
+}
+
+
+.game-number {
+
+    position:
+        absolute;
+
+    right:
+        15px;
+
+    top:
+        15px;
+
+    color:
+        #555;
+
+    font-size:
+        11px;
+
+}
+
+
+.game-icon {
+
+    font-size:
+        58px;
+
+    margin-bottom:
+        25px;
+
+    filter:
+        drop-shadow(
+            4px 4px 0 #000
+        );
+
+}
+
+
+.game-name {
+
+    font-size:
+        19px;
+
+    font-weight:
+        bold;
+
+    text-transform:
+        uppercase;
+
+    line-height:
+        1.5;
+
+    margin-bottom:
+        25px;
+
+}
+
+
+.play-button {
+
+    display:
+        inline-block;
+
+    padding:
+        12px 17px;
+
+    background:
+        #ffffff;
+
+    color:
+        #000000;
+
+    font-size:
+        11px;
+
+    font-weight:
+        bold;
+
+}
+
+
+.game-card:hover .play-button {
+
+    background:
+        #00ffff;
+
+}
+
+
+/* =========================================================
+   ADMIN BUTTON
+========================================================= */
+
+.admin-trigger {
+
+    position:
+        fixed;
+
+    right:
+        20px;
+
+    bottom:
+        20px;
+
+    z-index:
+        500;
+
+    width:
+        48px;
+
+    height:
+        48px;
+
+    border:
+        2px solid #333;
+
+    background:
+        #111;
+
+    color:
+        #777;
+
+    font-size:
+        20px;
+
+    cursor:
+        pointer;
+
+    transition:
+        0.2s;
+
+}
+
+
+.admin-trigger:hover {
+
+    color:
+        #00ffff;
+
+    border-color:
+        #00ffff;
+
+    box-shadow:
+        0 0 15px
+        rgba(
+            0,
+            255,
+            255,
+            0.3
+        );
+
+}
+
+
+/* =========================================================
+   MODAL BACKDROP
+========================================================= */
+
+.modal {
+
+    display:
+        none;
+
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        5000;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.88
+        );
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        20px;
+
+}
+
+
+.modal.show {
+
+    display:
+        flex;
+
+}
+
+
+/* =========================================================
+   MODAL BOX
+========================================================= */
+
+.modal-box {
+
+    width:
+        min(
+            650px,
+            100%
+        );
+
+    max-height:
+        90vh;
+
+    overflow-y:
+        auto;
+
+    background:
+        #101010;
+
+    border:
+        3px solid #00ffff;
+
+    box-shadow:
+
+        8px 8px 0 #ff00cc,
+
+        -4px -4px 0 #00ffff;
+
+    padding:
+        30px;
+
+}
+
+
+.modal-title {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        30px;
+
+}
+
+
+.modal-title h2 {
+
+    margin:
+        0;
+
+    font-size:
+        20px;
+
+    color:
+        #00ffff;
+
+}
+
+
+.close {
+
+    background:
+        transparent;
+
+    color:
+        #777;
+
+    border:
+        0;
+
+    font-size:
+        25px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.close:hover {
+
+    color:
+        #ff00cc;
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-label {
+
+    display:
+        block;
+
+    margin-bottom:
+        9px;
+
+    color:
+        #00ffff;
+
+    font-size:
+        11px;
+
+}
+
+
+input {
+
+    width:
+        100%;
+
+    padding:
+        15px;
+
+    margin-bottom:
+        22px;
+
+    border:
+        2px solid #444;
+
+    background:
+        #050505;
+
+    color:
+        #ffffff;
+
+    outline:
+        none;
+
+    font-family:
+        inherit;
+
+    font-size:
+        13px;
+
+}
+
+
+input:focus {
+
+    border-color:
+        #00ffff;
+
+}
+
+
+/* =========================================================
+   EMOJI SELECTOR
+========================================================= */
+
+.emoji-title {
+
+    margin-bottom:
+        12px;
+
+    color:
+        #00ffff;
+
+    font-size:
+        11px;
+
+}
+
+
+.emoji-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                48px,
+                1fr
+            )
+        );
+
+    gap:
+        8px;
+
+    margin-bottom:
+        25px;
+
+}
+
+
+.emoji-button {
+
+    height:
+        48px;
+
+    border:
+        2px solid #333;
+
+    background:
+        #080808;
+
+    font-size:
+        25px;
+
+    cursor:
+        pointer;
+
+    transition:
+        0.12s;
+
+}
+
+
+.emoji-button:hover {
+
+    border-color:
+        #00ffff;
+
+    transform:
+        scale(1.08);
+
+}
+
+
+.emoji-button.selected {
+
+    border-color:
+        #ff00cc;
+
+    background:
+        #211020;
+
+    box-shadow:
+        0 0 10px
+        rgba(
+            255,
+            0,
+            204,
+            0.4
+        );
+
+}
+
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+
+.add-button {
+
+    width:
+        100%;
+
+    padding:
+        17px;
+
+    border:
+        0;
+
+    background:
+        #ffffff;
+
+    color:
+        #000000;
+
+    font-family:
+        inherit;
+
+    font-weight:
+        bold;
+
+    font-size:
+        12px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.add-button:hover {
+
+    background:
+        #00ffff;
+
+}
+
+
+/* =========================================================
+   ADMIN GAME LIST
+========================================================= */
+
+.admin-list {
+
+    margin-top:
+        35px;
+
+    border-top:
+        1px solid #333;
+
+}
+
+
+.admin-list-title {
+
+    margin:
+        25px 0 15px;
+
+    color:
+        #ff00cc;
+
+    font-size:
+        12px;
+
+}
+
+
+.admin-game {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        15px;
+
+    padding:
+        15px 0;
+
+    border-bottom:
+        1px solid #292929;
+
+}
+
+
+.admin-game-info {
+
+    min-width:
+        0;
+
+}
+
+
+.admin-game-name {
+
+    font-size:
+        12px;
+
+    margin-bottom:
+        7px;
+
+}
+
+
+.admin-game-url {
+
+    color:
+        #666;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-size:
+        11px;
+
+    word-break:
+        break-all;
+
+}
+
+
+.delete-button {
+
+    flex-shrink:
+        0;
+
+    padding:
+        9px 12px;
+
+    border:
+        0;
+
+    background:
+        #ff3333;
+
+    color:
+        white;
+
+    font-family:
+        inherit;
+
+    font-size:
+        9px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.delete-button:hover {
+
+    background:
+        #ff0000;
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+.login-box {
+
+    width:
+        min(
+            430px,
+            100%
+        );
+
+    background:
+        #101010;
+
+    border:
+        3px solid #ff00cc;
+
+    box-shadow:
+        7px 7px 0 #00ffff;
+
+    padding:
+        30px;
+
+}
+
+
+.login-title {
+
+    color:
+        #00ffff;
+
+    font-size:
+        18px;
+
+    margin-bottom:
+        30px;
+
+    text-align:
+        center;
+
+}
+
+
+.login-button {
+
+    width:
+        100%;
+
+    padding:
+        15px;
+
+    border:
+        0;
+
+    background:
+        #ffffff;
+
+    color:
+        #000000;
+
+    font-family:
+        inherit;
+
+    font-weight:
+        bold;
+
+    cursor:
+        pointer;
+
+}
+
+
+.login-button:hover {
+
+    background:
+        #00ffff;
+
+}
+
+
+.login-error {
+
+    display:
+        none;
+
+    color:
+        #ff4444;
+
+    margin-bottom:
+        15px;
+
+    font-size:
+        10px;
+
+    text-align:
+        center;
+
+}
+
+
+/* =========================================================
+   ADMIN HEADER
+========================================================= */
+
+.admin-header {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        30px;
+
+}
+
+
+.logout-button {
+
+    padding:
+        9px 12px;
+
+    background:
+        #222;
+
+    color:
+        #ff4444;
+
+    border:
+        1px solid #ff4444;
+
+    font-family:
+        inherit;
+
+    font-size:
+        9px;
+
+    cursor:
+        pointer;
+
+}
+
+
+.logout-button:hover {
+
+    background:
+        #ff4444;
+
+    color:
+        white;
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty {
+
+    grid-column:
+        1 / -1;
+
+    text-align:
+        center;
+
+    padding:
+        70px 20px;
+
+    border:
+        2px dashed #333;
+
+    color:
+        #555;
+
+    font-size:
+        12px;
+
+    line-height:
+        2;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+
+    text-align:
+        center;
+
+    margin-top:
+        80px;
+
+    color:
+        #444;
+
+    font-size:
+        10px;
+
+    line-height:
+        2;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:600px) {
 
     .container {
-        width: min(1200px, 92%);
-        margin: auto;
-        padding: 60px 0 80px;
-        position: relative;
-        z-index: 1;
+
+        padding-top:
+            35px;
+
     }
 
-    /* Header */
 
-    .header {
-        text-align: center;
-        margin-bottom: 60px;
+    .logo {
+
+        font-size:
+            52px;
+
     }
 
-    .pixel-icon {
-        font-size: 70px;
-        margin-bottom: 15px;
-
-        filter:
-            drop-shadow(4px 4px 0 #ff2bd6)
-            drop-shadow(-4px -4px 0 #00ffff);
-
-        animation: floating 2s ease-in-out infinite;
-    }
-
-    @keyframes floating {
-        0%,100% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(-8px);
-        }
-    }
 
     h1 {
-        margin: 0;
 
-        font-size: clamp(32px, 6vw, 72px);
-        letter-spacing: 5px;
+        font-size:
+            35px;
 
-        color: #fff;
-
-        text-shadow:
-            5px 5px 0 #ff2bd6,
-            -5px -5px 0 #00ffff;
     }
 
-    .subtitle {
-        margin-top: 18px;
-        color: #aaa;
-        font-size: 15px;
-        letter-spacing: 3px;
+
+    .game-card {
+
+        min-height:
+            250px;
+
     }
 
-    .status {
-        display: inline-block;
-        margin-top: 25px;
 
-        padding: 8px 16px;
+    .modal-box {
 
-        border: 2px solid #00ff88;
+        padding:
+            20px;
 
-        color: #00ff88;
-
-        font-size: 12px;
-        letter-spacing: 2px;
-
-        background: #00150c;
     }
 
-    /* Game grid */
 
-    #games {
-        display: grid;
+    .admin-game {
 
-        grid-template-columns:
-            repeat(auto-fit, minmax(260px, 1fr));
+        align-items:
+            flex-start;
 
-        gap: 25px;
     }
 
-    .game {
-        position: relative;
+}
 
-        min-height: 210px;
-
-        padding: 25px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #161616,
-                #090909
-            );
-
-        border: 3px solid #333;
-
-        cursor: pointer;
-
-        transition:
-            transform 0.15s,
-            border-color 0.15s,
-            box-shadow 0.15s;
-
-        image-rendering: pixelated;
-    }
-
-    .game:hover {
-        transform: translate(-5px, -5px);
-
-        border-color: #00ffff;
-
-        box-shadow:
-            7px 7px 0 #ff2bd6,
-            -3px -3px 0 #00ffff;
-    }
-
-    .game-number {
-        position: absolute;
-
-        top: 10px;
-        right: 12px;
-
-        color: #444;
-
-        font-size: 12px;
-    }
-
-    .game-icon {
-        font-size: 48px;
-        margin-bottom: 20px;
-
-        filter:
-            drop-shadow(3px 3px 0 #000);
-    }
-
-    .game-name {
-        font-size: 21px;
-
-        color: white;
-
-        margin-bottom: 10px;
-
-        text-transform: uppercase;
-
-        letter-spacing: 2px;
-    }
-
-    .game-file {
-        color: #666;
-
-        font-size: 11px;
-
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .play {
-        margin-top: 20px;
-
-        display: inline-block;
-
-        padding: 8px 14px;
-
-        background: #fff;
-
-        color: #000;
-
-        font-weight: bold;
-
-        font-size: 12px;
-
-        letter-spacing: 1px;
-    }
-
-    .game:hover .play {
-        background: #00ffff;
-    }
-
-    /* Loading */
-
-    .loading {
-        grid-column: 1 / -1;
-
-        text-align: center;
-
-        padding: 60px;
-
-        color: #00ffff;
-
-        font-size: 16px;
-
-        letter-spacing: 3px;
-    }
-
-    .error {
-        grid-column: 1 / -1;
-
-        text-align: center;
-
-        padding: 40px;
-
-        border: 2px solid #ff4444;
-
-        color: #ff4444;
-
-        background: #180000;
-    }
-
-    /* Footer */
-
-    footer {
-        text-align: center;
-
-        margin-top: 70px;
-
-        color: #555;
-
-        font-size: 11px;
-
-        letter-spacing: 2px;
-    }
-
-    /* Mobile */
-
-    @media (max-width: 600px) {
-
-        .container {
-            padding-top: 35px;
-        }
-
-        .pixel-icon {
-            font-size: 50px;
-        }
-
-        .subtitle {
-            font-size: 11px;
-        }
-
-        #games {
-            grid-template-columns: 1fr;
-        }
-
-        .game {
-            min-height: 190px;
-        }
-    }
 </style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-    <header class="header">
 
-        <div class="pixel-icon">🎮</div>
+<!-- =====================================================
+     PUBLIC HEADER
+===================================================== -->
 
-        <h1>GAME WORLD</h1>
+<header>
 
-        <div class="subtitle">
-            WELCOME TO MY PIXEL UNIVERSE
+    <div class="logo">
+        🎮
+    </div>
+
+    <h1>
+        GAME WORLD
+    </h1>
+
+    <div class="subtitle">
+
+        WELCOME TO MY PIXEL UNIVERSE
+
+        <br>
+
+        SELECT A GAME AND ENTER THE WORLD
+
+    </div>
+
+    <div
+        class="game-count"
+        id="gameCount"
+    >
+        0 GAMES
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     PUBLIC GAME BOARD
+===================================================== -->
+
+<main id="games"></main>
+
+
+<footer>
+
+    KAISON'S GAME WORLD
+
+    <br>
+
+    © 2026 • ALL GAMES
+
+</footer>
+
+
+</div>
+
+
+<!-- =====================================================
+     ADMIN BUTTON
+===================================================== -->
+
+<button
+    class="admin-trigger"
+    onclick="openLogin()"
+    title="Admin"
+>
+    ⚙
+</button>
+
+
+<!-- =====================================================
+     LOGIN MODAL
+===================================================== -->
+
+<div
+    class="modal"
+    id="loginModal"
+>
+
+    <div class="login-box">
+
+        <div class="modal-title">
+
+            <h2>
+                ADMIN LOGIN
+            </h2>
+
+            <button
+                class="close"
+                onclick="closeLogin()"
+            >
+                ×
+            </button>
+
         </div>
 
-        <div class="status" id="status">
-            SCANNING GAMES...
+
+        <div
+            class="login-error"
+            id="loginError"
+        >
+            INCORRECT USERNAME OR PASSWORD.
         </div>
 
-    </header>
+
+        <label class="form-label">
+            USERNAME
+        </label>
+
+        <input
+            type="text"
+            id="username"
+            autocomplete="username"
+            placeholder="Username"
+        >
 
 
-    <main id="games">
+        <label class="form-label">
+            PASSWORD
+        </label>
 
-        <div class="loading">
-            LOADING GAMES...
+        <input
+            type="password"
+            id="password"
+            autocomplete="current-password"
+            placeholder="Password"
+        >
+
+
+        <button
+            class="login-button"
+            onclick="login()"
+        >
+            ENTER ADMIN PANEL
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ADMIN MODAL
+===================================================== -->
+
+<div
+    class="modal"
+    id="adminModal"
+>
+
+    <div class="modal-box">
+
+        <div class="admin-header">
+
+            <div>
+
+                <h2
+                    style="
+                    margin:0;
+                    color:#00ffff;
+                    font-size:18px;
+                    "
+                >
+                    🎮 GAME ADMIN
+                </h2>
+
+            </div>
+
+
+            <button
+                class="logout-button"
+                onclick="logout()"
+            >
+                LOGOUT
+            </button>
+
         </div>
 
-    </main>
+
+        <!-- GAME NAME -->
+
+        <label class="form-label">
+            GAME NAME
+        </label>
+
+        <input
+            type="text"
+            id="newGameName"
+            placeholder="Example: Ghost Escape"
+        >
 
 
-    <footer>
-        © 2026 • MY GAME WORLD • BUILT WITH HTML / CSS / JAVASCRIPT
-    </footer>
+        <!-- GAME URL -->
+
+        <label class="form-label">
+            GITHUB GAME URL
+        </label>
+
+        <input
+            type="url"
+            id="newGameURL"
+            placeholder="https://yourname.github.io/GameWorld/Ghosts.html"
+        >
+
+
+        <!-- EMOJI -->
+
+        <div class="emoji-title">
+            SELECT GAME ICON
+        </div>
+
+
+        <div
+            class="emoji-grid"
+            id="emojiGrid"
+        ></div>
+
+
+        <button
+            class="add-button"
+            onclick="addGame()"
+        >
+            + ADD GAME TO WORLD
+        </button>
+
+
+        <!-- CURRENT GAMES -->
+
+        <div class="admin-list">
+
+            <div class="admin-list-title">
+                CURRENT GAMES
+            </div>
+
+
+            <div
+                id="adminGameList"
+            ></div>
+
+        </div>
+
+    </div>
 
 </div>
 
 
 <script>
 
-/*
-=========================================================
-    CONFIGURATION
-=========================================================
-
-    CHANGE THESE TWO VALUES ONLY.
-*/
-
-const GITHUB_USERNAME = "KisanRai";
-
-const GITHUB_REPOSITORY = "games";
-
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
 
 /*
-=========================================================
-    GITHUB API
-=========================================================
+   These are the credentials you requested.
+
+   NOTE:
+   Because this is client-side HTML, this is NOT a
+   secure password system. Anyone who can inspect the
+   source code can technically discover the credentials.
+
+   For a personal/private game dashboard this is okay,
+   but do not use this approach for sensitive information.
 */
 
-const API_URL =
-    `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPOSITORY}/contents/`;
+const ADMIN_USERNAME =
+    "Kaison";
 
 
-/*
-=========================================================
-    ICONS
-=========================================================
-*/
+const ADMIN_PASSWORD =
+    "$NB038180098";
 
-const ICONS = [
+
+/* =========================================================
+   GAME ICONS
+========================================================= */
+
+const GAME_ICONS = [
+
     "🎮",
     "👻",
     "🚀",
@@ -372,227 +1563,883 @@ const ICONS = [
     "💣",
     "🪨",
     "🍎",
+    "🍓",
+    "🍉",
+    "🍌",
     "👁️",
     "🧠",
     "🔥",
     "🌌",
     "🛸",
-    "🏃",
     "🎯",
-    "🧩"
+    "🏃",
+    "🧩",
+    "⚡",
+    "🌙",
+    "☀️",
+    "💀",
+    "👾",
+    "🤖",
+    "🧟",
+    "🧙",
+    "🥷",
+    "🏆",
+    "💎",
+    "❤️",
+    "💥",
+    "🌋",
+    "🌊",
+    "🏎️",
+    "✈️",
+    "🚁",
+    "🚗",
+    "🏹",
+    "⚔️",
+    "🛡️",
+    "🔮",
+    "🌀",
+    "🛰️",
+    "🌍",
+    "🌠",
+    "☄️",
+    "🕹️"
+
 ];
 
 
-/*
-=========================================================
-    GAME NAME CLEANER
-=========================================================
-*/
+/* =========================================================
+   DEFAULT GAMES
+========================================================= */
 
-function cleanName(filename) {
+const DEFAULT_GAMES = [
 
-    return filename
-        .replace(/\.html$/i, "")
-        .replace(/[-_]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .replace(/\b\w/g, letter => letter.toUpperCase());
+    {
+        name:
+            "First Game",
 
-}
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/First-Game.html",
 
-
-/*
-=========================================================
-    GET RANDOM ICON
-=========================================================
-*/
-
-function getIcon(index) {
-
-    return ICONS[index % ICONS.length];
-
-}
+        icon:
+            "🎮"
+    },
 
 
-/*
-=========================================================
-    CREATE GAME CARD
-=========================================================
-*/
+    {
+        name:
+            "Space Two",
 
-function createGameCard(game, index) {
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Space-Two.html",
 
-    const card = document.createElement("div");
-
-    card.className = "game";
-
-    const name = cleanName(game.name);
-
-    card.innerHTML = `
-
-        <div class="game-number">
-            #${String(index + 1).padStart(2, "0")}
-        </div>
-
-        <div class="game-icon">
-            ${getIcon(index)}
-        </div>
-
-        <div class="game-name">
-            ${name}
-        </div>
-
-        <div class="game-file">
-            ${game.name}
-        </div>
-
-        <div class="play">
-            ▶ PLAY GAME
-        </div>
-
-    `;
+        icon:
+            "🚀"
+    },
 
 
-    /*
-        Because this dashboard is hosted
-        inside the same GitHub Pages site,
-        we can simply open the HTML file.
-    */
+    {
+        name:
+            "Balance Mobile",
 
-    card.addEventListener("click", () => {
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Balance-Mobile.html",
 
-        window.location.href = game.name;
-
-    });
-
-
-    return card;
-
-}
+        icon:
+            "⚖️"
+    },
 
 
-/*
-=========================================================
-    LOAD GAMES FROM GITHUB
-=========================================================
-*/
+    {
+        name:
+            "Ghosts",
 
-async function loadGames() {
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Ghosts.html",
 
-    const gamesContainer =
-        document.getElementById("games");
+        icon:
+            "👻"
+    },
 
-    const status =
-        document.getElementById("status");
 
+    {
+        name:
+            "Reflection",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Reflection.html",
+
+        icon:
+            "🪞"
+    }
+
+];
+
+
+/* =========================================================
+   LOAD GAMES
+========================================================= */
+
+let games;
+
+
+const savedGames =
+    localStorage.getItem(
+        "kaisonGameWorldGames"
+    );
+
+
+if (savedGames) {
 
     try {
 
-        const response =
-            await fetch(API_URL);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Could not access GitHub repository."
+        games =
+            JSON.parse(
+                savedGames
             );
 
-        }
+    } catch {
+
+        games =
+            [...DEFAULT_GAMES];
+
+    }
+
+} else {
+
+    games =
+        [...DEFAULT_GAMES];
+
+}
 
 
-        const files =
-            await response.json();
+/* =========================================================
+   SAVE GAMES
+========================================================= */
+
+function saveGames() {
+
+    localStorage.setItem(
+
+        "kaisonGameWorldGames",
+
+        JSON.stringify(
+            games
+        )
+
+    );
+
+}
 
 
-        /*
-            Find every HTML file.
+/* =========================================================
+   DISPLAY PUBLIC GAMES
+========================================================= */
 
-            index.html is excluded because
-            that's our dashboard.
-        */
+function displayGames() {
 
-        const games =
-            files
-                .filter(file =>
-                    file.type === "file" &&
-                    file.name.toLowerCase().endsWith(".html") &&
-                    file.name.toLowerCase() !== "index.html"
-                )
-                .sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                );
+    const container =
+        document.getElementById(
+            "games"
+        );
 
 
-        gamesContainer.innerHTML = "";
+    const counter =
+        document.getElementById(
+            "gameCount"
+        );
 
 
-        if (games.length === 0) {
-
-            gamesContainer.innerHTML = `
-                <div class="error">
-                    NO GAMES FOUND.
-                </div>
-            `;
-
-            status.textContent =
-                "0 GAMES FOUND";
-
-            return;
-
-        }
+    container.innerHTML =
+        "";
 
 
-        games.forEach((game, index) => {
-
-            const card =
-                createGameCard(game, index);
-
-            gamesContainer.appendChild(card);
-
-        });
+    counter.textContent =
+        `${games.length} GAME${games.length === 1 ? "" : "S"}`;
 
 
-        status.textContent =
-            `${games.length} GAMES AVAILABLE`;
+    if (
+        games.length === 0
+    ) {
 
+        container.innerHTML = `
 
-    } catch (error) {
+            <div class="empty">
 
-        console.error(error);
-
-        gamesContainer.innerHTML = `
-
-            <div class="error">
-
-                ⚠️ UNABLE TO LOAD GAMES
+                🎮
 
                 <br><br>
 
-                CHECK YOUR GITHUB USERNAME
-                AND REPOSITORY NAME.
+                NO GAMES AVAILABLE
 
             </div>
 
         `;
 
-        status.textContent =
-            "CONNECTION ERROR";
+        return;
+
+    }
+
+
+    games.forEach(
+        (game, index) => {
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "game-card";
+
+
+            card.innerHTML = `
+
+                <div
+                    class="game-number"
+                >
+                    #${String(index + 1).padStart(2, "0")}
+                </div>
+
+
+                <div
+                    class="game-icon"
+                >
+                    ${game.icon || "🎮"}
+                </div>
+
+
+                <div
+                    class="game-name"
+                >
+                    ${escapeHTML(game.name)}
+                </div>
+
+
+                <div
+                    class="play-button"
+                >
+                    ▶ PLAY GAME
+                </div>
+
+            `;
+
+
+            card.addEventListener(
+                "click",
+                function() {
+
+                    window.open(
+                        game.url,
+                        "_blank"
+                    );
+
+                }
+            );
+
+
+            container.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   OPEN LOGIN
+========================================================= */
+
+function openLogin() {
+
+    document
+        .getElementById(
+            "loginModal"
+        )
+        .classList
+        .add("show");
+
+
+    setTimeout(
+        function() {
+
+            document
+                .getElementById(
+                    "username"
+                )
+                .focus();
+
+        },
+        100
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE LOGIN
+========================================================= */
+
+function closeLogin() {
+
+    document
+        .getElementById(
+            "loginModal"
+        )
+        .classList
+        .remove("show");
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+function login() {
+
+    const username =
+        document
+            .getElementById(
+                "username"
+            )
+            .value;
+
+
+    const password =
+        document
+            .getElementById(
+                "password"
+            )
+            .value;
+
+
+    const error =
+        document
+            .getElementById(
+                "loginError"
+            );
+
+
+    if (
+
+        username ===
+            ADMIN_USERNAME
+
+        &&
+
+        password ===
+            ADMIN_PASSWORD
+
+    ) {
+
+        error.style.display =
+            "none";
+
+
+        document
+            .getElementById(
+                "loginModal"
+            )
+            .classList
+            .remove("show");
+
+
+        document
+            .getElementById(
+                "adminModal"
+            )
+            .classList
+            .add("show");
+
+
+        document
+            .getElementById(
+                "username"
+            )
+            .value =
+            "";
+
+
+        document
+            .getElementById(
+                "password"
+            )
+            .value =
+            "";
+
+
+        createEmojiSelector();
+
+        displayAdminGames();
+
+    } else {
+
+        error.style.display =
+            "block";
 
     }
 
 }
 
 
-/*
-=========================================================
-    START
-=========================================================
-*/
+/* =========================================================
+   LOGOUT
+========================================================= */
 
-loadGames();
+function logout() {
+
+    document
+        .getElementById(
+            "adminModal"
+        )
+        .classList
+        .remove("show");
+
+}
+
+
+/* =========================================================
+   EMOJI SELECTOR
+========================================================= */
+
+let selectedEmoji =
+    "🎮";
+
+
+function createEmojiSelector() {
+
+    const grid =
+        document.getElementById(
+            "emojiGrid"
+        );
+
+
+    grid.innerHTML =
+        "";
+
+
+    GAME_ICONS.forEach(
+        function(emoji) {
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.className =
+                "emoji-button";
+
+
+            if (
+                emoji ===
+                selectedEmoji
+            ) {
+
+                button.classList
+                    .add("selected");
+
+            }
+
+
+            button.textContent =
+                emoji;
+
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    selectedEmoji =
+                        emoji;
+
+
+                    document
+                        .querySelectorAll(
+                            ".emoji-button"
+                        )
+                        .forEach(
+                            btn => {
+
+                                btn.classList
+                                    .remove(
+                                        "selected"
+                                    );
+
+                            }
+                        );
+
+
+                    button.classList
+                        .add(
+                            "selected"
+                        );
+
+                }
+            );
+
+
+            grid.appendChild(
+                button
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ADD GAME
+========================================================= */
+
+function addGame() {
+
+    const name =
+        document
+            .getElementById(
+                "newGameName"
+            )
+            .value
+            .trim();
+
+
+    const url =
+        document
+            .getElementById(
+                "newGameURL"
+            )
+            .value
+            .trim();
+
+
+    if (!name) {
+
+        alert(
+            "Please enter a game name."
+        );
+
+        return;
+
+    }
+
+
+    if (!url) {
+
+        alert(
+            "Please enter your GitHub game URL."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        new URL(url);
+
+    } catch {
+
+        alert(
+            "Please enter a valid URL."
+        );
+
+        return;
+
+    }
+
+
+    games.push({
+
+        name:
+            name,
+
+        url:
+            url,
+
+        icon:
+            selectedEmoji
+
+    });
+
+
+    saveGames();
+
+
+    document
+        .getElementById(
+            "newGameName"
+        )
+        .value =
+        "";
+
+
+    document
+        .getElementById(
+            "newGameURL"
+        )
+        .value =
+        "";
+
+
+    selectedEmoji =
+        "🎮";
+
+
+    displayGames();
+
+    displayAdminGames();
+
+    createEmojiSelector();
+
+
+    alert(
+        "🎮 GAME ADDED TO GAME WORLD!"
+    );
+
+}
+
+
+/* =========================================================
+   ADMIN GAME LIST
+========================================================= */
+
+function displayAdminGames() {
+
+    const container =
+        document.getElementById(
+            "adminGameList"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    if (
+        games.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div
+                style="
+                color:#666;
+                font-size:10px;
+                padding:20px 0;
+                "
+            >
+                NO GAMES.
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    games.forEach(
+        function(game, index) {
+
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "admin-game";
+
+
+            row.innerHTML = `
+
+                <div
+                    class="admin-game-info"
+                >
+
+                    <div
+                        class="admin-game-name"
+                    >
+                        ${game.icon || "🎮"}
+                        ${escapeHTML(game.name)}
+                    </div>
+
+                    <div
+                        class="admin-game-url"
+                    >
+                        ${escapeHTML(game.url)}
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="delete-button"
+                    onclick="
+                        deleteGame(${index})
+                    "
+                >
+                    DELETE
+                </button>
+
+            `;
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DELETE GAME
+========================================================= */
+
+function deleteGame(index) {
+
+    const game =
+        games[index];
+
+
+    const confirmed =
+        confirm(
+            `Delete "${game.name}"?`
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    games.splice(
+        index,
+        1
+    );
+
+
+    saveGames();
+
+
+    displayGames();
+
+    displayAdminGames();
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(text) {
+
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.textContent =
+        text;
+
+
+    return element.innerHTML;
+
+}
+
+
+/* =========================================================
+   KEYBOARD ENTER LOGIN
+========================================================= */
+
+document
+    .getElementById("password")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                login();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   CLOSE MODALS BY CLICKING OUTSIDE
+========================================================= */
+
+document
+    .getElementById("loginModal")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target ===
+                this
+            ) {
+
+                closeLogin();
+
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("adminModal")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target ===
+                this
+            ) {
+
+                logout();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+displayGames();
 
 </script>
 
 </body>
+
 </html>
