@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Fruit Slash — Hand Tracking</title>
+<style>
+:root{--glass:rgba(8,10,16,.62);--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{touch-action:none}
+#app{position:fixed;inset:0;background:#000;overflow:hidden}#camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#000}#game{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,transparent 30%,rgba(0,0,0,.18) 70%,rgba(0,0,0,.7) 100%)}#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;mix-blend-mode:screen}
+#hud{position:absolute;inset:0;pointer-events:none}.top{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;gap:8px}.glass{background:var(--glass);border:1px solid var(--line);border-radius:15px;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);box-shadow:0 10px 40px rgba(0,0,0,.25)}.brand{padding:10px 12px}.brand b{font-size:11px;letter-spacing:.14em}.brand small{display:block;margin-top:3px;color:#a6abba;font-size:8px;letter-spacing:.08em}.stats{display:flex;gap:5px}.stat{min-width:62px;padding:8px 9px;text-align:center}.stat small{display:block;color:#9da4b2;font-size:8px;text-transform:uppercase;letter-spacing:.1em}.stat strong{display:block;font-size:16px;margin-top:2px}.pill{position:absolute;left:50%;top:16%;transform:translate(-50%,-50%) scale(.92);padding:9px 15px;border-radius:999px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);opacity:0;transition:.18s;font-weight:900;white-space:nowrap}.pill.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#buttons{position:absolute;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:7px;width:min(94vw,460px);pointer-events:auto}button{height:43px;flex:1;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:rgba(5,7,12,.72);color:#fff;font:inherit;font-size:11px;font-weight:800;backdrop-filter:blur(12px);cursor:pointer}button.primary{background:linear-gradient(135deg,#ff5b3d,#ff3b78);border:0}button:active{transform:scale(.98)}
+#start,#over{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 35%,rgba(27,20,28,.96),rgba(2,3,6,.99))}.card{width:min(94vw,560px);padding:27px;border:1px solid rgba(255,255,255,.12);border-radius:25px;background:rgba(9,11,17,.83);box-shadow:0 35px 90px rgba(0,0,0,.55);backdrop-filter:blur(18px);text-align:center}.hero{font-size:58px;filter:drop-shadow(0 15px 28px rgba(255,73,60,.3));animation:bob 1.7s ease-in-out infinite}@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}h1{margin:8px 0 7px;font-size:clamp(30px,7vw,54px);line-height:1}.intro{margin:0 auto 18px;color:#9ea6b5;font-size:13px;line-height:1.55;max-width:450px}.help{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:15px 0 20px}.help div{padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.035)}.help b{display:block;font-size:11px}.help span{display:block;margin-top:3px;color:#9da4b2;font-size:9px}.error{display:none;margin-top:12px;text-align:left;padding:10px;border-radius:11px;background:rgba(255,52,82,.08);border:1px solid rgba(255,52,82,.2);color:#ffacb8;font-size:10px;line-height:1.45}.error.show{display:block}.lb{text-align:left;margin-top:18px}.lbhead{display:flex;justify-content:space-between;color:#8f96a4;font-size:9px;letter-spacing:.1em;text-transform:uppercase}.row{display:grid;grid-template-columns:30px 1fr auto;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:11px}.rank{color:#ffd166;font-weight:900}.score{font-weight:900}
+#over{display:none;background:rgba(0,0,0,.55);backdrop-filter:blur(7px)}#over.show{display:grid}.overcard{width:min(92vw,430px);text-align:center;padding:25px;border-radius:22px;background:rgba(7,9,14,.92);border:1px solid rgba(255,255,255,.11)}.overcard h2{margin:0;font-size:35px}.final{font-size:50px;font-weight:900}.sub{color:#9da4b2;font-size:11px;margin-bottom:14px}input{width:100%;height:43px;padding:0 11px;border-radius:11px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.09);outline:none;font:inherit;font-size:11px}
+@media(max-width:600px){.brand{padding:8px}.brand b{font-size:9px}.brand small{font-size:7px}.stats{gap:3px}.stat{min-width:48px;padding:7px 5px}.stat strong{font-size:13px}.stat small{font-size:7px}#buttons{gap:5px}#buttons button{font-size:9px;padding:0 8px}}
+</style>
+</head>
+<body>
+<div id="app">
+<video id="camera" autoplay playsinline muted></video>
+<canvas id="game"></canvas><div id="vignette"></div><div id="flash"></div>
+<div id="hud">
+<div class="top"><div class="glass brand"><b>FRUIT SLASH</b><small>HAND-TRACKING ARENA</small></div><div class="stats"><div class="glass stat"><small>Score</small><strong id="score">0</strong></div><div class="glass stat"><small>Combo</small><strong id="combo">0</strong></div><div class="glass stat"><small>Speed</small><strong id="speed">2/8</strong></div><div class="glass stat"><small>Miss</small><strong id="miss">0/10</strong></div><div class="glass stat"><small>Hazard</small><strong id="hazard">0/2</strong></div></div></div>
+<div id="pill" class="pill"></div>
+<div id="buttons"><button id="pause">PAUSE</button><button id="restart">RESTART</button><button id="flip">FLIP</button><button id="sound">SOUND ON</button></div>
+</div>
+<div id="start"><div class="card"><div class="hero">🍉</div><h1>Fruit Slash</h1><p class="intro">Move your index fingertip quickly like a blade. Fruit launches from the lower-center area, rises in a slow natural arc, then falls. Speed begins around 2/10 and gradually rises toward 8/10. Slice fruit, avoid bombs and stones. Three total bomb/stone hits ends the run; four bomb hits also ends it. You can miss up to 10 fruits.<div class="help"><div><b>⚔️ Fast hand</b><span>Your fingertip path becomes the blade.</span></div><div><b>🍎 Fruit</b><span>Slice for points and combos.</span></div><div><b>💣 Bomb</b><span>Slicing it hurts your run.</span></div><div><b>🪨 Stone</b><span>Hard impact and combo reset.</span></div></div><button id="startBtn" class="primary">START GAME</button><div id="err" class="error"></div><div id="lb" class="lb"></div></div></div>
+<div id="over"><div class="overcard"><h2>GAME OVER</h2><div id="final" class="final">0</div><div id="reason" class="sub"></div><input id="name" maxlength="18" placeholder="Your name"><button id="save" class="primary" style="margin-top:9px">SAVE SCORE</button><button id="again" style="margin-top:7px">PLAY AGAIN</button></div></div>
+</div>
+<script type="module">
+const MP="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision";
+const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm";
+const MODEL="https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+const video=document.getElementById('camera'),canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score'),comboEl=document.getElementById('combo'),missEl=document.getElementById('miss'),hazardEl=document.getElementById('hazard'),speedEl=document.getElementById('speed'),pill=document.getElementById('pill'),flash=document.getElementById('flash'),err=document.getElementById('err'),lb=document.getElementById('lb'),start=document.getElementById('start'),over=document.getElementById('over'),finalEl=document.getElementById('final'),reasonEl=document.getElementById('reason'),nameEl=document.getElementById('name'),pauseBtn=document.getElementById('pause');
+let landmarker=null,stream=null,audio=null,gain=null,soundOn=true;
+const S={run:false,paused:false,over:false,w:0,h:0,dpr:1,last:performance.now(),infer:0,lastVT:-1,facing:'user',hand:null,trail:[],objects:[],particles:[],slashFx:[],score:0,combo:0,miss:0,bombHits:0,hazardHits:0,level:1,spawn:0,every:1450,slashCd:0,shake:0,flash:0,elapsed:0,difficultyStage:0,burstTimer:0};
+const FR=[['apple','#df3745','#ff8790','#8d1721'],['orange','#ff8a23','#ffd17b','#bb4c08'],['watermelon','#ef4253','#ffb0b4','#1b6d3c'],['lemon','#ffdb3d','#fff3a2','#aa8507'],['kiwi','#91c64d','#d9ee9b','#5a7b2d'],['peach','#ff9470','#ffd1c3','#b94d39']];
+const K='fruitSlashLeaderboardFinalV1';
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function lerp(a,b,t){return a+(b-a)*t}function rnd(a,b){return Math.random()*(b-a)+a}function d(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function errMsg(t){err.textContent=t;err.classList.add('show')}function clearErr(){err.textContent='';err.classList.remove('show')}
+function resize(){const r=canvas.getBoundingClientRect();S.w=Math.max(1,Math.floor(r.width));S.h=Math.max(1,Math.floor(r.height));S.dpr=Math.min(devicePixelRatio||1,2);canvas.width=S.w*S.dpr;canvas.height=S.h*S.dpr;ctx.setTransform(S.dpr,0,0,S.dpr,0,0)}addEventListener('resize',resize,{passive:true});resize();
+function lbGet(){try{return JSON.parse(localStorage.getItem(K)||'[]')}catch{return[]}}function lbPut(a){try{localStorage.setItem(K,JSON.stringify(a.slice(0,10)))}catch{}}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function renderLB(){const a=lbGet();lb.innerHTML='<div class="lbhead"><span>Leaderboard</span><span>Top 10</span></div>'+(!a.length?'<div style="color:#939aa8;padding-top:8px;font-size:10px">No scores yet.</div>':a.map((x,i)=>`<div class="row"><span class="rank">#${i+1}</span><span>${esc(x.name)}</span><span class="score">${x.score}</span></div>`).join(''))}renderLB();
+function initAudio(){if(audio)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audio=new AC();gain=audio.createGain();gain.gain.value=soundOn?.16:0;gain.connect(audio.destination)}
+async function unlockAudio(){initAudio();if(audio?.state==='suspended')try{await audio.resume()}catch{}}
+function tone(f,dur,type='sine',v=.08,delay=0){if(!audio||!soundOn)return;const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(45,f*.72),t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(gain);o.start(t);o.stop(t+dur+.03)}
+function noise(dur=.16,v=.13){if(!audio||!soundOn)return;const len=Math.max(1,Math.floor(audio.sampleRate*dur)),b=audio.createBuffer(1,len,audio.sampleRate),a=b.getChannelData(0);for(let i=0;i<len;i++){const env=1-i/len;a[i]=(Math.random()*2-1)*env}const src=audio.createBufferSource(),g=audio.createGain();src.buffer=b;g.gain.value=v;src.connect(g);g.connect(gain);src.start()}
+function sFruit(){tone(430,.055,'triangle',.055);tone(690,.09,'triangle',.07,.025);tone(980,.12,'sine',.045,.055)}
+function sBomb(){tone(52,.28,'sawtooth',.14);noise(.28,.24);tone(88,.18,'square',.08,.05)}
+function sStone(){noise(.12,.17);tone(115,.13,'square',.08);tone(80,.1,'square',.055,.04)}
+function sMiss(){tone(110,.13,'sawtooth',.05);tone(78,.16,'sawtooth',.04,.06)}
+async function setup(){try{const m=await import(MP);const {FilesetResolver,HandLandmarker}=m;const v=await FilesetResolver.forVisionTasks(WASM);landmarker=await HandLandmarker.createFromModelPath(v,MODEL);await landmarker.setOptions({runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minHandPresenceConfidence:.55,minTrackingConfidence:.55});return true}catch(e){console.error(e);errMsg('Could not load MediaPipe Hand Landmarker. Verify that you are using HTTPS or localhost and that cdn.jsdelivr.net and storage.googleapis.com are reachable. See the browser Console for the exact error.');return false}}
+async function camera(){if(!navigator.mediaDevices?.getUserMedia){errMsg('Camera API is not available in this browser.');return false}if(stream)stream.getTracks().forEach(t=>t.stop());try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:S.facing},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:60}}});video.srcObject=stream;await video.play();return true}catch(e){console.error(e);errMsg('Camera permission was denied or unavailable. Allow camera access for this site and try again.');return false}}
+function hud(){scoreEl.textContent=S.score;comboEl.textContent=S.combo;missEl.textContent=`${S.miss}/10`;hazardEl.textContent=`${S.hazardHits}/2`;speedEl.textContent=`${getGameSpeed().toFixed(1)}/8`;pauseBtn.textContent=S.paused?'PLAY':'PAUSE';}
+function banner(t,c='#fff'){pill.textContent=t;pill.style.color=c;pill.classList.add('show');clearTimeout(banner.t);banner.t=setTimeout(()=>pill.classList.remove('show'),650)}
+function reset(){S.run=true;S.paused=false;S.over=false;S.score=0;S.combo=0;S.miss=0;S.bombHits=0;S.hazardHits=0;S.level=1;S.objects=[];S.particles=[];S.slashFx=[];S.trail=[];S.spawn=0;S.every=1450;S.slashCd=0;S.shake=0;S.flash=0;S.hand=null;S.lastVT=-1;S.elapsed=0;S.difficultyStage=0;S.burstTimer=0;pauseBtn.textContent='PAUSE';hud();for(let i=0;i<2;i++)spawn(true)}
+function getGameSpeed(){
+  // Deliberately slow, readable Fruit-Ninja-style progression: 2 -> 8.
+  return Math.min(8, 2 + S.score / 550);
+}
+function spawn(initial=false, forcedKind=null, laneBias=null){
+  const speed=getGameSpeed();
+  const stage=S.difficultyStage;
+  const centerBias=laneBias==null?rnd(-0.18,0.18):laneBias;
+  let lane=clamp(.5+centerBias+rnd(-.07,.07),.15,.85);
+  if(stage>=4 && Math.random()<.22) lane=clamp(lane+rnd(-.20,.20),.10,.90);
+  const launchX=lane;
+  const startY=1.11;
+  const apex=clamp(rnd(.24,.37),.22,.40);
+  const normalized=(speed-2)/6;
+  const apexTime=lerp(1650,1050,normalized);
+  const g=2*(startY-apex)/(apexTime*apexTime);
+  const vy=-g*apexTime;
+  const flightTime=apexTime*2;
+  const desiredDx=rnd(-.08,.08)*(0.55+normalized*.45);
+  const vx=desiredDx/flightTime;
+
+  let kind=forcedKind||'fruit';
+  if(!forcedKind){
+    const roll=Math.random();
+    const bombChance=stage===0?.045:stage===1?.09:stage===2?.13:stage===3?.16:.18;
+    const stoneChance=stage===0?.05:stage===1?.09:stage===2?.12:stage===3?.14:.17;
+    if(roll<bombChance)kind='bomb';
+    else if(roll<bombChance+stoneChance)kind='stone';
+  }
+
+  const type=FR[Math.floor(Math.random()*FR.length)][0];
+  const size=kind==='fruit'?rnd(60,76):kind==='bomb'?rnd(52,63):rnd(52,65);
+  S.objects.push({kind,type,x:launchX,y:startY,vx,vy,gravity:g,r:size,rot:rnd(0,6.28),vr:rnd(-.018,.018),dead:false,missed:false,hit:false,seed:Math.random()*9,spawned:performance.now(),speed});
+}
+
+function spawnPattern(){
+  const stage=S.difficultyStage;
+  if(stage<=0){
+    spawn();
+    return;
+  }
+  if(stage===1){
+    // Multiple hazards: one fruit plus a possible second hazard.
+    spawn(undefined,'fruit',rnd(-.18,.18));
+    if(Math.random()<.72) spawn(undefined,Math.random()<.55?'bomb':'stone',rnd(-.08,.08));
+    return;
+  }
+  if(stage===2){
+    // Mixed fruit + hazard clusters.
+    const lane=rnd(-.2,.2);
+    spawn(undefined,'fruit',lane-.10);
+    spawn(undefined,Math.random()<.55?'bomb':'stone',lane+.10);
+    if(Math.random()<.55) spawn(undefined,'fruit',lane+rnd(-.22,.22));
+    return;
+  }
+  if(stage===3){
+    // Combo opportunities: 3-5 fruits, sometimes with a hazard threading through them.
+    const count=Math.random()<.5?4:3;
+    const base=rnd(-.18,.18);
+    for(let i=0;i<count;i++) spawn(undefined,'fruit',base+(i-(count-1)/2)*.09);
+    if(Math.random()<.38) spawn(undefined,'bomb',base+rnd(-.04,.04));
+    return;
+  }
+  if(stage===4){
+    // Dense mixed wave.
+    const count=Math.random()<.45?5:4;
+    const base=rnd(-.22,.22);
+    for(let i=0;i<count;i++) spawn(undefined,i===Math.floor(count/2)?(Math.random()<.5?'bomb':'stone'):'fruit',base+(i-(count-1)/2)*.10);
+    return;
+  }
+  // Stage 5+: alternating dense waves and hazard traps.
+  if(Math.random()<.5){
+    const count=5+Math.floor(Math.random()*2),base=rnd(-.24,.24);
+    for(let i=0;i<count;i++) spawn(undefined,'fruit',base+(i-(count-1)/2)*.085);
+    if(Math.random()<.62) spawn(undefined,'bomb',base+rnd(-.12,.12));
+  } else {
+    spawn(undefined,'fruit',rnd(-.24,.24));
+    spawn(undefined,'bomb',rnd(-.12,.12));
+    spawn(undefined,'stone',rnd(-.12,.12));
+    spawn(undefined,'fruit',rnd(-.24,.24));
+    if(Math.random()<.55) spawn(undefined,'fruit',rnd(-.20,.20));
+  }
+}
+
+function handUpdate(res){const ls=res?.landmarks?.[0];if(!ls){S.hand=null;return}const tip=ls[8],x=1-tip.x,y=tip.y;if(!S.hand)S.hand={x,y,px:x,py:y};else{S.hand.px=S.hand.x;S.hand.py=S.hand.y;S.hand.x=lerp(S.hand.x,x,.55);S.hand.y=lerp(S.hand.y,y,.55)}const dx=S.hand.x-S.hand.px,dy=S.hand.y-S.hand.py,sp=Math.hypot(dx,dy);if(sp>.0015){S.trail.push({x:S.hand.x,y:S.hand.y,life:1});if(S.trail.length>36)S.trail.shift()}if(sp>.009&&S.slashCd<=0&&!S.paused){slash({x:S.hand.px,y:S.hand.py},{x:S.hand.x,y:S.hand.y});S.slashCd=75}}
+function segDist(px,py,ax,ay,bx,by){const abx=bx-ax,aby=by-ay,apx=px-ax,apy=py-ay,ab2=abx*abx+aby*aby;let t=ab2?((apx*abx+apy*aby)/ab2):0;t=clamp(t,0,1);const cx=ax+abx*t,cy=ay+aby*t;return Math.hypot(px-cx,py-cy)}
+function slash(a,b){S.slashFx.push({ax:a.x,ay:a.y,bx:b.x,by:b.y,life:1,color:'#fff'});let hit=false;for(const o of [...S.objects]){if(o.dead||o.hit)continue;const r=o.r+8;if(segDist(o.x*S.w,o.y*S.h,a.x*S.w,a.y*S.h,b.x*S.w,b.y*S.h)<r){hit=true;o.hit=true;if(o.kind==='fruit')fruitHit(o,a,b);else if(o.kind==='bomb')bombHit(o,a,b);else stoneHit(o,a,b)}}if(hit)tone(740,.03,'triangle',.025)}
+function fruitHit(o,a,b){
+  o.dead=true;S.score+=10+Math.min(80,S.combo*2);S.combo++;hud();sFruit();banner(S.combo>=5?`COMBO x${S.combo}`:'SLICE!','#ffd166');
+  S.slashFx.push({ax:a.x,ay:a.y,bx:b.x,by:b.y,life:1,color:'#ffe7a8'});
+  const c=FR.find(f=>f[0]===o.type)||FR[0];
+  for(let i=0;i<58;i++){const ang=rnd(0,6.28),sp=rnd(.0015,.009);S.particles.push({x:o.x,y:o.y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-rnd(.0005,.0035),size:rnd(2,8),life:1,decay:rnd(.024,.05),color:Math.random()>.25?c[1]:c[2]})}
+  // A crisp circular juice burst at the point of impact.
+  for(let i=0;i<18;i++){const a2=i*Math.PI*2/18;S.particles.push({x:o.x,y:o.y,vx:Math.cos(a2)*.006,vy:Math.sin(a2)*.006,size:rnd(2,4),life:1,decay:.045,color:'#fff'})}
+}
+function badHit(o,msg,snd,color,a,b){o.dead=true;S.combo=0;S.hazardHits++;if(o.kind==='bomb')S.bombHits++;S.score=Math.max(0,S.score-(o.kind==='bomb'?40:20));hud();banner(msg,color);S.shake=o.kind==='bomb'?20:10;S.flash=o.kind==='bomb'?.5:.16;snd();S.slashFx.push({ax:a.x,ay:a.y,bx:b.x,by:b.y,life:1,color:o.kind==='bomb'?'#ff6b45':'#e7f0ff'});const count=o.kind==='bomb'?95:55;for(let i=0;i<count;i++){const ang=rnd(0,6.28),sp=rnd(.002,.014);S.particles.push({x:o.x,y:o.y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-rnd(.001,.003),size:rnd(2,9),life:1,decay:rnd(.016,.038),color:o.kind==='bomb'?(Math.random()>.5?'#ff3b30':'#ffb000'):(Math.random()>.5?'#edf2f7':'#7b8590')})}if(S.bombHits>3||S.hazardHits>2)end(o.kind==='bomb'?'Too many bomb hits.':'Too many bomb/stone hits.')}
+function bombHit(o,a,b){badHit(o,'BOMB!',sBomb,'#ff536e',a,b)}
+function stoneHit(o,a,b){badHit(o,'STONE!',sStone,'#cbd3dc',a,b)}
+
+function update(dt,t){
+  if(!S.run||S.paused)return;
+  S.elapsed+=dt;
+  S.difficultyStage=Math.min(5,Math.floor(S.elapsed/10000));
+  S.level=1+S.difficultyStage;
+  S.slashCd=Math.max(0,S.slashCd-dt);
+  S.spawn-=dt;
+
+  if(S.difficultyStage>=3){
+    S.burstTimer+=dt;
+  }
+
+  if(S.spawn<=0){
+    spawnPattern();
+    const speed=getGameSpeed();
+    const stageMul=[1.0,.96,.91,.86,.80,.74][S.difficultyStage];
+    S.every=lerp(1500,840,(speed-2)/6)*stageMul;
+    S.spawn=S.every;
+  }
+
+  for(const o of S.objects){
+    if(o.dead)continue;
+    o.x+=o.vx*dt;
+    o.y+=o.vy*dt+.5*o.gravity*dt*dt;
+    o.vy+=o.gravity*dt;
+    o.rot+=o.vr*dt;
+    if(o.kind==='fruit'&&o.y>1.16&&!o.missed){
+      o.missed=true;S.miss++;S.combo=0;hud();sMiss();banner('MISSED!','#ff9292');
+      if(S.miss>=10)end('Ten fruit misses.');
+    }
+    if(o.y>1.30||o.x<-.14||o.x>1.14)o.dead=true;
+  }
+  S.objects=S.objects.filter(o=>!o.dead);
+
+  for(let i=S.particles.length-1;i>=0;i--){
+    const p=S.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.000008*dt;p.vx*=.996;p.vy*=.996;p.life-=p.decay*dt/16;if(p.life<=0)S.particles.splice(i,1);
+  }
+  for(let i=S.slashFx.length-1;i>=0;i--){S.slashFx[i].life-=dt/170;if(S.slashFx[i].life<=0)S.slashFx.splice(i,1)}
+  for(const p of S.trail)p.life*=.86;S.trail=S.trail.filter(p=>p.life>.04);S.shake*=.9;
+
+  if(S.difficultyStage>0 && Math.floor((S.elapsed-dt)/10000)<S.difficultyStage){
+    const labels=['','HAZARD WAVE','MIXED WAVE','COMBO STORM','CHAOS WAVE','FINAL FEVER'];
+    banner(labels[S.difficultyStage]||'CHAOS','#7df9ff');
+    tone(320,.08,'triangle',.045);tone(480,.10,'triangle',.05,.07);tone(680,.13,'triangle',.05,.14);
+  }
+}
+function fruitDraw(o){const x=o.x*S.w,y=o.y*S.h,r=o.r,c=FR.find(f=>f[0]===o.type)||FR[0];ctx.save();ctx.translate(x,y);ctx.rotate(o.rot);ctx.shadowBlur=24;ctx.shadowColor=c[1]+'88';const g=ctx.createRadialGradient(-r*.3,-r*.32,1,0,0,r);g.addColorStop(0,c[2]);g.addColorStop(.34,c[1]);g.addColorStop(1,c[3]);ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r*.88,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.arc(-r*.25,-r*.32,r*.17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#6b4222';ctx.fillRect(-r*.04,-r*.95,r*.08,r*.24);if(o.type==='watermelon'){ctx.strokeStyle='#2e914c';ctx.lineWidth=r*.16;ctx.beginPath();ctx.arc(0,0,r*.9,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#2a1510';for(let i=0;i<7;i++){const a=i*6.28/7;ctx.beginPath();ctx.ellipse(Math.cos(a)*r*.42,Math.sin(a)*r*.42,2.2,4.5,a,0,6.28);ctx.fill()}}else if(o.type==='kiwi'){ctx.fillStyle='#f5f0c8';ctx.beginPath();ctx.arc(0,0,r*.32,0,6.28);ctx.fill();ctx.fillStyle='#3c2a20';for(let i=0;i<14;i++){const a=i*6.28/14;ctx.beginPath();ctx.arc(Math.cos(a)*r*.5,Math.sin(a)*r*.5,1.6,0,6.28);ctx.fill()}}ctx.restore()}
+function bombDraw(o){const x=o.x*S.w,y=o.y*S.h,r=o.r;ctx.save();ctx.translate(x,y);ctx.rotate(o.rot);ctx.shadowBlur=22;ctx.shadowColor='#ff334488';const g=ctx.createRadialGradient(-r*.25,-r*.3,1,0,0,r);g.addColorStop(0,'#69717e');g.addColorStop(.35,'#262a33');g.addColorStop(1,'#090b10');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r*.9,0,6.28);ctx.fill();ctx.fillStyle='#181a1f';ctx.fillRect(-r*.11,-r*.96,r*.22,r*.25);const p=.5+.5*Math.sin(performance.now()/65+o.seed);ctx.fillStyle=`rgba(255,80,25,${.4+.6*p})`;ctx.beginPath();ctx.arc(0,-r*.84,5+2*p,0,6.28);ctx.fill();ctx.restore()}
+function stoneDraw(o){const x=o.x*S.w,y=o.y*S.h,r=o.r;ctx.save();ctx.translate(x,y);ctx.rotate(o.rot);ctx.shadowBlur=16;ctx.shadowColor='#c7d1db66';const pts=[];for(let i=0;i<8;i++){const a=i*6.28/8;const rr=r*rnd(.72,1);pts.push([Math.cos(a)*rr,Math.sin(a)*rr])}const g=ctx.createLinearGradient(-r,-r,r,r);g.addColorStop(0,'#e0e4ea');g.addColorStop(.5,'#8e97a4');g.addColorStop(1,'#424851');ctx.fillStyle=g;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fill();ctx.strokeStyle='#27303a88';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-r*.35,-r*.2);ctx.lineTo(r*.08,r*.15);ctx.lineTo(-r*.03,r*.5);ctx.stroke();ctx.restore()}
+function draw(){ctx.save();ctx.clearRect(0,0,S.w,S.h);if(S.shake>0)ctx.translate(rnd(-S.shake,S.shake),rnd(-S.shake,S.shake));for(const o of S.objects){if(o.kind==='fruit')fruitDraw(o);else if(o.kind==='bomb')bombDraw(o);else stoneDraw(o)}for(const p of S.particles){ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowBlur=p.size*3;ctx.shadowColor=p.color;ctx.beginPath();ctx.arc(p.x*S.w,p.y*S.h,p.size,0,6.28);ctx.fill()}if(S.trail.length>1){ctx.lineCap='round';ctx.lineJoin='round';for(let i=1;i<S.trail.length;i++){const a=S.trail[i-1],b=S.trail[i],q=i/S.trail.length;ctx.strokeStyle=`rgba(255,255,255,${.05+.9*q*a.life})`;ctx.lineWidth=2+13*q;ctx.shadowBlur=15;ctx.shadowColor='#fff';ctx.beginPath();ctx.moveTo(a.x*S.w,a.y*S.h);ctx.lineTo(b.x*S.w,b.y*S.h);ctx.stroke()}const p=S.trail[S.trail.length-1];ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x*S.w,p.y*S.h,6,0,6.28);ctx.fill()}for(const fx of S.slashFx){
+  const q=Math.max(0,fx.life),ax=fx.ax*S.w,ay=fx.ay*S.h,bx=fx.bx*S.w,by=fx.by*S.h;
+  const dx=bx-ax,dy=by-ay,len=Math.max(1,Math.hypot(dx,dy)),nx=-dy/len,ny=dx/len;
+  ctx.save();ctx.lineCap='round';ctx.shadowBlur=38;ctx.shadowColor=fx.color;
+  ctx.strokeStyle=`rgba(255,255,255,${.18*q})`;ctx.lineWidth=28*q;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+  ctx.strokeStyle=`rgba(255,235,180,${.96*q})`;ctx.lineWidth=Math.max(2,8*q);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+  ctx.strokeStyle=`rgba(255,255,255,${.8*q})`;ctx.lineWidth=Math.max(1,2.5*q);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+  // Two crescent cuts make the hit feel like a cinematic sword arc.
+  ctx.strokeStyle=`rgba(255,214,122,${.82*q})`;ctx.lineWidth=3*q;ctx.beginPath();ctx.arc(bx-dx*.18,by-dy*.18,len*.7,Math.atan2(dy,dx)-.75,Math.atan2(dy,dx)+.05);ctx.stroke();
+  ctx.strokeStyle=`rgba(160,240,255,${.55*q})`;ctx.lineWidth=2*q;ctx.beginPath();ctx.arc(ax+dx*.55,ay+dy*.55,len*.45,Math.atan2(dy,dx)+2.55,Math.atan2(dy,dx)+3.15);ctx.stroke();
+  ctx.fillStyle=`rgba(255,255,255,${q})`;ctx.beginPath();ctx.arc(bx,by,6+11*q,0,6.28);ctx.fill();ctx.restore();
+}ctx.restore();if(S.flash>0){flash.style.opacity=S.flash;S.flash*=.87}else flash.style.opacity=0}
+async function vision(t){if(!landmarker||!S.run||S.paused||video.readyState<2)return;if(t-S.infer<33||video.currentTime===S.lastVT)return;S.infer=t;S.lastVT=video.currentTime;try{const r=landmarker.detectForVideo(video,t);handUpdate(r)}catch(e){console.warn(e)}}
+function frame(t){const dt=Math.min(34,t-S.last);S.last=t;vision(t);update(dt,t);draw();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+async function startGame(){clearErr();await unlockAudio();const ok=landmarker?true:await setup();if(!ok)return;const cam=stream?true:await camera();if(!cam)return;start.style.display='none';reset();tone(330,.08,'triangle',.05);tone(495,.12,'triangle',.05,.06)}
+function end(msg){if(S.over)return;S.run=false;S.paused=false;S.over=true;pauseBtn.textContent='PAUSE';hud();finalEl.textContent=S.score;reasonEl.textContent=msg+` Hazards: ${S.hazardHits}.`;over.classList.add('show')}
+function saveScore(){const name=(nameEl.value.trim()||'Player').slice(0,18),a=lbGet();a.push({name,score:S.score,hazards:S.hazardHits});a.sort((x,y)=>y.score-x.score);lbPut(a);renderLB();over.classList.remove('show');start.style.display='grid';nameEl.value=''}
+document.getElementById('startBtn').onclick=startGame;pauseBtn.onclick=()=>{if(!S.run||S.over)return;S.paused=!S.paused;hud();banner(S.paused?'PAUSED':'PLAYING',S.paused?'#ffd166':'#7df9ff')};document.getElementById('restart').onclick=()=>{if(stream){reset()}};document.getElementById('again').onclick=()=>{over.classList.remove('show');reset()};document.getElementById('save').onclick=saveScore;document.getElementById('flip').onclick=async()=>{S.facing=S.facing==='user'?'environment':'user';if(stream)await camera()};document.getElementById('sound').onclick=async()=>{soundOn=!soundOn;await unlockAudio();if(gain)gain.gain.value=soundOn?.14:0;document.getElementById('sound').textContent=soundOn?'SOUND ON':'SOUND OFF'};
+addEventListener('pagehide',()=>{stream?.getTracks().forEach(t=>t.stop());try{landmarker?.close?.()}catch{}});
+</script>
+</body>
+</html>
