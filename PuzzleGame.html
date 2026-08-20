@@ -1,0 +1,4187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+/>
+<meta name="theme-color" content="#17100b" />
+
+<title>Wooden Photo Slider</title>
+
+<style>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+:root {
+    --bg: #120d09;
+    --panel: #21160f;
+    --panel-2: #2b1b10;
+
+    --wood-light: #d19a60;
+    --wood: #a76b38;
+    --wood-dark: #61381b;
+
+    --gold: #f4c96e;
+
+    --text: #fff1dd;
+    --muted: #cbb79e;
+
+    --success: #72d19a;
+    --danger: #e26455;
+
+    --shadow:
+        0 20px 55px rgba(0,0,0,.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(209,154,96,.18),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 100% 20%,
+            rgba(244,201,110,.08),
+            transparent 28%
+        ),
+        linear-gradient(
+            135deg,
+            #0c0907,
+            #1b120c 50%,
+            #0c0907
+        );
+}
+
+button,
+input {
+    font: inherit;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+    width: min(1200px, 100%);
+    margin: auto;
+    padding: 24px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.brand-icon {
+    width: 52px;
+    height: 52px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 16px;
+
+    font-size: 26px;
+
+    background:
+        linear-gradient(
+            145deg,
+            var(--wood-light),
+            var(--wood-dark)
+        );
+
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,.3),
+        0 10px 25px rgba(0,0,0,.35);
+}
+
+.title {
+    margin: 0;
+
+    font-size:
+        clamp(25px, 4vw, 38px);
+
+    line-height: 1;
+}
+
+.subtitle {
+    margin-top: 5px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+.game-status {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        320px;
+
+    gap: 20px;
+
+    align-items: start;
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(45,29,18,.97),
+            rgba(25,17,11,.97)
+        );
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius: 23px;
+
+    padding: 18px;
+
+    box-shadow:
+        var(--shadow);
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+.hud {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 9px;
+
+    margin-bottom: 16px;
+}
+
+.stat {
+    min-width: 0;
+
+    padding: 11px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    border:
+        1px solid rgba(255,255,255,.035);
+}
+
+.stat-label {
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .08em;
+
+    color: var(--muted);
+}
+
+.stat-value {
+    margin-top: 4px;
+
+    font-size: 19px;
+
+    font-weight: 850;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+.timer-complete .stat-value {
+    color: var(--success);
+}
+
+
+/* =========================================================
+   BOARD AREA
+========================================================= */
+
+.board-area {
+    display: grid;
+
+    grid-template-columns:
+        minmax(260px, 1fr)
+        185px;
+
+    gap: 18px;
+
+    align-items: start;
+}
+
+
+/* =========================================================
+   WOOD FRAME
+========================================================= */
+
+.board-frame {
+    width: min(72vw, 620px);
+
+    aspect-ratio: 1;
+
+    justify-self: center;
+
+    padding: 10px;
+
+    border-radius: 23px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #633918,
+            #d29a5f 45%,
+            #71421f
+        );
+
+    box-shadow:
+        inset 0 2px 3px rgba(255,255,255,.25),
+        inset 0 -6px 15px rgba(0,0,0,.35),
+        0 20px 38px rgba(0,0,0,.4);
+}
+
+
+/* =========================================================
+   BOARD
+========================================================= */
+
+.board {
+    width: 100%;
+    height: 100%;
+
+    padding: 6px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    grid-template-rows:
+        repeat(3, 1fr);
+
+    gap: 6px;
+
+    border-radius: 16px;
+
+    background:
+        #2d1d13;
+
+    box-shadow:
+        inset 0 0 15px rgba(0,0,0,.35);
+
+    touch-action: manipulation;
+}
+
+
+/* =========================================================
+   TILE
+========================================================= */
+
+.tile {
+    position: relative;
+
+    border: 0;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border-radius: 11px;
+
+    background-repeat: no-repeat;
+
+    cursor: pointer;
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.17),
+        inset 0 -6px 12px rgba(0,0,0,.27),
+        0 4px 8px rgba(0,0,0,.28);
+
+    transition:
+        transform .12s ease,
+        filter .12s ease,
+        box-shadow .12s ease;
+}
+
+.tile::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.08),
+            transparent 40%,
+            rgba(0,0,0,.08)
+        );
+}
+
+.tile:not(.empty):hover {
+    transform:
+        translateY(-2px);
+
+    filter:
+        brightness(1.08);
+}
+
+.tile:not(.empty):active {
+    transform:
+        scale(.95);
+}
+
+.tile.empty {
+    cursor: default;
+
+    background:
+        rgba(0,0,0,.38);
+
+    box-shadow:
+        inset 0 0 20px rgba(0,0,0,.45);
+}
+
+
+/* =========================================================
+   TILE MOVEMENT
+========================================================= */
+
+.tile.move-animation {
+    animation:
+        tileMove .18s ease;
+}
+
+@keyframes tileMove {
+
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(.93);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+/* =========================================================
+   REFERENCE
+========================================================= */
+
+.reference-title {
+    margin-bottom: 8px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .1em;
+}
+
+.reference-image {
+    width: 100%;
+
+    aspect-ratio: 1;
+
+    object-fit: cover;
+
+    display: block;
+
+    border-radius: 15px;
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,.025);
+}
+
+
+/* =========================================================
+   SIDE BOX
+========================================================= */
+
+.side-box {
+    margin-top: 12px;
+
+    padding: 12px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(255,255,255,.04);
+
+    border:
+        1px solid rgba(255,255,255,.05);
+}
+
+.side-box strong {
+    display: block;
+
+    margin-bottom: 6px;
+}
+
+.side-box p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.controls {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+button {
+    border: 0;
+
+    min-height: 46px;
+
+    padding: 11px 14px;
+
+    border-radius: 14px;
+
+    color: #fff;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ba7940,
+            #794720
+        );
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.20),
+        0 8px 18px rgba(0,0,0,.23);
+
+    transition:
+        transform .12s ease,
+        filter .12s ease;
+}
+
+button:hover {
+    transform:
+        translateY(-1px);
+
+    filter:
+        brightness(1.08);
+}
+
+button:active {
+    transform:
+        scale(.98);
+}
+
+button.secondary {
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid rgba(255,255,255,.06);
+}
+
+button.danger {
+    background:
+        linear-gradient(
+            145deg,
+            #bd5547,
+            #753328
+        );
+}
+
+
+/* =========================================================
+   FILE UPLOAD
+========================================================= */
+
+.upload-row {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 10px;
+}
+
+.file-button {
+    position: relative;
+
+    min-height: 46px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 10px;
+
+    text-align: center;
+
+    border-radius: 14px;
+
+    border:
+        1px dashed rgba(255,255,255,.20);
+
+    background:
+        rgba(255,255,255,.045);
+
+    cursor: pointer;
+
+    font-weight: 800;
+}
+
+.file-button input {
+    position: absolute;
+
+    inset: 0;
+
+    opacity: 0;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+.leaderboard-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.leaderboard-header h2 {
+    margin: 0;
+
+    font-size: 20px;
+}
+
+.leaderboard-clear {
+    min-height: auto;
+
+    padding: 7px 10px;
+
+    font-size: 11px;
+}
+
+.leaderboard-subtitle {
+    margin-top: 5px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.leaderboard {
+    margin-top: 11px;
+}
+
+.score-row {
+    display: grid;
+
+    grid-template-columns:
+        35px
+        1fr
+        auto;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 9px 6px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.065);
+}
+
+.score-row:last-child {
+    border-bottom: 0;
+}
+
+.score-rank {
+    color: var(--gold);
+
+    font-weight: 900;
+}
+
+.score-player {
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.score-time {
+    font-weight: 850;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+.empty-leaderboard {
+    padding: 12px 6px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 500;
+
+    display: none;
+
+    place-items: center;
+
+    background:
+        rgba(0,0,0,.76);
+
+    backdrop-filter:
+        blur(7px);
+
+    padding: 16px;
+}
+
+.overlay.show {
+    display: grid;
+}
+
+.modal {
+    width:
+        min(92vw, 470px);
+
+    padding: 26px;
+
+    border-radius: 25px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            #382416,
+            #1f150e
+        );
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    box-shadow:
+        0 25px 75px rgba(0,0,0,.6);
+}
+
+.modal-icon {
+    font-size: 60px;
+
+    animation:
+        trophyPop .8s ease;
+}
+
+@keyframes trophyPop {
+
+    0% {
+        opacity: 0;
+        transform:
+            scale(.35)
+            rotate(-12deg);
+    }
+
+    65% {
+        transform:
+            scale(1.18)
+            rotate(5deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform:
+            scale(1);
+    }
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 25px;
+
+    z-index: 700;
+
+    padding: 12px 17px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(20,14,10,.97);
+
+    border:
+        1px solid rgba(255,255,255,.11);
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.5);
+
+    transform:
+        translate(-50%, 25px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity .2s ease,
+        transform .2s ease;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+.toast.show {
+    opacity: 1;
+
+    transform:
+        translate(-50%,0);
+}
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+.confetti {
+    position: fixed;
+
+    z-index: 650;
+
+    width: 9px;
+
+    height: 14px;
+
+    left: 50%;
+
+    top: 42%;
+
+    pointer-events: none;
+
+    animation:
+        confettiFall
+        1.5s
+        cubic-bezier(.17,.84,.44,1)
+        forwards;
+}
+
+@keyframes confettiFall {
+
+    0% {
+        transform:
+            translate(0,0)
+            rotate(0deg);
+
+        opacity: 1;
+    }
+
+    100% {
+        transform:
+            translate(var(--x),var(--y))
+            rotate(720deg);
+
+        opacity: 0;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .board-area {
+        grid-template-columns:
+            1fr;
+    }
+
+    .reference-image {
+        max-width: 240px;
+
+        margin:
+            0 auto;
+    }
+}
+
+
+@media (max-width: 620px) {
+
+    .app {
+        padding: 12px;
+    }
+
+    .header {
+        align-items: flex-start;
+    }
+
+    .hud {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .board-frame {
+        width:
+            min(93vw, 620px);
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🧩
+            </div>
+
+            <div>
+
+                <h1 class="title">
+                    Wooden Photo Slider
+                </h1>
+
+                <div class="subtitle">
+                    12 calming sliding puzzle levels.
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            id="gameStatus"
+            class="game-status"
+        >
+            Ready
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="layout">
+
+
+        <!-- =================================================
+             GAME PANEL
+        ================================================== -->
+
+        <section class="panel">
+
+
+            <!-- HUD -->
+
+            <div class="hud">
+
+                <div class="stat">
+
+                    <div class="stat-label">
+                        Level
+                    </div>
+
+                    <div
+                        id="levelValue"
+                        class="stat-value"
+                    >
+                        1
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="timerBox"
+                    class="stat"
+                >
+
+                    <div class="stat-label">
+                        Solve Time
+                    </div>
+
+                    <div
+                        id="timerValue"
+                        class="stat-value"
+                    >
+                        00:00.0
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-label">
+                        Best
+                    </div>
+
+                    <div
+                        id="bestValue"
+                        class="stat-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-label">
+                        Moves
+                    </div>
+
+                    <div
+                        id="movesValue"
+                        class="stat-value"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <div class="stat-label">
+                        Difficulty
+                    </div>
+
+                    <div
+                        id="difficultyValue"
+                        class="stat-value"
+                    >
+                        Easy
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- BOARD + REFERENCE -->
+
+            <div class="board-area">
+
+
+                <!-- BOARD -->
+
+                <div class="board-frame">
+
+                    <div
+                        id="puzzleBoard"
+                        class="board"
+                    >
+                    </div>
+
+                </div>
+
+
+                <!-- REFERENCE -->
+
+                <aside>
+
+                    <div class="reference-title">
+                        Reference
+                    </div>
+
+                    <img
+                        id="referenceImage"
+                        class="reference-image"
+                        alt="Original puzzle image"
+                    />
+
+
+                    <div class="side-box">
+
+                        <strong id="levelTitle">
+                            Level 1
+                        </strong>
+
+                        <p id="missionText">
+                            Restore the image by sliding
+                            the pieces into place.
+                        </p>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+
+            <!-- CONTROLS -->
+
+            <div class="controls">
+
+                <button id="newLevelButton">
+                    Next Level
+                </button>
+
+                <button
+                    id="reshuffleButton"
+                    class="secondary"
+                >
+                    Reshuffle
+                </button>
+
+                <button
+                    id="pauseButton"
+                    class="secondary"
+                >
+                    Pause
+                </button>
+
+                <button
+                    id="resetButton"
+                    class="danger"
+                >
+                    Restart Level
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+        <aside class="panel">
+
+
+            <!-- LEADERBOARD -->
+
+            <div class="leaderboard-header">
+
+                <h2>
+                    Level Leaderboard
+                </h2>
+
+                <button
+                    id="clearLeaderboardButton"
+                    class="secondary leaderboard-clear"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+
+            <div
+                id="leaderboardSubtitle"
+                class="leaderboard-subtitle"
+            >
+                Best times for Level 1
+            </div>
+
+
+            <div
+                id="leaderboard"
+                class="leaderboard"
+            >
+            </div>
+
+
+            <!-- PHOTO -->
+
+            <div class="side-box">
+
+                <strong>
+                    Custom Photo
+                </strong>
+
+                <div class="upload-row">
+
+                    <label class="file-button">
+
+                        📷 Choose Photo
+
+                        <input
+                            id="photoInput"
+                            type="file"
+                            accept="image/*"
+                        />
+
+                    </label>
+
+
+                    <button
+                        id="sampleButton"
+                    >
+                        Sample
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- DIFFICULTY -->
+
+            <div class="side-box">
+
+                <strong>
+                    12-Level Journey
+                </strong>
+
+                <p>
+                    Every level becomes substantially
+                    harder. The scramble depth doubles
+                    as you progress, while each level
+                    introduces a different illustration.
+                </p>
+
+            </div>
+
+
+            <!-- CONTROLS -->
+
+            <div class="side-box">
+
+                <strong>
+                    Controls
+                </strong>
+
+                <p>
+                    Click a tile next to the empty space,
+                    or use the arrow keys. Press Space
+                    or P to pause.
+                </p>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+
+<!-- =========================================================
+     WIN MODAL
+========================================================= -->
+
+<div
+    id="winOverlay"
+    class="overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-icon">
+            🏆
+        </div>
+
+        <h2 id="winTitle">
+            Puzzle Complete!
+        </h2>
+
+        <p id="winMessage">
+        </p>
+
+        <div class="controls">
+
+            <button id="nextLevelButton">
+                Next Level
+            </button>
+
+            <button
+                id="stayButton"
+                class="secondary"
+            >
+                Stay Here
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    id="toast"
+    class="toast"
+>
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   CONFIGURATION
+========================================================= */
+
+const SIZE = 3;
+
+const TILE_COUNT = 9;
+
+const EMPTY_TILE = 8;
+
+const TOTAL_LEVELS = 12;
+
+const LEADERBOARD_KEY =
+    "wooden_photo_slider_leaderboard_v2";
+
+const PLAYER_NAME_KEY =
+    "wooden_photo_slider_player_v2";
+
+
+/* =========================================================
+   12 LEVELS
+========================================================= */
+
+const LEVEL_DATA = [
+
+    {
+        name: "Morning Meadow",
+        difficulty: "Easy"
+    },
+
+    {
+        name: "Quiet Lake",
+        difficulty: "Gentle"
+    },
+
+    {
+        name: "Lavender Valley",
+        difficulty: "Calm"
+    },
+
+    {
+        name: "Pine Forest",
+        difficulty: "Focused"
+    },
+
+    {
+        name: "Autumn Valley",
+        difficulty: "Challenging"
+    },
+
+    {
+        name: "Moonlit Lake",
+        difficulty: "Hard"
+    },
+
+    {
+        name: "Forest Cabin",
+        difficulty: "Hard+"
+    },
+
+    {
+        name: "Coastal Morning",
+        difficulty: "Expert"
+    },
+
+    {
+        name: "Mountain Mist",
+        difficulty: "Expert+"
+    },
+
+    {
+        name: "Japanese Garden",
+        difficulty: "Master"
+    },
+
+    {
+        name: "Northern Lights",
+        difficulty: "Master+"
+    },
+
+    {
+        name: "Enchanted Valley",
+        difficulty: "Legendary"
+    }
+
+];
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+const game = {
+
+    level: 1,
+
+    board: [
+        0,1,2,
+        3,4,5,
+        6,7,8
+    ],
+
+    emptyIndex: EMPTY_TILE,
+
+    moves: 0,
+
+    elapsed: 0,
+
+    startedAt: 0,
+
+    running: false,
+
+    paused: false,
+
+    imageURL: null,
+
+    shuffleMoves: 12
+
+};
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const boardElement =
+    document.getElementById(
+        "puzzleBoard"
+    );
+
+const referenceImage =
+    document.getElementById(
+        "referenceImage"
+    );
+
+const levelValue =
+    document.getElementById(
+        "levelValue"
+    );
+
+const timerValue =
+    document.getElementById(
+        "timerValue"
+    );
+
+const timerBox =
+    document.getElementById(
+        "timerBox"
+    );
+
+const bestValue =
+    document.getElementById(
+        "bestValue"
+    );
+
+const movesValue =
+    document.getElementById(
+        "movesValue"
+    );
+
+const difficultyValue =
+    document.getElementById(
+        "difficultyValue"
+    );
+
+const gameStatus =
+    document.getElementById(
+        "gameStatus"
+    );
+
+const missionText =
+    document.getElementById(
+        "missionText"
+    );
+
+const levelTitle =
+    document.getElementById(
+        "levelTitle"
+    );
+
+const leaderboardElement =
+    document.getElementById(
+        "leaderboard"
+    );
+
+const leaderboardSubtitle =
+    document.getElementById(
+        "leaderboardSubtitle"
+    );
+
+const winOverlay =
+    document.getElementById(
+        "winOverlay"
+    );
+
+const winTitle =
+    document.getElementById(
+        "winTitle"
+    );
+
+const winMessage =
+    document.getElementById(
+        "winMessage"
+    );
+
+const toast =
+    document.getElementById(
+        "toast"
+    );
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+let audioContext = null;
+
+
+function initAudio() {
+
+    if (!audioContext) {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext) {
+            return;
+        }
+
+        audioContext =
+            new AudioContext();
+    }
+
+    if (
+        audioContext.state ===
+        "suspended"
+    ) {
+
+        audioContext.resume();
+    }
+}
+
+
+function tone(
+    frequency,
+    duration,
+    waveform = "triangle",
+    volume = 0.05
+) {
+
+    initAudio();
+
+    if (!audioContext) {
+        return;
+    }
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.type =
+        waveform;
+
+    oscillator.frequency.value =
+        frequency;
+
+    oscillator.connect(
+        gain
+    );
+
+    gain.connect(
+        audioContext.destination
+    );
+
+    const now =
+        audioContext.currentTime;
+
+    gain.gain.setValueAtTime(
+        0.0001,
+        now
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        now + 0.01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + duration
+    );
+
+    oscillator.start(now);
+
+    oscillator.stop(
+        now + duration + 0.02
+    );
+}
+
+
+function moveSound() {
+
+    tone(
+        180,
+        0.07,
+        "triangle",
+        0.045
+    );
+}
+
+
+function victorySound() {
+
+    tone(
+        523.25,
+        0.11,
+        "sine",
+        0.08
+    );
+
+    setTimeout(() => {
+
+        tone(
+            659.25,
+            0.11,
+            "sine",
+            0.08
+        );
+
+    }, 110);
+
+
+    setTimeout(() => {
+
+        tone(
+            783.99,
+            0.18,
+            "sine",
+            0.09
+        );
+
+    }, 220);
+
+}
+
+
+/* =========================================================
+   NEIGHBORS
+========================================================= */
+
+function getNeighbors(
+    index
+) {
+
+    const row =
+        Math.floor(
+            index / SIZE
+        );
+
+    const col =
+        index % SIZE;
+
+    const result = [];
+
+
+    if (row > 0) {
+
+        result.push(
+            index - SIZE
+        );
+    }
+
+
+    if (row < SIZE - 1) {
+
+        result.push(
+            index + SIZE
+        );
+    }
+
+
+    if (col > 0) {
+
+        result.push(
+            index - 1
+        );
+    }
+
+
+    if (col < SIZE - 1) {
+
+        result.push(
+            index + 1
+        );
+    }
+
+
+    return result;
+}
+
+
+/* =========================================================
+   DOUBLED DIFFICULTY
+========================================================= */
+
+/*
+   Level 1:
+   12 shuffle moves
+
+   Level 2:
+   24
+
+   Level 3:
+   48
+
+   Level 4:
+   96
+
+   Level 5:
+   192
+
+   Afterwards the shuffle depth is capped.
+
+   Because a 3×3 sliding puzzle has only
+   a finite state space, simply making the
+   number enormous doesn't infinitely increase
+   difficulty. We therefore also make sure
+   the resulting board isn't accidentally too
+   close to solved.
+*/
+
+function getShuffleMoves(
+    level
+) {
+
+    const base = 12;
+
+    const doubled =
+        base *
+        Math.pow(
+            2,
+            level - 1
+        );
+
+
+    return Math.min(
+        doubled,
+        500
+    );
+}
+
+
+/*
+   Keep the board meaningfully scrambled.
+
+   We calculate the number of misplaced
+   tiles and reject weak scrambles.
+*/
+
+function countMisplacedTiles(
+    board
+) {
+
+    let count = 0;
+
+
+    for (
+        let i = 0;
+        i < TILE_COUNT;
+        i++
+    ) {
+
+        if (
+            board[i] !== i &&
+            board[i] !== EMPTY_TILE
+        ) {
+
+            count++;
+        }
+    }
+
+
+    return count;
+}
+
+
+/* =========================================================
+   SOLVABLE SHUFFLE
+========================================================= */
+
+function generateSolvablePuzzle(
+    shuffleCount
+) {
+
+    let bestBoard = null;
+
+    let bestEmpty = EMPTY_TILE;
+
+    let bestScore = -1;
+
+
+    /*
+        Generate several legal scrambles
+        and keep the most mixed one.
+    */
+
+    const attempts =
+        Math.min(
+            15,
+            Math.max(
+                5,
+                Math.floor(
+                    shuffleCount / 20
+                )
+            )
+        );
+
+
+    for (
+        let attempt = 0;
+        attempt < attempts;
+        attempt++
+    ) {
+
+        const board = [
+            0,1,2,
+            3,4,5,
+            6,7,8
+        ];
+
+
+        let empty =
+            EMPTY_TILE;
+
+
+        let previous =
+            -1;
+
+
+        for (
+            let i = 0;
+            i < shuffleCount;
+            i++
+        ) {
+
+            let choices =
+                getNeighbors(
+                    empty
+                ).filter(
+                    position =>
+                        position !==
+                        previous
+                );
+
+
+            /*
+                At random intervals we choose
+                from all legal neighbors. This
+                prevents predictable back-and-forth
+                movement.
+            */
+
+            if (
+                Math.random() < 0.15
+            ) {
+
+                choices =
+                    getNeighbors(
+                        empty
+                    );
+            }
+
+
+            const selected =
+                choices[
+                    Math.floor(
+                        Math.random() *
+                        choices.length
+                    )
+                ];
+
+
+            [
+                board[empty],
+                board[selected]
+            ] = [
+                board[selected],
+                board[empty]
+            ];
+
+
+            previous =
+                empty;
+
+
+            empty =
+                selected;
+        }
+
+
+        const score =
+            countMisplacedTiles(
+                board
+            );
+
+
+        if (
+            score >
+            bestScore
+        ) {
+
+            bestScore =
+                score;
+
+            bestBoard =
+                [...board];
+
+            bestEmpty =
+                empty;
+        }
+    }
+
+
+    /*
+        Absolute fallback.
+    */
+
+    if (!bestBoard) {
+
+        bestBoard = [
+            1,2,3,
+            4,5,6,
+            7,8,0
+        ];
+
+        bestEmpty = 8;
+    }
+
+
+    /*
+        Ensure the puzzle isn't accidentally solved.
+    */
+
+    if (
+        bestBoard.every(
+            (value,index) =>
+                value === index
+        )
+    ) {
+
+        const selected =
+            getNeighbors(
+                bestEmpty
+            )[0];
+
+
+        [
+            bestBoard[bestEmpty],
+            bestBoard[selected]
+        ] = [
+            bestBoard[selected],
+            bestBoard[bestEmpty]
+        ];
+
+
+        bestEmpty =
+            selected;
+    }
+
+
+    return {
+
+        board:
+            bestBoard,
+
+        emptyIndex:
+            bestEmpty
+    };
+}
+
+
+/* =========================================================
+   SOLVED
+========================================================= */
+
+function isSolved() {
+
+    for (
+        let i = 0;
+        i < TILE_COUNT;
+        i++
+    ) {
+
+        if (
+            game.board[i] !== i
+        ) {
+
+            return false;
+        }
+    }
+
+
+    return true;
+}
+
+
+/* =========================================================
+   MOVEMENT
+========================================================= */
+
+function canMove(
+    position
+) {
+
+    if (!game.running) {
+        return false;
+    }
+
+
+    if (game.paused) {
+        return false;
+    }
+
+
+    return getNeighbors(
+        game.emptyIndex
+    ).includes(
+        position
+    );
+}
+
+
+function moveTile(
+    position
+) {
+
+    if (
+        !canMove(
+            position
+        )
+    ) {
+
+        return;
+    }
+
+
+    [
+        game.board[
+            game.emptyIndex
+        ],
+
+        game.board[
+            position
+        ]
+
+    ] = [
+
+        game.board[
+            position
+        ],
+
+        game.board[
+            game.emptyIndex
+        ]
+    ];
+
+
+    game.emptyIndex =
+        position;
+
+
+    game.moves++;
+
+
+    moveSound();
+
+
+    renderBoard();
+
+
+    movesValue.textContent =
+        game.moves;
+
+
+    /*
+        The exact moment the last move
+        solves the puzzle:
+        stop timer immediately.
+    */
+
+    if (isSolved()) {
+
+        completeLevel();
+    }
+}
+
+
+/* =========================================================
+   LEVEL IMAGE GENERATOR
+========================================================= */
+
+/*
+   Every level gets a completely different
+   calming illustration.
+
+   All images are embedded as SVG data URLs,
+   so the entire game still remains one HTML file.
+*/
+
+function createLevelImage(
+    level
+) {
+
+    const scenes = [
+
+        /* 1 - Meadow */
+
+        `
+        <rect width="1200" height="1200" fill="#dfe8d0"/>
+
+        <circle
+            cx="900"
+            cy="230"
+            r="145"
+            fill="#f7df9d"/>
+
+        <path
+            d="M0 650 Q280 520 520 660 T1200 620 V1200 H0Z"
+            fill="#8ca87c"/>
+
+        <path
+            d="M0 820 Q300 680 580 820 T1200 770 V1200 H0Z"
+            fill="#607f59"/>
+
+        <path
+            d="M0 1000 Q270 850 560 980 T1200 930 V1200 H0Z"
+            fill="#456448"/>
+
+        <g fill="#f4e8bb">
+            <circle cx="130" cy="840" r="7"/>
+            <circle cx="220" cy="900" r="8"/>
+            <circle cx="350" cy="820" r="6"/>
+            <circle cx="860" cy="860" r="7"/>
+            <circle cx="1020" cy="820" r="8"/>
+        </g>
+        `,
+
+
+        /* 2 - Lake */
+
+        `
+        <rect width="1200" height="1200" fill="#c6dadd"/>
+
+        <circle
+            cx="230"
+            cy="250"
+            r="125"
+            fill="#fff0bd"/>
+
+        <path
+            d="M0 610 L190 430 340 600 510 420 690 620 900 440 1200 650 V1200 H0Z"
+            fill="#718d8c"/>
+
+        <rect
+            y="650"
+            width="1200"
+            height="550"
+            fill="#709b9b"/>
+
+        <path
+            d="M0 760 Q300 710 600 760 T1200 750"
+            fill="none"
+            stroke="#dfe9e1"
+            stroke-width="13"
+            opacity=".55"/>
+
+        <path
+            d="M0 880 Q300 830 600 880 T1200 870"
+            fill="none"
+            stroke="#dfe9e1"
+            stroke-width="8"
+            opacity=".3"/>
+        `,
+
+
+        /* 3 - Lavender */
+
+        `
+        <rect width="1200" height="1200" fill="#ddd5e4"/>
+
+        <circle
+            cx="970"
+            cy="240"
+            r="145"
+            fill="#f6dfaa"/>
+
+        <path
+            d="M0 680 Q250 520 510 680 T1200 640 V1200 H0Z"
+            fill="#8d7398"/>
+
+        <path
+            d="M0 840 Q250 700 570 850 T1200 810 V1200 H0Z"
+            fill="#66506e"/>
+
+        <path
+            d="M570 1200
+                     C500 1040 500 900 570 800
+                     C650 690 720 620 820 530"
+            fill="none"
+            stroke="#d6bd8f"
+            stroke-width="130"
+            stroke-linecap="round"/>
+
+        <g fill="#b79ac6">
+            <circle cx="130" cy="780" r="20"/>
+            <circle cx="230" cy="690" r="16"/>
+            <circle cx="330" cy="830" r="21"/>
+            <circle cx="940" cy="770" r="19"/>
+            <circle cx="1040" cy="680" r="16"/>
+        </g>
+        `,
+
+
+        /* 4 - Pine Forest */
+
+        `
+        <rect width="1200" height="1200" fill="#b7c8c1"/>
+
+        <circle
+            cx="890"
+            cy="260"
+            r="120"
+            fill="#e5e0bf"
+            opacity=".65"/>
+
+        <path
+            d="M0 720 Q240 530 500 710 T1200 680 V1200 H0Z"
+            fill="#5d756b"/>
+
+        ${Array.from({length:18},(_,i)=>{
+
+            const x =
+                30 +
+                i * 68;
+
+            const top =
+                320 +
+                (i % 5) * 55;
+
+            return `
+                <path
+                    d="
+                        M${x} 1010
+                        L${x+42} ${top}
+                        L${x+84} 1010
+                        Z"
+                    fill="#385247"/>
+            `;
+
+        }).join("")}
+
+        <path
+            d="M0 1040 Q300 880 610 1010 T1200 960 V1200 H0Z"
+            fill="#2f473c"/>
+        `,
+
+
+        /* 5 - Autumn */
+
+        `
+        <rect width="1200" height="1200" fill="#ead7c0"/>
+
+        <circle
+            cx="930"
+            cy="240"
+            r="150"
+            fill="#e9ba73"/>
+
+        <path
+            d="M0 730 Q250 570 520 720 T1200 680 V1200 H0Z"
+            fill="#8c684f"/>
+
+        <path
+            d="M0 920 Q270 770 600 900 T1200 860 V1200 H0Z"
+            fill="#6e5141"/>
+
+        <g>
+            <circle cx="160" cy="510" r="95" fill="#c97b59"/>
+            <circle cx="250" cy="450" r="75" fill="#b96c50"/>
+            <rect x="200" y="500" width="18" height="240" fill="#664a3b"/>
+
+            <circle cx="1010" cy="520" r="105" fill="#c78b55"/>
+            <circle cx="1090" cy="470" r="75" fill="#d09b61"/>
+            <rect x="1045" y="530" width="18" height="240" fill="#664a3b"/>
+        </g>
+
+        <path
+            d="M510 1200 Q610 1030 760 850"
+            fill="none"
+            stroke="#cdb184"
+            stroke-width="110"
+            stroke-linecap="round"/>
+        `,
+
+
+        /* 6 - Moon Lake */
+
+        `
+        <rect width="1200" height="1200" fill="#50657a"/>
+
+        <circle
+            cx="920"
+            cy="235"
+            r="135"
+            fill="#e8dfbf"/>
+
+        <circle
+            cx="975"
+            cy="195"
+            r="130"
+            fill="#60768b"
+            opacity=".35"/>
+
+        <path
+            d="M0 680 L190 500 350 650 540 440 760 660 960 470 1200 690 V1200 H0Z"
+            fill="#304957"/>
+
+        <rect
+            y="700"
+            width="1200"
+            height="500"
+            fill="#3d6070"/>
+
+        <path
+            d="M0 820 Q300 770 600 820 T1200 810"
+            fill="none"
+            stroke="#dce4de"
+            stroke-width="8"
+            opacity=".3"/>
+
+        <g fill="#eee9d4">
+            <circle cx="160" cy="160" r="3"/>
+            <circle cx="310" cy="110" r="4"/>
+            <circle cx="520" cy="220" r="3"/>
+            <circle cx="720" cy="130" r="4"/>
+            <circle cx="1090" cy="150" r="3"/>
+        </g>
+        `,
+
+
+        /* 7 - Cabin */
+
+        `
+        <rect width="1200" height="1200" fill="#aebda7"/>
+
+        <circle
+            cx="920"
+            cy="230"
+            r="145"
+            fill="#e4c98b"
+            opacity=".75"/>
+
+        <path
+            d="M0 660 Q250 500 520 670 T1200 630 V1200 H0Z"
+            fill="#526d55"/>
+
+        <path
+            d="M0 860 Q290 730 580 850 T1200 820 V1200 H0Z"
+            fill="#354d3a"/>
+
+        <rect
+            x="415"
+            y="690"
+            width="360"
+            height="255"
+            rx="8"
+            fill="#79563e"/>
+
+        <path
+            d="M380 710 L595 530 815 710Z"
+            fill="#4d372e"/>
+
+        <rect
+            x="545"
+            y="805"
+            width="72"
+            height="140"
+            fill="#3c2d25"/>
+
+        <rect
+            x="655"
+            y="770"
+            width="78"
+            height="75"
+            fill="#d9bd82"/>
+
+        <path
+            d="M694 770 V845"
+            stroke="#5d4b37"
+            stroke-width="5"/>
+        `,
+
+
+        /* 8 - Coast */
+
+        `
+        <rect width="1200" height="1200" fill="#c2dddd"/>
+
+        <circle
+            cx="940"
+            cy="240"
+            r="155"
+            fill="#f2dc9e"/>
+
+        <path
+            d="M0 670 Q250 530 480 680 T1200 650 V1200 H0Z"
+            fill="#5a8884"/>
+
+        <rect
+            y="710"
+            width="1200"
+            height="490"
+            fill="#79aead"/>
+
+        <path
+            d="M0 820 Q270 780 540 820 T1200 810"
+            fill="none"
+            stroke="#eef0e2"
+            stroke-width="15"
+            opacity=".6"/>
+
+        <path
+            d="M0 920 Q280 880 550 920 T1200 910"
+            fill="none"
+            stroke="#eef0e2"
+            stroke-width="8"
+            opacity=".35"/>
+
+        <path
+            d="M0 1050 Q270 1000 600 1040 T1200 1030 V1200 H0Z"
+            fill="#548f89"/>
+        `,
+
+
+        /* 9 - Mountain Mist */
+
+        `
+        <rect width="1200" height="1200" fill="#c9d4d8"/>
+
+        <circle
+            cx="920"
+            cy="220"
+            r="135"
+            fill="#ded8bd"/>
+
+        <path
+            d="M0 780
+                     L220 430
+                     L410 700
+                     L660 300
+                     L940 700
+                     L1090 470
+                     L1200 650
+                     V1200
+                     H0Z"
+            fill="#637783"/>
+
+        <path
+            d="M160 520 L220 430 295 545"
+            fill="#edf0eb"/>
+
+        <path
+            d="M560 430 L660 300 760 465"
+            fill="#f0f1ec"/>
+
+        <path
+            d="M1020 550 L1090 470 1145 540"
+            fill="#eff1ed"/>
+
+        <path
+            d="M0 950 Q270 800 590 930 T1200 900 V1200 H0Z"
+            fill="#4c615d"/>
+
+        <path
+            d="M0 1080 Q300 940 620 1060 T1200 1020 V1200 H0Z"
+            fill="#394d47"/>
+
+        <path
+            d="M0 680 Q350 580 700 650 T1200 620"
+            fill="none"
+            stroke="#eef1ed"
+            stroke-width="65"
+            opacity=".25"/>
+        `,
+
+
+        /* 10 - Japanese Garden */
+
+        `
+        <rect width="1200" height="1200" fill="#d9d1dc"/>
+
+        <circle
+            cx="920"
+            cy="220"
+            r="135"
+            fill="#e8d09c"/>
+
+        <path
+            d="M0 680 Q250 540 520 690 T1200 640 V1200 H0Z"
+            fill="#5c705d"/>
+
+        <path
+            d="M0 890 Q280 740 600 880 T1200 840 V1200 H0Z"
+            fill="#3f5547"/>
+
+        <rect
+            x="170"
+            y="620"
+            width="20"
+            height="290"
+            fill="#6f5645"/>
+
+        <circle
+            cx="180"
+            cy="590"
+            r="105"
+            fill="#b88daf"/>
+
+        <circle
+            cx="110"
+            cy="640"
+            r="60"
+            fill="#9c7696"/>
+
+        <circle
+            cx="250"
+            cy="650"
+            r="68"
+            fill="#c19ab4"/>
+
+        <path
+            d="M530 1200 Q610 1010 690 850 Q760 690 910 540"
+            fill="none"
+            stroke="#c5aa7a"
+            stroke-width="110"
+            stroke-linecap="round"/>
+        `,
+
+
+        /* 11 - Northern Lights */
+
+        `
+        <rect width="1200" height="1200" fill="#142435"/>
+
+        <path
+            d="M70 430
+                     C260 180 420 620 600 350
+                     C770 100 860 550 1100 230"
+            fill="none"
+            stroke="#74b89b"
+            stroke-width="100"
+            opacity=".48"
+            filter="blur(8px)"/>
+
+        <path
+            d="M20 520
+                     C250 230 430 680 620 390
+                     C800 120 900 560 1190 260"
+            fill="none"
+            stroke="#8dbf9a"
+            stroke-width="54"
+            opacity=".52"/>
+
+        <circle
+            cx="970"
+            cy="190"
+            r="115"
+            fill="#d6d2b2"/>
+
+        <path
+            d="M0 800 L210 540 390 750 580 500 810 760 1020 550 1200 740 V1200 H0Z"
+            fill="#263f45"/>
+
+        <path
+            d="M0 960 Q280 820 600 940 T1200 900 V1200 H0Z"
+            fill="#182e30"/>
+
+        <g fill="#dbe5dc">
+            <circle cx="170" cy="180" r="3"/>
+            <circle cx="330" cy="110" r="4"/>
+            <circle cx="530" cy="210" r="3"/>
+            <circle cx="690" cy="130" r="4"/>
+            <circle cx="1130" cy="170" r="3"/>
+        </g>
+        `,
+
+
+        /* 12 - Enchanted Valley */
+
+        `
+        <rect width="1200" height="1200" fill="#384d49"/>
+
+        <circle
+            cx="850"
+            cy="230"
+            r="150"
+            fill="#e5d5a6"
+            opacity=".88"/>
+
+        <path
+            d="M0 680
+                     Q250 480 470 680
+                     T900 620
+                     T1200 680
+                     V1200
+                     H0Z"
+            fill="#58715e"/>
+
+        <path
+            d="M0 850
+                     Q280 700 560 840
+                     T1200 800
+                     V1200
+                     H0Z"
+            fill="#3b5a4b"/>
+
+        <path
+            d="M0 1020
+                     Q300 870 600 1000
+                     T1200 950
+                     V1200
+                     H0Z"
+            fill="#29473a"/>
+
+        <path
+            d="M520 1200
+                     C570 1050 640 940 710 820
+                     C790 680 870 610 950 510"
+            fill="none"
+            stroke="#b89e70"
+            stroke-width="90"
+            stroke-linecap="round"/>
+
+        <g fill="#8fb28f" opacity=".85">
+            <circle cx="150" cy="700" r="20"/>
+            <circle cx="260" cy="640" r="17"/>
+            <circle cx="1010" cy="690" r="22"/>
+            <circle cx="1090" cy="620" r="18"/>
+        </g>
+
+        <g fill="#d4c58d">
+            <circle cx="160" cy="590" r="8"/>
+            <circle cx="260" cy="530" r="7"/>
+            <circle cx="1030" cy="560" r="8"/>
+            <circle cx="1120" cy="500" r="7"/>
+        </g>
+
+        <g fill="#e2e7d9">
+            <circle cx="150" cy="160" r="3"/>
+            <circle cx="320" cy="220" r="4"/>
+            <circle cx="510" cy="130" r="3"/>
+            <circle cx="720" cy="180" r="4"/>
+            <circle cx="1080" cy="130" r="3"/>
+        </g>
+        `
+    ];
+
+
+    const content =
+        scenes[
+            Math.max(
+                0,
+                Math.min(
+                    scenes.length - 1,
+                    level - 1
+                )
+            )
+        ];
+
+
+    const svg = `
+
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="1200"
+        height="1200"
+        viewBox="0 0 1200 1200"
+    >
+
+        <defs>
+
+            <linearGradient
+                id="overlay"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+            >
+
+                <stop
+                    offset="0%"
+                    stop-color="#ffffff"
+                    stop-opacity=".04"
+                />
+
+                <stop
+                    offset="100%"
+                    stop-color="#000000"
+                    stop-opacity=".16"
+                />
+
+            </linearGradient>
+
+        </defs>
+
+        ${content}
+
+        <rect
+            width="1200"
+            height="1200"
+            fill="url(#overlay)"
+        />
+
+    </svg>
+
+    `;
+
+
+    return (
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(
+            svg
+        )
+    );
+}
+
+
+/* =========================================================
+   LEVEL IMAGE
+========================================================= */
+
+function loadLevelImage(
+    level
+) {
+
+    game.imageURL =
+        createLevelImage(
+            level
+        );
+
+
+    referenceImage.src =
+        game.imageURL;
+}
+
+
+/* =========================================================
+   SHUFFLE / LEVEL
+========================================================= */
+
+function startLevel(
+    level
+) {
+
+    game.level =
+        Math.max(
+            1,
+            Math.min(
+                TOTAL_LEVELS,
+                level
+            )
+        );
+
+
+    game.shuffleMoves =
+        getShuffleMoves(
+            game.level
+        );
+
+
+    game.moves =
+        0;
+
+
+    game.elapsed =
+        0;
+
+
+    game.paused =
+        false;
+
+
+    game.running =
+        true;
+
+
+    loadLevelImage(
+        game.level
+    );
+
+
+    const levelInfo =
+        LEVEL_DATA[
+            game.level - 1
+        ];
+
+
+    const puzzle =
+        generateSolvablePuzzle(
+            game.shuffleMoves
+        );
+
+
+    game.board =
+        puzzle.board;
+
+
+    game.emptyIndex =
+        puzzle.emptyIndex;
+
+
+    game.startedAt =
+        performance.now();
+
+
+    levelValue.textContent =
+        game.level;
+
+
+    movesValue.textContent =
+        "0";
+
+
+    timerValue.textContent =
+        "00:00.0";
+
+
+    bestValue.textContent =
+        getBestTimeForLevel(
+            game.level
+        );
+
+
+    difficultyValue.textContent =
+        levelInfo.difficulty;
+
+
+    levelTitle.textContent =
+        `Level ${game.level}: ${levelInfo.name}`;
+
+
+    missionText.textContent =
+        `Arrange the illustration by sliding the wooden pieces. ` +
+        `This level uses ${game.shuffleMoves} shuffle moves.`;
+
+
+    leaderboardSubtitle.textContent =
+        `Best times for Level ${game.level}`;
+
+
+    gameStatus.textContent =
+        "Solving";
+
+
+    timerBox.classList.remove(
+        "timer-complete"
+    );
+
+
+    closeWinModal();
+
+
+    renderBoard();
+
+
+    renderLeaderboard();
+}
+
+
+/* =========================================================
+   BOARD RENDER
+========================================================= */
+
+function getTileStyle(
+    tileIndex
+) {
+
+    const row =
+        Math.floor(
+            tileIndex / 3
+        );
+
+
+    const col =
+        tileIndex % 3;
+
+
+    return {
+
+        backgroundImage:
+            `url("${game.imageURL}")`,
+
+        backgroundSize:
+            "300% 300%",
+
+        backgroundPosition:
+            `${col * 50}% ${row * 50}%`
+    };
+}
+
+
+function renderBoard() {
+
+    boardElement.innerHTML =
+        "";
+
+
+    game.board.forEach(
+        (
+            tileIndex,
+            position
+        ) => {
+
+            const tile =
+                document.createElement(
+                    "button"
+                );
+
+
+            tile.type =
+                "button";
+
+
+            tile.className =
+                "tile";
+
+
+            if (
+                tileIndex ===
+                EMPTY_TILE
+            ) {
+
+                tile.classList.add(
+                    "empty"
+                );
+
+
+                tile.setAttribute(
+                    "aria-label",
+                    "Empty space"
+                );
+
+            } else {
+
+                Object.assign(
+                    tile.style,
+                    getTileStyle(
+                        tileIndex
+                    )
+                );
+
+
+                tile.setAttribute(
+                    "aria-label",
+                    `Puzzle tile ${tileIndex + 1}`
+                );
+
+
+                tile.addEventListener(
+                    "click",
+                    () =>
+                        moveTile(
+                            position
+                        )
+                );
+            }
+
+
+            boardElement.appendChild(
+                tile
+            );
+
+        }
+    );
+}
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+function getElapsedTime() {
+
+    if (!game.running) {
+
+        return game.elapsed;
+    }
+
+
+    if (game.paused) {
+
+        return game.elapsed;
+    }
+
+
+    return (
+        performance.now()
+        -
+        game.startedAt
+    );
+}
+
+
+function formatTime(
+    milliseconds
+) {
+
+    milliseconds =
+        Math.max(
+            0,
+            milliseconds
+        );
+
+
+    const minutes =
+        Math.floor(
+            milliseconds / 60000
+        );
+
+
+    const seconds =
+        Math.floor(
+            (
+                milliseconds %
+                60000
+            ) / 1000
+        );
+
+
+    const tenths =
+        Math.floor(
+            (
+                milliseconds %
+                1000
+            ) / 100
+        );
+
+
+    return (
+        `${String(minutes).padStart(2,"0")}:` +
+        `${String(seconds).padStart(2,"0")}.` +
+        `${tenths}`
+    );
+}
+
+
+function updateTimer() {
+
+    if (
+        game.running &&
+        !game.paused
+    ) {
+
+        game.elapsed =
+            getElapsedTime();
+
+
+        timerValue.textContent =
+            formatTime(
+                game.elapsed
+            );
+    }
+
+
+    requestAnimationFrame(
+        updateTimer
+    );
+}
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+function togglePause() {
+
+    if (!game.running) {
+        return;
+    }
+
+
+    initAudio();
+
+
+    if (
+        !game.paused
+    ) {
+
+        game.elapsed =
+            getElapsedTime();
+
+
+        game.paused =
+            true;
+
+
+        gameStatus.textContent =
+            "Paused";
+
+
+    } else {
+
+        game.startedAt =
+            performance.now()
+            -
+            game.elapsed;
+
+
+        game.paused =
+            false;
+
+
+        gameStatus.textContent =
+            "Solving";
+    }
+}
+
+
+/* =========================================================
+   COMPLETE LEVEL
+========================================================= */
+
+function completeLevel() {
+
+    /*
+        Freeze the timer immediately.
+    */
+
+    game.elapsed =
+        getElapsedTime();
+
+
+    game.running =
+        false;
+
+
+    game.paused =
+        false;
+
+
+    timerValue.textContent =
+        formatTime(
+            game.elapsed
+        );
+
+
+    timerBox.classList.add(
+        "timer-complete"
+    );
+
+
+    gameStatus.textContent =
+        "Solved";
+
+
+    const score = {
+
+        level:
+            game.level,
+
+        time:
+            Math.round(
+                game.elapsed
+            ),
+
+        moves:
+            game.moves,
+
+        date:
+            Date.now()
+    };
+
+
+    saveScore(
+        score
+    );
+
+
+    renderLeaderboard();
+
+
+    /*
+        Small victory sound.
+    */
+
+    victorySound();
+
+
+    /*
+        Celebration.
+    */
+
+    createConfetti();
+
+
+    /*
+        Final level.
+    */
+
+    if (
+        game.level ===
+        TOTAL_LEVELS
+    ) {
+
+        winTitle.textContent =
+            "All 12 Levels Complete!";
+
+
+        winMessage.textContent =
+            `Final level time: ` +
+            `${formatTime(score.time)} • ` +
+            `${score.moves} moves`;
+
+        document.getElementById(
+            "nextLevelButton"
+        ).textContent =
+            "Play Again";
+
+
+    } else {
+
+        winTitle.textContent =
+            `Level ${game.level} Complete!`;
+
+
+        winMessage.textContent =
+            `Time: ${formatTime(score.time)} • ` +
+            `Moves: ${score.moves} • ` +
+            `${LEVEL_DATA[game.level - 1].difficulty}`;
+
+
+        document.getElementById(
+            "nextLevelButton"
+        ).textContent =
+            "Next Level";
+    }
+
+
+    winOverlay.classList.add(
+        "show"
+    );
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+function getLeaderboard() {
+
+    try {
+
+        const raw =
+            localStorage.getItem(
+                LEADERBOARD_KEY
+            );
+
+
+        if (!raw) {
+            return [];
+        }
+
+
+        const parsed =
+            JSON.parse(
+                raw
+            );
+
+
+        return Array.isArray(
+            parsed
+        )
+            ? parsed
+            : [];
+
+    } catch {
+
+        return [];
+    }
+}
+
+
+function saveScore(
+    score
+) {
+
+    const scores =
+        getLeaderboard();
+
+
+    scores.push(
+        score
+    );
+
+
+    localStorage.setItem(
+        LEADERBOARD_KEY,
+        JSON.stringify(
+            scores
+        )
+    );
+}
+
+
+function getBestTimeForLevel(
+    level
+) {
+
+    const scores =
+        getLeaderboard()
+            .filter(
+                score =>
+                    Number(
+                        score.level
+                    ) ===
+                    Number(
+                        level
+                    )
+            )
+            .sort(
+                (a,b) =>
+                    a.time - b.time
+            );
+
+
+    if (!scores.length) {
+
+        return "—";
+    }
+
+
+    return formatTime(
+        scores[0].time
+    );
+}
+
+
+function getPlayerName() {
+
+    let name =
+        localStorage.getItem(
+            PLAYER_NAME_KEY
+        );
+
+
+    if (!name) {
+
+        name =
+            prompt(
+                "Enter your leaderboard name:"
+            );
+
+
+        name =
+            (
+                name ||
+                "Player"
+            )
+            .trim()
+            .slice(
+                0,
+                24
+            );
+
+
+        if (!name) {
+
+            name =
+                "Player";
+        }
+
+
+        localStorage.setItem(
+            PLAYER_NAME_KEY,
+            name
+        );
+    }
+
+
+    return name;
+}
+
+
+function renderLeaderboard() {
+
+    const scores =
+        getLeaderboard()
+            .filter(
+                score =>
+                    Number(
+                        score.level
+                    ) ===
+                    Number(
+                        game.level
+                    )
+            )
+            .sort(
+                (
+                    a,
+                    b
+                ) =>
+                    a.time - b.time ||
+                    a.moves - b.moves
+            )
+            .slice(
+                0,
+                10
+            );
+
+
+    leaderboardElement.innerHTML =
+        "";
+
+
+    if (!scores.length) {
+
+        leaderboardElement.innerHTML =
+            `
+            <div class="empty-leaderboard">
+                No times recorded yet.
+            </div>
+            `;
+
+
+        return;
+    }
+
+
+    scores.forEach(
+        (
+            score,
+            index
+        ) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "score-row";
+
+
+            const rank =
+                document.createElement(
+                    "div"
+                );
+
+
+            rank.className =
+                "score-rank";
+
+
+            rank.textContent =
+                `#${index + 1}`;
+
+
+            const player =
+                document.createElement(
+                    "div"
+                );
+
+
+            player.className =
+                "score-player";
+
+
+            player.textContent =
+                getPlayerName();
+
+
+            const time =
+                document.createElement(
+                    "div"
+                );
+
+
+            time.className =
+                "score-time";
+
+
+            time.textContent =
+                formatTime(
+                    score.time
+                );
+
+
+            row.append(
+                rank,
+                player,
+                time
+            );
+
+
+            leaderboardElement.appendChild(
+                row
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+function createConfetti() {
+
+    const colors = [
+
+        "#f4c96e",
+        "#e26455",
+        "#72d19a",
+        "#5fa4e7",
+        "#e087d5"
+
+    ];
+
+
+    for (
+        let i = 0;
+        i < 45;
+        i++
+    ) {
+
+        const piece =
+            document.createElement(
+                "div"
+            );
+
+
+        piece.className =
+            "confetti";
+
+
+        piece.style.background =
+            colors[
+                Math.floor(
+                    Math.random() *
+                    colors.length
+                )
+            ];
+
+
+        piece.style.setProperty(
+            "--x",
+            `${
+                (
+                    Math.random() -
+                    0.5
+                ) * 90
+            }vw`
+        );
+
+
+        piece.style.setProperty(
+            "--y",
+            `${
+                (
+                    Math.random() +
+                    0.5
+                ) * 90
+            }vh`
+        );
+
+
+        document.body.appendChild(
+            piece
+        );
+
+
+        setTimeout(
+            () =>
+                piece.remove(),
+            1500
+        );
+    }
+}
+
+
+/* =========================================================
+   WIN MODAL
+========================================================= */
+
+function closeWinModal() {
+
+    winOverlay.classList.remove(
+        "show"
+    );
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimeout = null;
+
+
+function showToast(
+    message
+) {
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimeout
+    );
+
+
+    toastTimeout =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2200
+        );
+}
+
+
+/* =========================================================
+   CUSTOM PHOTO
+========================================================= */
+
+function setCustomImage(
+    url
+) {
+
+    if (
+        game.imageURL &&
+        game.imageURL.startsWith(
+            "blob:"
+        )
+    ) {
+
+        try {
+
+            URL.revokeObjectURL(
+                game.imageURL
+            );
+
+        } catch {}
+    }
+
+
+    game.imageURL =
+        url;
+
+
+    referenceImage.src =
+        url;
+
+
+    /*
+        Important:
+        Custom photo starts a new Level 1,
+        but does NOT interfere with the
+        normal 12 built-in level progression.
+    */
+
+    startLevel(
+        1
+    );
+}
+
+
+/* =========================================================
+   PHOTO UPLOAD
+========================================================= */
+
+document
+    .getElementById(
+        "photoInput"
+    )
+    .addEventListener(
+        "change",
+        event => {
+
+            const file =
+                event.target.files[0];
+
+
+            if (!file) {
+                return;
+            }
+
+
+            if (
+                !file.type.startsWith(
+                    "image/"
+                )
+            ) {
+
+                showToast(
+                    "Please choose an image."
+                );
+
+
+                return;
+            }
+
+
+            const imageURL =
+                URL.createObjectURL(
+                    file
+                );
+
+
+            setCustomImage(
+                imageURL
+            );
+
+
+            showToast(
+                "Custom photo loaded."
+            );
+
+
+            event.target.value =
+                "";
+        }
+    );
+
+
+/* =========================================================
+   SAMPLE
+========================================================= */
+
+document
+    .getElementById(
+        "sampleButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+
+            startLevel(
+                1
+            );
+
+
+            showToast(
+                "Level 1 illustration restored."
+            );
+        }
+    );
+
+
+/* =========================================================
+   NEXT LEVEL
+========================================================= */
+
+document
+    .getElementById(
+        "newLevelButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+
+            if (
+                game.level <
+                TOTAL_LEVELS
+            ) {
+
+                startLevel(
+                    game.level + 1
+                );
+
+            } else {
+
+                showToast(
+                    "You completed all 12 levels!"
+                );
+            }
+        }
+    );
+
+
+/* =========================================================
+   RESHUFFLE
+========================================================= */
+
+document
+    .getElementById(
+        "reshuffleButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+
+            startLevel(
+                game.level
+            );
+
+
+            showToast(
+                "New scramble generated."
+            );
+        }
+    );
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+document
+    .getElementById(
+        "pauseButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+            togglePause();
+        }
+    );
+
+
+/* =========================================================
+   RESET LEVEL
+========================================================= */
+
+document
+    .getElementById(
+        "resetButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+
+            startLevel(
+                game.level
+            );
+
+
+            showToast(
+                "Level restarted."
+            );
+        }
+    );
+
+
+/* =========================================================
+   NEXT LEVEL FROM MODAL
+========================================================= */
+
+document
+    .getElementById(
+        "nextLevelButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            initAudio();
+
+
+            closeWinModal();
+
+
+            if (
+                game.level <
+                TOTAL_LEVELS
+            ) {
+
+                startLevel(
+                    game.level + 1
+                );
+
+            } else {
+
+                /*
+                    After Level 12,
+                    start a fresh run.
+                */
+
+                startLevel(
+                    1
+                );
+            }
+        }
+    );
+
+
+/* =========================================================
+   STAY
+========================================================= */
+
+document
+    .getElementById(
+        "stayButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            closeWinModal();
+        }
+    );
+
+
+/* =========================================================
+   CLEAR LEADERBOARD
+========================================================= */
+
+document
+    .getElementById(
+        "clearLeaderboardButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            localStorage.removeItem(
+                LEADERBOARD_KEY
+            );
+
+
+            renderLeaderboard();
+
+
+            bestValue.textContent =
+                "—";
+
+
+            showToast(
+                "Leaderboard cleared."
+            );
+        }
+    );
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        /*
+            Space / P = pause
+        */
+
+        if (
+            event.key === " " ||
+            event.key.toLowerCase() === "p"
+        ) {
+
+            event.preventDefault();
+
+            togglePause();
+
+            return;
+        }
+
+
+        if (
+            !game.running ||
+            game.paused
+        ) {
+
+            return;
+        }
+
+
+        const row =
+            Math.floor(
+                game.emptyIndex / 3
+            );
+
+
+        const col =
+            game.emptyIndex % 3;
+
+
+        let target =
+            null;
+
+
+        if (
+            event.key ===
+            "ArrowUp"
+        ) {
+
+            if (
+                row < 2
+            ) {
+
+                target =
+                    game.emptyIndex + 3;
+            }
+
+        } else if (
+            event.key ===
+            "ArrowDown"
+        ) {
+
+            if (
+                row > 0
+            ) {
+
+                target =
+                    game.emptyIndex - 3;
+            }
+
+        } else if (
+            event.key ===
+            "ArrowLeft"
+        ) {
+
+            if (
+                col < 2
+            ) {
+
+                target =
+                    game.emptyIndex + 1;
+            }
+
+        } else if (
+            event.key ===
+            "ArrowRight"
+        ) {
+
+            if (
+                col > 0
+            ) {
+
+                target =
+                    game.emptyIndex - 1;
+            }
+        }
+
+
+        if (
+            target !== null
+        ) {
+
+            event.preventDefault();
+
+
+            moveTile(
+                target
+            );
+        }
+    }
+);
+
+
+/* =========================================================
+   AUDIO INITIALIZATION
+========================================================= */
+
+document.addEventListener(
+    "pointerdown",
+    () => {
+
+        initAudio();
+
+    },
+    {
+        once: true
+    }
+);
+
+
+/* =========================================================
+   INITIAL START
+========================================================= */
+
+startLevel(
+    1
+);
+
+
+/* =========================================================
+   TIMER LOOP
+========================================================= */
+
+requestAnimationFrame(
+    updateTimer
+);
+
+</script>
+
+</body>
+</html>
