@@ -1,9 +1,8 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 
 <meta
@@ -14,10 +13,6 @@
 <title>Kaison's Game World</title>
 
 <style>
-
-/* =========================================================
-   RESET
-========================================================= */
 
 * {
     box-sizing: border-box;
@@ -31,792 +26,479 @@ body {
 }
 
 body {
-
-    background:
-        #050505;
-
-    color: #ffffff;
-
-    font-family:
-        "Courier New",
-        monospace;
-
+    background: #050505;
+    color: #fff;
+    font-family: "Courier New", monospace;
     overflow-x: hidden;
-
 }
 
-
-/* =========================================================
-   PIXEL BACKGROUND
-========================================================= */
-
+/* Pixel grid */
 body::before {
-
     content: "";
-
     position: fixed;
-
     inset: 0;
-
     pointer-events: none;
-
     z-index: 0;
-
     opacity: 0.07;
 
     background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
 
-        linear-gradient(
-            #ffffff 1px,
-            transparent 1px
-        ),
-
-        linear-gradient(
-            90deg,
-            #ffffff 1px,
-            transparent 1px
-        );
-
-    background-size:
-        24px 24px;
-
+    background-size: 24px 24px;
 }
 
-
-/* =========================================================
-   CRT SCANLINES
-========================================================= */
-
+/* CRT scanlines */
 body::after {
-
     content: "";
-
     position: fixed;
-
     inset: 0;
-
     pointer-events: none;
-
     z-index: 9999;
 
     background:
-
         repeating-linear-gradient(
             to bottom,
-            rgba(255,255,255,0.025) 0px,
-            rgba(255,255,255,0.025) 1px,
+            rgba(255,255,255,.025) 0px,
+            rgba(255,255,255,.025) 1px,
             transparent 1px,
             transparent 4px
         );
-
 }
-
-
-/* =========================================================
-   MAIN CONTAINER
-========================================================= */
 
 .container {
-
+    width: min(1200px, 92%);
+    margin: auto;
     position: relative;
-
     z-index: 2;
-
-    width:
-        min(1200px, 92%);
-
-    margin:
-        auto;
-
-    padding:
-        55px 0 100px;
-
+    padding: 55px 0 100px;
 }
 
-
-/* =========================================================
-   HEADER
-========================================================= */
+/* Header */
 
 header {
-
-    text-align:
-        center;
-
-    margin-bottom:
-        65px;
-
+    text-align: center;
+    margin-bottom: 65px;
 }
 
 .logo {
+    font-size: 74px;
+    margin-bottom: 20px;
 
-    font-size:
-        72px;
-
-    margin-bottom:
-        20px;
-
-    animation:
-        floating 2s ease-in-out infinite;
+    animation: floating 2s ease-in-out infinite;
 
     filter:
-
-        drop-shadow(
-            5px 5px 0 #ff00cc
-        )
-
-        drop-shadow(
-            -5px -5px 0 #00ffff
-        );
-
+        drop-shadow(5px 5px 0 #ff00cc)
+        drop-shadow(-5px -5px 0 #00ffff);
 }
 
 @keyframes floating {
-
-    0%,
-    100% {
-
-        transform:
-            translateY(0);
-
+    0%, 100% {
+        transform: translateY(0);
     }
 
     50% {
-
-        transform:
-            translateY(-10px);
-
+        transform: translateY(-10px);
     }
-
 }
-
 
 h1 {
+    margin: 0;
 
-    margin:
-        0;
+    font-size: clamp(34px, 7vw, 76px);
 
-    font-size:
-        clamp(
-            32px,
-            7vw,
-            75px
-        );
-
-    letter-spacing:
-        5px;
-
-    line-height:
-        1.3;
+    letter-spacing: 5px;
 
     text-shadow:
-
         5px 5px 0 #ff00cc,
-
         -5px -5px 0 #00ffff;
-
 }
-
 
 .subtitle {
+    margin-top: 25px;
 
-    margin-top:
-        25px;
+    color: #888;
 
-    color:
-        #888;
+    font-size: 12px;
 
-    font-size:
-        12px;
+    letter-spacing: 3px;
 
-    letter-spacing:
-        3px;
-
-    line-height:
-        2;
-
+    line-height: 2;
 }
-
 
 .game-count {
+    display: inline-block;
 
-    display:
-        inline-block;
+    margin-top: 25px;
 
-    margin-top:
-        25px;
+    padding: 11px 18px;
 
-    padding:
-        11px 18px;
+    border: 2px solid #00ff88;
 
-    border:
-        2px solid #00ff88;
+    color: #00ff88;
 
-    color:
-        #00ff88;
+    background: #00150d;
 
-    background:
-        #00150d;
-
-    font-size:
-        11px;
-
+    font-size: 11px;
 }
 
-
-/* =========================================================
-   GAME GRID
-========================================================= */
+/* Game grid */
 
 #games {
-
-    display:
-        grid;
+    display: grid;
 
     grid-template-columns:
-
         repeat(
             auto-fit,
-            minmax(
-                260px,
-                1fr
-            )
+            minmax(260px, 1fr)
         );
 
-    gap:
-        30px;
-
+    gap: 30px;
 }
 
-
-/* =========================================================
-   GAME CARD
-========================================================= */
+/* Game card */
 
 .game-card {
+    position: relative;
 
-    position:
-        relative;
+    min-height: 285px;
 
-    min-height:
-        285px;
-
-    padding:
-        30px;
+    padding: 30px;
 
     background:
-
         linear-gradient(
             145deg,
             #191919,
             #080808
         );
 
-    border:
-        3px solid #333;
+    border: 3px solid #333;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
-        transform 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
+        transform .15s ease,
+        border-color .15s ease,
+        box-shadow .15s ease;
 
-    overflow:
-        hidden;
-
+    overflow: hidden;
 }
-
-
-.game-card::before {
-
-    content:
-        "";
-
-    position:
-        absolute;
-
-    width:
-        120px;
-
-    height:
-        120px;
-
-    right:
-        -45px;
-
-    top:
-        -45px;
-
-    background:
-        #00ffff;
-
-    opacity:
-        0.04;
-
-    transform:
-        rotate(45deg);
-
-}
-
 
 .game-card:hover {
+    transform: translate(-6px, -6px);
 
-    transform:
-        translate(
-            -6px,
-            -6px
-        );
-
-    border-color:
-        #00ffff;
+    border-color: #00ffff;
 
     box-shadow:
-
         8px 8px 0 #ff00cc,
-
         -4px -4px 0 #00ffff;
-
 }
-
 
 .game-number {
+    position: absolute;
 
-    position:
-        absolute;
+    top: 15px;
+    right: 15px;
 
-    right:
-        15px;
+    color: #555;
 
-    top:
-        15px;
-
-    color:
-        #555;
-
-    font-size:
-        11px;
-
+    font-size: 11px;
 }
-
 
 .game-icon {
+    font-size: 60px;
 
-    font-size:
-        58px;
-
-    margin-bottom:
-        25px;
-
-    filter:
-        drop-shadow(
-            4px 4px 0 #000
-        );
-
+    margin-bottom: 25px;
 }
-
 
 .game-name {
+    font-size: 19px;
 
-    font-size:
-        19px;
+    font-weight: bold;
 
-    font-weight:
-        bold;
+    text-transform: uppercase;
 
-    text-transform:
-        uppercase;
+    line-height: 1.5;
 
-    line-height:
-        1.5;
-
-    margin-bottom:
-        25px;
-
+    margin-bottom: 25px;
 }
 
+.game-url-preview {
+    color: #555;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 11px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    margin-bottom: 20px;
+}
 
 .play-button {
+    display: inline-block;
 
-    display:
-        inline-block;
+    padding: 12px 17px;
 
-    padding:
-        12px 17px;
+    background: #fff;
 
-    background:
-        #ffffff;
+    color: #000;
 
-    color:
-        #000000;
+    font-size: 11px;
 
-    font-size:
-        11px;
-
-    font-weight:
-        bold;
-
+    font-weight: bold;
 }
-
 
 .game-card:hover .play-button {
-
-    background:
-        #00ffff;
-
+    background: #00ffff;
 }
 
-
-/* =========================================================
-   ADMIN BUTTON
-========================================================= */
+/* Admin button */
 
 .admin-trigger {
+    position: fixed;
 
-    position:
-        fixed;
+    right: 20px;
+    bottom: 20px;
 
-    right:
-        20px;
+    z-index: 500;
 
-    bottom:
-        20px;
+    width: 48px;
+    height: 48px;
 
-    z-index:
-        500;
+    border: 2px solid #333;
 
-    width:
-        48px;
+    background: #111;
 
-    height:
-        48px;
+    color: #777;
 
-    border:
-        2px solid #333;
+    font-size: 20px;
 
-    background:
-        #111;
-
-    color:
-        #777;
-
-    font-size:
-        20px;
-
-    cursor:
-        pointer;
-
-    transition:
-        0.2s;
-
+    cursor: pointer;
 }
-
 
 .admin-trigger:hover {
-
-    color:
-        #00ffff;
-
-    border-color:
-        #00ffff;
-
-    box-shadow:
-        0 0 15px
-        rgba(
-            0,
-            255,
-            255,
-            0.3
-        );
-
+    color: #00ffff;
+    border-color: #00ffff;
 }
 
-
-/* =========================================================
-   MODAL BACKDROP
-========================================================= */
+/* Modals */
 
 .modal {
+    display: none;
 
-    display:
-        none;
+    position: fixed;
 
-    position:
-        fixed;
+    inset: 0;
 
-    inset:
-        0;
+    z-index: 5000;
 
-    z-index:
-        5000;
+    background: rgba(0,0,0,.90);
 
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.88
-        );
+    align-items: center;
 
-    align-items:
-        center;
+    justify-content: center;
 
-    justify-content:
-        center;
-
-    padding:
-        20px;
-
+    padding: 20px;
 }
-
 
 .modal.show {
-
-    display:
-        flex;
-
+    display: flex;
 }
 
+/* Modal boxes */
 
-/* =========================================================
-   MODAL BOX
-========================================================= */
+.login-box,
+.admin-box {
+    width: min(680px, 100%);
 
-.modal-box {
+    max-height: 90vh;
 
-    width:
-        min(
-            650px,
-            100%
-        );
+    overflow-y: auto;
 
-    max-height:
-        90vh;
+    padding: 30px;
 
-    overflow-y:
-        auto;
+    background: #101010;
 
-    background:
-        #101010;
-
-    border:
-        3px solid #00ffff;
+    border: 3px solid #00ffff;
 
     box-shadow:
-
         8px 8px 0 #ff00cc,
-
         -4px -4px 0 #00ffff;
-
-    padding:
-        30px;
-
 }
 
+.login-box {
+    width: min(430px, 100%);
 
-.modal-title {
+    border-color: #ff00cc;
 
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    margin-bottom:
-        30px;
-
+    box-shadow:
+        7px 7px 0 #00ffff;
 }
 
+.modal-header {
+    display: flex;
 
-.modal-title h2 {
+    align-items: center;
 
-    margin:
-        0;
+    justify-content: space-between;
 
-    font-size:
-        20px;
-
-    color:
-        #00ffff;
-
+    margin-bottom: 30px;
 }
 
+.modal-header h2 {
+    margin: 0;
+
+    color: #00ffff;
+
+    font-size: 19px;
+}
 
 .close {
+    border: 0;
 
-    background:
-        transparent;
+    background: transparent;
 
-    color:
-        #777;
+    color: #777;
 
-    border:
-        0;
+    font-size: 27px;
 
-    font-size:
-        25px;
-
-    cursor:
-        pointer;
-
+    cursor: pointer;
 }
-
 
 .close:hover {
-
-    color:
-        #ff00cc;
-
+    color: #ff00cc;
 }
 
-
-/* =========================================================
-   FORM
-========================================================= */
+/* Forms */
 
 .form-label {
+    display: block;
 
-    display:
-        block;
+    margin-bottom: 8px;
 
-    margin-bottom:
-        9px;
+    color: #00ffff;
 
-    color:
-        #00ffff;
-
-    font-size:
-        11px;
-
+    font-size: 11px;
 }
-
 
 input {
+    width: 100%;
 
-    width:
-        100%;
+    padding: 15px;
 
-    padding:
-        15px;
+    margin-bottom: 22px;
 
-    margin-bottom:
-        22px;
+    background: #050505;
 
-    border:
-        2px solid #444;
+    color: #fff;
 
-    background:
-        #050505;
+    border: 2px solid #444;
 
-    color:
-        #ffffff;
+    outline: none;
 
-    outline:
-        none;
+    font-family: inherit;
 
-    font-family:
-        inherit;
-
-    font-size:
-        13px;
-
+    font-size: 13px;
 }
-
 
 input:focus {
-
-    border-color:
-        #00ffff;
-
+    border-color: #00ffff;
 }
 
+/* Buttons */
 
-/* =========================================================
-   EMOJI SELECTOR
-========================================================= */
+.main-button {
+    width: 100%;
+
+    padding: 16px;
+
+    border: 0;
+
+    background: #fff;
+
+    color: #000;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.main-button:hover {
+    background: #00ffff;
+}
+
+.secondary-button {
+    padding: 12px 15px;
+
+    border: 1px solid #555;
+
+    background: #151515;
+
+    color: #fff;
+
+    font-family: inherit;
+
+    cursor: pointer;
+}
+
+.secondary-button:hover {
+    border-color: #00ffff;
+    color: #00ffff;
+}
+
+/* Emoji */
 
 .emoji-title {
+    margin-bottom: 12px;
 
-    margin-bottom:
-        12px;
+    color: #00ffff;
 
-    color:
-        #00ffff;
-
-    font-size:
-        11px;
-
+    font-size: 11px;
 }
 
-
 .emoji-grid {
-
-    display:
-        grid;
+    display: grid;
 
     grid-template-columns:
         repeat(
             auto-fit,
-            minmax(
-                48px,
-                1fr
-            )
+            minmax(48px, 1fr)
         );
 
-    gap:
-        8px;
+    gap: 8px;
 
-    margin-bottom:
-        25px;
-
+    margin-bottom: 25px;
 }
-
 
 .emoji-button {
+    height: 48px;
 
-    height:
-        48px;
+    border: 2px solid #333;
 
-    border:
-        2px solid #333;
+    background: #080808;
 
-    background:
-        #080808;
+    font-size: 24px;
 
-    font-size:
-        25px;
-
-    cursor:
-        pointer;
-
-    transition:
-        0.12s;
-
+    cursor: pointer;
 }
-
 
 .emoji-button:hover {
-
-    border-color:
-        #00ffff;
-
-    transform:
-        scale(1.08);
-
+    border-color: #00ffff;
 }
 
-
 .emoji-button.selected {
+    border-color: #ff00cc;
 
-    border-color:
-        #ff00cc;
-
-    background:
-        #211020;
+    background: #211020;
 
     box-shadow:
         0 0 10px
@@ -824,446 +506,297 @@ input:focus {
             255,
             0,
             204,
-            0.4
+            .3
         );
-
 }
 
-
-/* =========================================================
-   ADD BUTTON
-========================================================= */
-
-.add-button {
-
-    width:
-        100%;
-
-    padding:
-        17px;
-
-    border:
-        0;
-
-    background:
-        #ffffff;
-
-    color:
-        #000000;
-
-    font-family:
-        inherit;
-
-    font-weight:
-        bold;
-
-    font-size:
-        12px;
-
-    cursor:
-        pointer;
-
-}
-
-
-.add-button:hover {
-
-    background:
-        #00ffff;
-
-}
-
-
-/* =========================================================
-   ADMIN GAME LIST
-========================================================= */
+/* Admin list */
 
 .admin-list {
+    margin-top: 35px;
 
-    margin-top:
-        35px;
-
-    border-top:
-        1px solid #333;
-
+    border-top: 1px solid #333;
 }
 
+.admin-title {
+    margin: 25px 0 15px;
 
-.admin-list-title {
+    color: #ff00cc;
 
-    margin:
-        25px 0 15px;
-
-    color:
-        #ff00cc;
-
-    font-size:
-        12px;
-
+    font-size: 12px;
 }
-
 
 .admin-game {
+    display: flex;
 
-    display:
-        flex;
+    justify-content: space-between;
 
-    justify-content:
-        space-between;
+    align-items: center;
 
-    align-items:
-        center;
+    gap: 15px;
 
-    gap:
-        15px;
+    padding: 16px 0;
 
-    padding:
-        15px 0;
-
-    border-bottom:
-        1px solid #292929;
-
+    border-bottom: 1px solid #292929;
 }
-
 
 .admin-game-info {
+    flex: 1;
 
-    min-width:
-        0;
-
+    min-width: 0;
 }
-
 
 .admin-game-name {
+    font-size: 12px;
 
-    font-size:
-        12px;
-
-    margin-bottom:
-        7px;
-
+    margin-bottom: 8px;
 }
 
-
 .admin-game-url {
+    color: #666;
 
-    color:
-        #666;
+    font-family: Arial, sans-serif;
+
+    font-size: 11px;
+
+    word-break: break-all;
+}
+
+.admin-actions {
+    display: flex;
+
+    gap: 8px;
+}
+
+.small-button {
+    padding: 9px 11px;
+
+    border: 0;
+
+    background: #222;
+
+    color: #fff;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+.small-button.edit {
+    color: #00ffff;
+
+    border: 1px solid #00ffff;
+}
+
+.small-button.delete {
+    color: #ff4444;
+
+    border: 1px solid #ff4444;
+}
+
+.small-button:hover {
+    background: #333;
+}
+
+/* Messages */
+
+.message {
+    display: none;
+
+    padding: 13px;
+
+    margin-bottom: 20px;
+
+    font-size: 10px;
+
+    line-height: 1.7;
+}
+
+.message.show {
+    display: block;
+}
+
+.message.success {
+    color: #00ff88;
+
+    border: 1px solid #00ff88;
+
+    background: #00150d;
+}
+
+.message.error {
+    color: #ff4444;
+
+    border: 1px solid #ff4444;
+
+    background: #1b0000;
+}
+
+.message.info {
+    color: #00ffff;
+
+    border: 1px solid #00ffff;
+
+    background: #00151a;
+}
+
+/* Admin top controls */
+
+.admin-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 30px;
+}
+
+.logout {
+    padding: 9px 12px;
+
+    background: #222;
+
+    color: #ff4444;
+
+    border: 1px solid #ff4444;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+.logout:hover {
+    background: #ff4444;
+
+    color: #fff;
+}
+
+/* Export area */
+
+.export-box {
+    margin-top: 30px;
+
+    padding: 20px;
+
+    border:
+        2px dashed #444;
+
+    background: #080808;
+}
+
+.export-box h3 {
+    margin-top: 0;
+
+    color: #ff00cc;
+
+    font-size: 12px;
+}
+
+.export-box p {
+    color: #777;
 
     font-family:
         Arial,
         sans-serif;
 
-    font-size:
-        11px;
+    font-size: 12px;
 
-    word-break:
-        break-all;
-
+    line-height: 1.6;
 }
 
+.export-button {
+    width: 100%;
 
-.delete-button {
+    margin-top: 10px;
 
-    flex-shrink:
-        0;
+    padding: 15px;
 
-    padding:
-        9px 12px;
+    background: #ff00cc;
 
-    border:
-        0;
+    color: #fff;
 
-    background:
-        #ff3333;
+    border: 0;
 
-    color:
-        white;
+    font-family: inherit;
 
-    font-family:
-        inherit;
+    font-weight: bold;
 
-    font-size:
-        9px;
-
-    cursor:
-        pointer;
-
+    cursor: pointer;
 }
 
+.export-button:hover {
+    background: #00ffff;
 
-.delete-button:hover {
-
-    background:
-        #ff0000;
-
+    color: #000;
 }
 
-
-/* =========================================================
-   LOGIN
-========================================================= */
-
-.login-box {
-
-    width:
-        min(
-            430px,
-            100%
-        );
-
-    background:
-        #101010;
-
-    border:
-        3px solid #ff00cc;
-
-    box-shadow:
-        7px 7px 0 #00ffff;
-
-    padding:
-        30px;
-
-}
-
-
-.login-title {
-
-    color:
-        #00ffff;
-
-    font-size:
-        18px;
-
-    margin-bottom:
-        30px;
-
-    text-align:
-        center;
-
-}
-
-
-.login-button {
-
-    width:
-        100%;
-
-    padding:
-        15px;
-
-    border:
-        0;
-
-    background:
-        #ffffff;
-
-    color:
-        #000000;
-
-    font-family:
-        inherit;
-
-    font-weight:
-        bold;
-
-    cursor:
-        pointer;
-
-}
-
-
-.login-button:hover {
-
-    background:
-        #00ffff;
-
-}
-
-
-.login-error {
-
-    display:
-        none;
-
-    color:
-        #ff4444;
-
-    margin-bottom:
-        15px;
-
-    font-size:
-        10px;
-
-    text-align:
-        center;
-
-}
-
-
-/* =========================================================
-   ADMIN HEADER
-========================================================= */
-
-.admin-header {
-
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    margin-bottom:
-        30px;
-
-}
-
-
-.logout-button {
-
-    padding:
-        9px 12px;
-
-    background:
-        #222;
-
-    color:
-        #ff4444;
-
-    border:
-        1px solid #ff4444;
-
-    font-family:
-        inherit;
-
-    font-size:
-        9px;
-
-    cursor:
-        pointer;
-
-}
-
-
-.logout-button:hover {
-
-    background:
-        #ff4444;
-
-    color:
-        white;
-
-}
-
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
+/* Empty */
 
 .empty {
+    grid-column: 1 / -1;
 
-    grid-column:
-        1 / -1;
+    padding: 70px 20px;
 
-    text-align:
-        center;
+    text-align: center;
 
-    padding:
-        70px 20px;
+    border: 2px dashed #333;
 
-    border:
-        2px dashed #333;
+    color: #555;
 
-    color:
-        #555;
+    font-size: 12px;
 
-    font-size:
-        12px;
-
-    line-height:
-        2;
-
+    line-height: 2;
 }
 
-
-/* =========================================================
-   FOOTER
-========================================================= */
+/* Footer */
 
 footer {
+    margin-top: 80px;
 
-    text-align:
-        center;
+    text-align: center;
 
-    margin-top:
-        80px;
+    color: #444;
 
-    color:
-        #444;
+    font-size: 10px;
 
-    font-size:
-        10px;
-
-    line-height:
-        2;
-
+    line-height: 2;
 }
 
+/* Mobile */
 
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media(max-width:600px) {
+@media (max-width: 600px) {
 
     .container {
-
-        padding-top:
-            35px;
-
+        padding-top: 35px;
     }
-
 
     .logo {
-
-        font-size:
-            52px;
-
+        font-size: 52px;
     }
-
 
     h1 {
-
-        font-size:
-            35px;
-
+        font-size: 35px;
     }
-
-
-    .game-card {
-
-        min-height:
-            250px;
-
-    }
-
-
-    .modal-box {
-
-        padding:
-            20px;
-
-    }
-
 
     .admin-game {
+        align-items: flex-start;
 
-        align-items:
-            flex-start;
+        flex-direction: column;
+    }
 
+    .admin-actions {
+        width: 100%;
+    }
+
+    .small-button {
+        flex: 1;
     }
 
 }
@@ -1278,10 +811,6 @@ footer {
 
 <div class="container">
 
-
-<!-- =====================================================
-     PUBLIC HEADER
-===================================================== -->
 
 <header>
 
@@ -1313,10 +842,6 @@ footer {
 </header>
 
 
-<!-- =====================================================
-     PUBLIC GAME BOARD
-===================================================== -->
-
 <main id="games"></main>
 
 
@@ -1330,13 +855,10 @@ footer {
 
 </footer>
 
-
 </div>
 
 
-<!-- =====================================================
-     ADMIN BUTTON
-===================================================== -->
+<!-- ADMIN BUTTON -->
 
 <button
     class="admin-trigger"
@@ -1347,9 +869,7 @@ footer {
 </button>
 
 
-<!-- =====================================================
-     LOGIN MODAL
-===================================================== -->
+<!-- LOGIN MODAL -->
 
 <div
     class="modal"
@@ -1358,10 +878,10 @@ footer {
 
     <div class="login-box">
 
-        <div class="modal-title">
+        <div class="modal-header">
 
             <h2>
-                ADMIN LOGIN
+                🔐 ADMIN LOGIN
             </h2>
 
             <button
@@ -1375,10 +895,10 @@ footer {
 
 
         <div
-            class="login-error"
+            class="message error"
             id="loginError"
         >
-            INCORRECT USERNAME OR PASSWORD.
+            Incorrect username or password.
         </div>
 
 
@@ -1387,9 +907,8 @@ footer {
         </label>
 
         <input
-            type="text"
             id="username"
-            autocomplete="username"
+            type="text"
             placeholder="Username"
         >
 
@@ -1399,15 +918,14 @@ footer {
         </label>
 
         <input
-            type="password"
             id="password"
-            autocomplete="current-password"
+            type="password"
             placeholder="Password"
         >
 
 
         <button
-            class="login-button"
+            class="main-button"
             onclick="login()"
         >
             ENTER ADMIN PANEL
@@ -1418,36 +936,29 @@ footer {
 </div>
 
 
-<!-- =====================================================
-     ADMIN MODAL
-===================================================== -->
+<!-- ADMIN MODAL -->
 
 <div
     class="modal"
     id="adminModal"
 >
 
-    <div class="modal-box">
+    <div class="admin-box">
 
-        <div class="admin-header">
+        <div class="admin-top">
 
-            <div>
-
-                <h2
-                    style="
-                    margin:0;
-                    color:#00ffff;
-                    font-size:18px;
-                    "
-                >
-                    🎮 GAME ADMIN
-                </h2>
-
-            </div>
-
+            <h2
+                style="
+                margin:0;
+                color:#00ffff;
+                font-size:19px;
+                "
+            >
+                🎮 GAME ADMIN
+            </h2>
 
             <button
-                class="logout-button"
+                class="logout"
                 onclick="logout()"
             >
                 LOGOUT
@@ -1456,36 +967,36 @@ footer {
         </div>
 
 
-        <!-- GAME NAME -->
+        <div
+            class="message"
+            id="adminMessage"
+        ></div>
+
 
         <label class="form-label">
             GAME NAME
         </label>
 
         <input
+            id="gameName"
             type="text"
-            id="newGameName"
             placeholder="Example: Ghost Escape"
         >
 
 
-        <!-- GAME URL -->
-
         <label class="form-label">
-            GITHUB GAME URL
+            GITHUB / GITHUB PAGES URL
         </label>
 
         <input
+            id="gameURL"
             type="url"
-            id="newGameURL"
-            placeholder="https://yourname.github.io/GameWorld/Ghosts.html"
+            placeholder="https://yourusername.github.io/GameWorld/Ghosts.html"
         >
 
 
-        <!-- EMOJI -->
-
         <div class="emoji-title">
-            SELECT GAME ICON
+            SELECT AN ICON
         </div>
 
 
@@ -1496,25 +1007,45 @@ footer {
 
 
         <button
-            class="add-button"
-            onclick="addGame()"
+            class="main-button"
+            id="saveButton"
+            onclick="saveGame()"
         >
-            + ADD GAME TO WORLD
+            + ADD GAME
         </button>
 
 
-        <!-- CURRENT GAMES -->
-
         <div class="admin-list">
 
-            <div class="admin-list-title">
+            <div class="admin-title">
                 CURRENT GAMES
             </div>
 
+            <div id="adminList"></div>
 
-            <div
-                id="adminGameList"
-            ></div>
+        </div>
+
+
+        <div class="export-box">
+
+            <h3>
+                ⚠️ SAVE YOUR CHANGES TO GITHUB
+            </h3>
+
+            <p>
+                Your game list is saved in this browser.
+                To make the updated game list permanent
+                on GitHub, download the updated HTML and
+                replace your old index.html on GitHub.
+            </p>
+
+
+            <button
+                class="export-button"
+                onclick="downloadUpdatedHTML()"
+            >
+                ⬇ DOWNLOAD UPDATED INDEX.HTML
+            </button>
 
         </div>
 
@@ -1526,34 +1057,92 @@ footer {
 <script>
 
 /* =========================================================
-   ADMIN LOGIN
+   CONFIGURATION
 ========================================================= */
 
 /*
-   These are the credentials you requested.
+   Because this is one standalone HTML file, the password
+   cannot be truly secret.
 
-   NOTE:
-   Because this is client-side HTML, this is NOT a
-   secure password system. Anyone who can inspect the
-   source code can technically discover the credentials.
-
-   For a personal/private game dashboard this is okay,
-   but do not use this approach for sensitive information.
+   Change these whenever you want.
 */
 
 const ADMIN_USERNAME =
     "Kaison";
-
 
 const ADMIN_PASSWORD =
     "$NB038180098";
 
 
 /* =========================================================
-   GAME ICONS
+   DEFAULT GAMES
 ========================================================= */
 
-const GAME_ICONS = [
+const DEFAULT_GAMES = [
+
+    {
+        name:
+            "First Game",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/First-Game.html",
+
+        icon:
+            "🎮"
+    },
+
+    {
+        name:
+            "Space Two",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Space-Two.html",
+
+        icon:
+            "🚀"
+    },
+
+    {
+        name:
+            "Balance Mobile",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Balance-Mobile.html",
+
+        icon:
+            "⚖️"
+    },
+
+    {
+        name:
+            "Ghosts",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Ghosts.html",
+
+        icon:
+            "👻"
+    },
+
+    {
+        name:
+            "Reflection",
+
+        url:
+            "https://YOURUSERNAME.github.io/GameWorld/Reflection.html",
+
+        icon:
+            "🪞"
+    }
+
+];
+
+
+/* =========================================================
+   EMOJI LIST
+========================================================= */
+
+const EMOJIS = [
 
     "🎮",
     "👻",
@@ -1608,119 +1197,71 @@ const GAME_ICONS = [
 
 
 /* =========================================================
-   DEFAULT GAMES
+   LOAD SAVED GAMES
 ========================================================= */
 
-const DEFAULT_GAMES = [
+let games = loadGames();
 
-    {
-        name:
-            "First Game",
+let selectedEmoji = "🎮";
 
-        url:
-            "https://YOURUSERNAME.github.io/GameWorld/First-Game.html",
-
-        icon:
-            "🎮"
-    },
-
-
-    {
-        name:
-            "Space Two",
-
-        url:
-            "https://YOURUSERNAME.github.io/GameWorld/Space-Two.html",
-
-        icon:
-            "🚀"
-    },
-
-
-    {
-        name:
-            "Balance Mobile",
-
-        url:
-            "https://YOURUSERNAME.github.io/GameWorld/Balance-Mobile.html",
-
-        icon:
-            "⚖️"
-    },
-
-
-    {
-        name:
-            "Ghosts",
-
-        url:
-            "https://YOURUSERNAME.github.io/GameWorld/Ghosts.html",
-
-        icon:
-            "👻"
-    },
-
-
-    {
-        name:
-            "Reflection",
-
-        url:
-            "https://YOURUSERNAME.github.io/GameWorld/Reflection.html",
-
-        icon:
-            "🪞"
-    }
-
-];
+let editingIndex = -1;
 
 
 /* =========================================================
-   LOAD GAMES
+   LOAD FROM LOCAL STORAGE
 ========================================================= */
 
-let games;
+function loadGames() {
 
+    const saved =
+        localStorage.getItem(
+            "KaisonGameWorldGames"
+        );
 
-const savedGames =
-    localStorage.getItem(
-        "kaisonGameWorldGames"
-    );
+    if (!saved) {
 
-
-if (savedGames) {
-
-    try {
-
-        games =
-            JSON.parse(
-                savedGames
-            );
-
-    } catch {
-
-        games =
-            [...DEFAULT_GAMES];
+        return structuredClone(
+            DEFAULT_GAMES
+        );
 
     }
 
-} else {
+    try {
 
-    games =
-        [...DEFAULT_GAMES];
+        const parsed =
+            JSON.parse(saved);
 
+        if (
+            Array.isArray(parsed)
+        ) {
+
+            return parsed;
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Saved game data is invalid."
+        );
+
+    }
+
+    return structuredClone(
+        DEFAULT_GAMES
+    );
 }
 
 
 /* =========================================================
-   SAVE GAMES
+   SAVE TO LOCAL STORAGE
 ========================================================= */
 
-function saveGames() {
+function saveToBrowser() {
 
     localStorage.setItem(
 
-        "kaisonGameWorldGames",
+        "KaisonGameWorldGames",
 
         JSON.stringify(
             games
@@ -1732,7 +1273,7 @@ function saveGames() {
 
 
 /* =========================================================
-   DISPLAY PUBLIC GAMES
+   DISPLAY GAMES
 ========================================================= */
 
 function displayGames() {
@@ -1741,7 +1282,6 @@ function displayGames() {
         document.getElementById(
             "games"
         );
-
 
     const counter =
         document.getElementById(
@@ -1783,7 +1323,6 @@ function displayGames() {
     games.forEach(
         (game, index) => {
 
-
             const card =
                 document.createElement(
                     "div"
@@ -1802,13 +1341,11 @@ function displayGames() {
                     #${String(index + 1).padStart(2, "0")}
                 </div>
 
-
                 <div
                     class="game-icon"
                 >
                     ${game.icon || "🎮"}
                 </div>
-
 
                 <div
                     class="game-name"
@@ -1816,6 +1353,11 @@ function displayGames() {
                     ${escapeHTML(game.name)}
                 </div>
 
+                <div
+                    class="game-url-preview"
+                >
+                    ${escapeHTML(game.url)}
+                </div>
 
                 <div
                     class="play-button"
@@ -1828,11 +1370,12 @@ function displayGames() {
 
             card.addEventListener(
                 "click",
-                function() {
+                () => {
 
                     window.open(
                         game.url,
-                        "_blank"
+                        "_blank",
+                        "noopener,noreferrer"
                     );
 
                 }
@@ -1864,7 +1407,7 @@ function openLogin() {
 
 
     setTimeout(
-        function() {
+        () => {
 
             document
                 .getElementById(
@@ -1906,7 +1449,8 @@ function login() {
             .getElementById(
                 "username"
             )
-            .value;
+            .value
+            .trim();
 
 
     const password =
@@ -1936,16 +1480,12 @@ function login() {
 
     ) {
 
-        error.style.display =
-            "none";
+        error.classList.remove(
+            "show"
+        );
 
 
-        document
-            .getElementById(
-                "loginModal"
-            )
-            .classList
-            .remove("show");
+        closeLogin();
 
 
         document
@@ -1972,14 +1512,22 @@ function login() {
             "";
 
 
-        createEmojiSelector();
+        editingIndex =
+            -1;
 
-        displayAdminGames();
+
+        resetForm();
+
+
+        createEmojiPicker();
+
+        displayAdminList();
 
     } else {
 
-        error.style.display =
-            "block";
+        error.classList.add(
+            "show"
+        );
 
     }
 
@@ -1999,18 +1547,18 @@ function logout() {
         .classList
         .remove("show");
 
+
+    editingIndex =
+        -1;
+
 }
 
 
 /* =========================================================
-   EMOJI SELECTOR
+   CREATE EMOJI PICKER
 ========================================================= */
 
-let selectedEmoji =
-    "🎮";
-
-
-function createEmojiSelector() {
+function createEmojiPicker() {
 
     const grid =
         document.getElementById(
@@ -2022,9 +1570,8 @@ function createEmojiSelector() {
         "";
 
 
-    GAME_ICONS.forEach(
-        function(emoji) {
-
+    EMOJIS.forEach(
+        emoji => {
 
             const button =
                 document.createElement(
@@ -2040,24 +1587,25 @@ function createEmojiSelector() {
                 "emoji-button";
 
 
+            button.textContent =
+                emoji;
+
+
             if (
                 emoji ===
                 selectedEmoji
             ) {
 
-                button.classList
-                    .add("selected");
+                button.classList.add(
+                    "selected"
+                );
 
             }
 
 
-            button.textContent =
-                emoji;
-
-
             button.addEventListener(
                 "click",
-                function() {
+                () => {
 
                     selectedEmoji =
                         emoji;
@@ -2068,21 +1616,19 @@ function createEmojiSelector() {
                             ".emoji-button"
                         )
                         .forEach(
-                            btn => {
+                            item => {
 
-                                btn.classList
-                                    .remove(
-                                        "selected"
-                                    );
+                                item.classList.remove(
+                                    "selected"
+                                );
 
                             }
                         );
 
 
-                    button.classList
-                        .add(
-                            "selected"
-                        );
+                    button.classList.add(
+                        "selected"
+                    );
 
                 }
             );
@@ -2099,15 +1645,15 @@ function createEmojiSelector() {
 
 
 /* =========================================================
-   ADD GAME
+   ADD / EDIT GAME
 ========================================================= */
 
-function addGame() {
+function saveGame() {
 
     const name =
         document
             .getElementById(
-                "newGameName"
+                "gameName"
             )
             .value
             .trim();
@@ -2116,7 +1662,7 @@ function addGame() {
     const url =
         document
             .getElementById(
-                "newGameURL"
+                "gameURL"
             )
             .value
             .trim();
@@ -2124,8 +1670,9 @@ function addGame() {
 
     if (!name) {
 
-        alert(
-            "Please enter a game name."
+        showMessage(
+            "Please enter a game name.",
+            "error"
         );
 
         return;
@@ -2135,8 +1682,9 @@ function addGame() {
 
     if (!url) {
 
-        alert(
-            "Please enter your GitHub game URL."
+        showMessage(
+            "Please enter the GitHub game URL.",
+            "error"
         );
 
         return;
@@ -2150,8 +1698,9 @@ function addGame() {
 
     } catch {
 
-        alert(
-            "Please enter a valid URL."
+        showMessage(
+            "Please enter a valid URL.",
+            "error"
         );
 
         return;
@@ -2159,7 +1708,7 @@ function addGame() {
     }
 
 
-    games.push({
+    const game = {
 
         name:
             name,
@@ -2170,151 +1719,126 @@ function addGame() {
         icon:
             selectedEmoji
 
-    });
+    };
 
 
-    saveGames();
+    if (
+        editingIndex === -1
+    ) {
+
+        games.push(
+            game
+        );
 
 
-    document
-        .getElementById(
-            "newGameName"
-        )
-        .value =
-        "";
+        showMessage(
+            "🎮 Game added successfully!",
+            "success"
+        );
+
+    } else {
+
+        games[
+            editingIndex
+        ] =
+            game;
 
 
-    document
-        .getElementById(
-            "newGameURL"
-        )
-        .value =
-        "";
+        showMessage(
+            "✅ Game updated successfully!",
+            "success"
+        );
+
+    }
 
 
-    selectedEmoji =
-        "🎮";
-
+    saveToBrowser();
 
     displayGames();
 
-    displayAdminGames();
+    displayAdminList();
 
-    createEmojiSelector();
-
-
-    alert(
-        "🎮 GAME ADDED TO GAME WORLD!"
-    );
+    resetForm();
 
 }
 
 
 /* =========================================================
-   ADMIN GAME LIST
+   EDIT
 ========================================================= */
 
-function displayAdminGames() {
+function editGame(index) {
 
-    const container =
-        document.getElementById(
-            "adminGameList"
-        );
+    const game =
+        games[index];
 
 
-    container.innerHTML =
-        "";
-
-
-    if (
-        games.length === 0
-    ) {
-
-        container.innerHTML = `
-
-            <div
-                style="
-                color:#666;
-                font-size:10px;
-                padding:20px 0;
-                "
-            >
-                NO GAMES.
-            </div>
-
-        `;
+    if (!game) {
 
         return;
 
     }
 
 
-    games.forEach(
-        function(game, index) {
+    editingIndex =
+        index;
 
 
-            const row =
-                document.createElement(
-                    "div"
-                );
+    document
+        .getElementById(
+            "gameName"
+        )
+        .value =
+        game.name;
 
 
-            row.className =
-                "admin-game";
+    document
+        .getElementById(
+            "gameURL"
+        )
+        .value =
+        game.url;
 
 
-            row.innerHTML = `
-
-                <div
-                    class="admin-game-info"
-                >
-
-                    <div
-                        class="admin-game-name"
-                    >
-                        ${game.icon || "🎮"}
-                        ${escapeHTML(game.name)}
-                    </div>
-
-                    <div
-                        class="admin-game-url"
-                    >
-                        ${escapeHTML(game.url)}
-                    </div>
-
-                </div>
+    selectedEmoji =
+        game.icon || "🎮";
 
 
-                <button
-                    class="delete-button"
-                    onclick="
-                        deleteGame(${index})
-                    "
-                >
-                    DELETE
-                </button>
-
-            `;
+    document
+        .getElementById(
+            "saveButton"
+        )
+        .textContent =
+        "✓ UPDATE GAME";
 
 
-            container.appendChild(
-                row
-            );
+    createEmojiPicker();
 
-        }
-    );
+
+    document
+        .getElementById(
+            "gameName"
+        )
+        .focus();
 
 }
 
 
 /* =========================================================
-   DELETE GAME
+   DELETE
 ========================================================= */
 
 function deleteGame(index) {
 
     const game =
         games[index];
+
+
+    if (!game) {
+
+        return;
+
+    }
 
 
     const confirmed =
@@ -2336,12 +1860,216 @@ function deleteGame(index) {
     );
 
 
-    saveGames();
-
+    saveToBrowser();
 
     displayGames();
 
-    displayAdminGames();
+    displayAdminList();
+
+
+    showMessage(
+        "Game deleted.",
+        "success"
+    );
+
+}
+
+
+/* =========================================================
+   RESET FORM
+========================================================= */
+
+function resetForm() {
+
+    editingIndex =
+        -1;
+
+    selectedEmoji =
+        "🎮";
+
+
+    document
+        .getElementById(
+            "gameName"
+        )
+        .value =
+        "";
+
+
+    document
+        .getElementById(
+            "gameURL"
+        )
+        .value =
+        "";
+
+
+    document
+        .getElementById(
+            "saveButton"
+        )
+        .textContent =
+        "+ ADD GAME";
+
+
+    createEmojiPicker();
+
+}
+
+
+/* =========================================================
+   ADMIN GAME LIST
+========================================================= */
+
+function displayAdminList() {
+
+    const container =
+        document.getElementById(
+            "adminList"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    if (
+        games.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div
+                style="
+                color:#555;
+                padding:20px 0;
+                font-size:10px;
+                "
+            >
+                NO GAMES.
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    games.forEach(
+        (game, index) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "admin-game";
+
+
+            row.innerHTML = `
+
+                <div
+                    class="admin-game-info"
+                >
+
+                    <div
+                        class="admin-game-name"
+                    >
+
+                        ${game.icon || "🎮"}
+
+                        ${escapeHTML(
+                            game.name
+                        )}
+
+                    </div>
+
+                    <div
+                        class="admin-game-url"
+                    >
+
+                        ${escapeHTML(
+                            game.url
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="admin-actions"
+                >
+
+                    <button
+                        class="small-button edit"
+                        onclick="
+                            editGame(${index})
+                        "
+                    >
+                        EDIT
+                    </button>
+
+
+                    <button
+                        class="small-button delete"
+                        onclick="
+                            deleteGame(${index})
+                        "
+                    >
+                        DELETE
+                    </button>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showMessage(
+    text,
+    type
+) {
+
+    const element =
+        document.getElementById(
+            "adminMessage"
+        );
+
+
+    element.textContent =
+        text;
+
+
+    element.className =
+        "message show " + type;
+
+
+    setTimeout(
+        () => {
+
+            element.className =
+                "message";
+
+        },
+        4000
+    );
 
 }
 
@@ -2352,57 +2080,279 @@ function deleteGame(index) {
 
 function escapeHTML(text) {
 
-    const element =
+    const div =
         document.createElement(
             "div"
         );
 
 
-    element.textContent =
+    div.textContent =
         text;
 
 
-    return element.innerHTML;
+    return div.innerHTML;
 
 }
 
 
 /* =========================================================
-   KEYBOARD ENTER LOGIN
+   DOWNLOAD UPDATED HTML
 ========================================================= */
 
-document
-    .getElementById("password")
-    .addEventListener(
-        "keydown",
-        function(event) {
+function downloadUpdatedHTML() {
+
+    /*
+       We take THIS exact HTML document,
+       replace the DEFAULT_GAMES array,
+       and download a new index.html.
+    */
+
+    let html =
+        "<!DOCTYPE html>\n" +
+        document.documentElement.outerHTML;
+
+
+    const serializedGames =
+        JSON.stringify(
+            games,
+            null,
+            4
+        );
+
+
+    /*
+       Find the DEFAULT_GAMES section.
+    */
+
+    const marker =
+        "const DEFAULT_GAMES =";
+
+
+    const start =
+        html.indexOf(
+            marker
+        );
+
+
+    if (
+        start === -1
+    ) {
+
+        alert(
+            "Could not find the game database section."
+        );
+
+        return;
+
+    }
+
+
+    const arrayStart =
+        html.indexOf(
+            "[",
+            start
+        );
+
+
+    const arrayEnd =
+        findMatchingBracket(
+            html,
+            arrayStart
+        );
+
+
+    html =
+
+        html.substring(
+            0,
+            arrayStart
+        )
+
+        +
+
+        serializedGames
+
+        +
+
+        html.substring(
+            arrayEnd + 1
+        );
+
+
+    const blob =
+        new Blob(
+            [html],
+            {
+                type:
+                    "text/html;charset=utf-8"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "index.html";
+
+
+    document
+        .body
+        .appendChild(
+            link
+        );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    showMessage(
+        "⬇ Updated index.html downloaded. Upload it to GitHub to publish the changes.",
+        "success"
+    );
+
+}
+
+
+/* =========================================================
+   FIND MATCHING BRACKET
+========================================================= */
+
+function findMatchingBracket(
+    text,
+    start
+) {
+
+    let depth = 0;
+
+    let insideString = false;
+
+    let escaped = false;
+
+
+    for (
+        let i = start;
+        i < text.length;
+        i++
+    ) {
+
+        const char =
+            text[i];
+
+
+        if (
+            insideString
+        ) {
 
             if (
-                event.key ===
-                "Enter"
+                escaped
             ) {
 
-                login();
+                escaped =
+                    false;
+
+            } else if (
+                char === "\\"
+            ) {
+
+                escaped =
+                    true;
+
+            } else if (
+                char === '"'
+            ) {
+
+                insideString =
+                    false;
+
+            }
+
+            continue;
+
+        }
+
+
+        if (
+            char === '"'
+        ) {
+
+            insideString =
+                true;
+
+            continue;
+
+        }
+
+
+        if (
+            char === "["
+        ) {
+
+            depth++;
+
+        }
+
+
+        if (
+            char === "]"
+        ) {
+
+            depth--;
+
+
+            if (
+                depth === 0
+            ) {
+
+                return i;
 
             }
 
         }
-    );
+
+    }
+
+
+    return -1;
+
+}
 
 
 /* =========================================================
-   CLOSE MODALS BY CLICKING OUTSIDE
+   CLOSE MODAL CLICK
 ========================================================= */
 
 document
-    .getElementById("loginModal")
+    .getElementById(
+        "loginModal"
+    )
     .addEventListener(
         "click",
         function(event) {
 
             if (
-                event.target ===
-                this
+                event.target === this
             ) {
 
                 closeLogin();
@@ -2414,17 +2364,42 @@ document
 
 
 document
-    .getElementById("adminModal")
+    .getElementById(
+        "adminModal"
+    )
     .addEventListener(
         "click",
         function(event) {
 
             if (
-                event.target ===
-                this
+                event.target === this
             ) {
 
                 logout();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   ENTER LOGIN
+========================================================= */
+
+document
+    .getElementById(
+        "password"
+    )
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                login();
 
             }
 
@@ -2443,3 +2418,4 @@ displayGames();
 </body>
 
 </html>
+```
